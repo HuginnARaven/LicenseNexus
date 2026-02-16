@@ -1,0 +1,57 @@
+﻿services:
+  licensenexus.api:
+    image: licensenexus.api
+    container_name: licensenexus_api
+    build:
+      context: .
+      dockerfile: LicenseNexus.API/Dockerfile
+    ports:
+      - "5000:8080" # HTTP
+      - "5001:8081" # HTTPS
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__MongoArchDatabase=Server=mssql;Database=LicenseNexus_Minimal_Db;User Id=sa;Password=TST12345!;TrustServerCertificate=True;
+      - ConnectionStrings__RedisArchDatabase=Server=mssql;Database=LicenseNexus_Full_Db;User Id=sa;Password=TST12345!;TrustServerCertificate=True;
+      - MongoDbSettings__ConnectionString=mongodb://mongo:27017
+      - MongoDbSettings__DatabaseName=LicenseNexus_Mongo
+      - RedisSettings__ConnectionString=redis:6379
+    depends_on:
+      - mssql
+      - mongo
+      - redis
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: licensenexus_mssql
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=TST12345!
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+
+  mongo:
+    image: mongo:latest
+    container_name: licensenexus_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:alpine
+    container_name: licensenexus_redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  mssql_data:
+  mongo_data:
+  redis_data:

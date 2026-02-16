@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".dockerignore" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="compose.yaml" />
+    <File Path="diagrams.drawio" />
+  </Folder>
+  <Project Path="LicenseNexus.API/LicenseNexus.API.csproj" />
+  <Project Path="LicenseNexus.Application/LicenseNexus.Application.csproj" />
+  <Project Path="LicenseNexus.Domain/LicenseNexus.Domain.csproj" />
+  <Project Path="LicenseNexus.Infrastructure/LicenseNexus.Infrastructure.csproj" />
+</Solution>
