@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 
-namespace LicenseNexus.Infrastructure.Data.MongoEntities;
+namespace LicenseNexus.Infrastructure.Data.MongoDocuments;
 
 public class DatabaseSequence
 {

@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
+using LicenseNexus.Domain.Models;
 using LicenseNexus.Infrastructure.Data.Contexts;
-using LicenseNexus.Infrastructure.Data.RedisEntities;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
@@ -98,29 +98,33 @@ public class ProductAggregatorService : IProductAggregatorService
             Sku = p.Sku ?? "",
             Title = p.Title,
             IsActive = (p.ProductGroup?.IsActive ?? false) && (p.ProductGroup?.Category?.IsActive ?? false),
-                
+            
             Tags = p.ProductTags.Select(pt => pt.Tag?.Name ?? "").ToList(),
-                
-            Classification = new ClassificationModel
+            
+            Classification = new Classification
             {
+                TypeId = p.ProductTypeId,
                 TypeName = p.ProductType?.TypeName ?? "",
+                UnitMeasureId = p.UnitMeasureId,
                 UnitMeasureName = p.UnitMeasure?.Name ?? "",
-                Vendor = new VendorModel
+                Vendor = new Vendor
                 {
                     Id = p.VendorId,
                     Name = p.Vendor?.Name ?? "",
                     CountryCode = p.Vendor?.CountryCode ?? ""
                 },
-                Group = new GroupModel
+                Group = new Group
                 {
                     Id = p.ProductGroupId,
                     Name = p.ProductGroup?.Name ?? "",
+                    CategoryId = p.ProductGroupId,
                     CategoryName = p.ProductGroup?.Category?.CategoryName ?? ""
                 }
             },
-                
-            Attributes = new AttributesModel
+            
+            Attributes = new Attributes
             {
+                ShortDescription = p.ShortDescription ?? "",
                 QuantityMin = p.QuantityMin,
                 QuantityMax = p.QuantityMax,
                 IsPromo = p.IsPromo,
@@ -132,18 +136,21 @@ public class ProductAggregatorService : IProductAggregatorService
                 CreatedDate = p.CreatedDate,
                 Author = p.Author
             },
-                
-            Descriptions = p.FullDescriptions.Select(d => new DescriptionModel
+            
+            Descriptions = p.FullDescriptions.Select(d => new Description
             {
-                Description = p.ShortDescription ?? "", // Короткий опис з головної таблиці
+                Id = d.Id,
                 FullText = d.FullText,
                 LanguageCode = d.LanguageCode
             }).ToList(),
-                
-            Prices = p.Prices.Select(pr => new ProductPriceModel
+            
+            CurrencyId = p.CurrencyId,
+            CurrencyCode = p.Currency?.LiteralCode ?? "",
+            
+            Prices = p.Prices.Select(pr => new ProductPrice
             {
+                Id = pr.Id,
                 Price = pr.Price,
-                CurrencyCode = p.Currency?.LiteralCode ?? "",
                 TermDuration = pr.TermDuration,
                 BillingPlan = pr.BillingPlan,
                 Segment = pr.Segment,

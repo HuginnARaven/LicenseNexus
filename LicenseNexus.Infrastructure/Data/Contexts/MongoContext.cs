@@ -1,4 +1,4 @@
-﻿using LicenseNexus.Infrastructure.Data.MongoEntities;
+﻿using LicenseNexus.Infrastructure.Data.MongoDocuments;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 

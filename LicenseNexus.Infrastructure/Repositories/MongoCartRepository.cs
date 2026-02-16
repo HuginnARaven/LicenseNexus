@@ -1,7 +1,7 @@
 ﻿using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Domain.Models;
 using LicenseNexus.Infrastructure.Data.Contexts;
-using LicenseNexus.Infrastructure.Data.MongoEntities;
+using LicenseNexus.Infrastructure.Data.MongoDocuments;
 using MongoDB.Driver;
 
 namespace LicenseNexus.Infrastructure.Repositories;

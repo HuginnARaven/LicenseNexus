@@ -1,7 +1,7 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace LicenseNexus.Infrastructure.Data.MongoEntities;
+namespace LicenseNexus.Infrastructure.Data.MongoDocuments;
 
 public class ProductDocument
 {
@@ -32,6 +32,9 @@ public class ProductDocument
     
     [BsonElement("description")]
     public List<DescriptionDoc> Descriptions { get; set; } = new();
+    
+    [BsonElement("currency_code")]
+    public string CurrencyCode { get; set; } = string.Empty;
     
     [BsonElement("prices")]
     public List<ProductPriceDoc> Prices { get; set; } = new();
@@ -129,9 +132,6 @@ public class ProductPriceDoc
     [BsonElement("price")]
     [BsonRepresentation(BsonType.Decimal128)]
     public decimal Price { get; set; }
-
-    [BsonElement("currency_code")]
-    public string CurrencyCode { get; set; } = string.Empty;
 
     [BsonElement("term_duration")]
     public int? TermDuration { get; set; }
