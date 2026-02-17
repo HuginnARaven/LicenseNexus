@@ -1,6 +1,9 @@
+using LicenseNexus.Application.Interfaces;
+using LicenseNexus.Application.Services;
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using LicenseNexus.Infrastructure.Repositories;
+using LicenseNexus.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,21 +22,37 @@ builder.Services.AddSingleton<RedisContext>();
 
 
 var archMode = builder.Configuration["ArchitectureMode"];
+Console.WriteLine(archMode);
 if (archMode == "Redis")
 {
     builder.Services.AddScoped<DbContext>(provider => provider.GetRequiredService<ExtendedSqlContext>());
+    builder.Services.AddScoped<BaseSqlContext>(provider => provider.GetRequiredService<ExtendedSqlContext>());
+    
     builder.Services.AddScoped<ICartRepository, RedisCartRepository>();
     builder.Services.AddScoped<IProductRepository, RedisProductRepository>();
+    builder.Services.AddScoped<IVendorRepository, RedisVendorRepository>();
+    builder.Services.AddScoped<ICategoryRepository, RedisCategoryRepository>();
+    builder.Services.AddScoped<IProductGroupRepository, RedisProductGroupRepository>();
+    
+    builder.Services.AddScoped<IProductAggregatorService, ProductAggregatorService>();
 }
 else // Mongo
 {
     builder.Services.AddScoped<DbContext>(provider => provider.GetRequiredService<BaseSqlContext>());
-    builder.Services.AddScoped<BaseSqlContext>(provider => provider.GetRequiredService<ExtendedSqlContext>());
+    
     builder.Services.AddScoped<ICartRepository, MongoCartRepository>();
     builder.Services.AddScoped<IProductRepository, MongoProductRepository>();
+    builder.Services.AddScoped<IVendorRepository, MongoVendorRepository>();
+    builder.Services.AddScoped<ICategoryRepository, MongoCategoryRepository>();
+    builder.Services.AddScoped<IProductGroupRepository, MongoProductGroupRepository>();
+    
 }
 
 builder.Services.AddScoped<IOrderRepository, SqlOrderRepository>();
+
+builder.Services.AddScoped<IVendorService, VendorService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IProductGroupService, ProductGroupService>();
 
 var app = builder.Build();
 

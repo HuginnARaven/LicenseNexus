@@ -21,6 +21,9 @@ public class MongoContext
     public IMongoCollection<DatabaseSequence> Counters => _database.GetCollection<DatabaseSequence>("Counters");
     public IMongoCollection<CategoryDocument> Categories => _database.GetCollection<CategoryDocument>("Categories");
     public IMongoCollection<VendorDocument> Vendors => _database.GetCollection<VendorDocument>("Vendors");
+    public IMongoCollection<ProductTypeDocument> ProductTypes => _database.GetCollection<ProductTypeDocument>("ProductTypes");
+    public IMongoCollection<UnitMeasureDocument> UnitMeasures => _database.GetCollection<UnitMeasureDocument>("UnitMeasures");
+    public IMongoCollection<CurrencyDocument> Currencies => _database.GetCollection<CurrencyDocument>("Currencies");
     
     public async Task<int> GetNextSequenceValueAsync(string sequenceName)
     {

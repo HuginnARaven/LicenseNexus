@@ -18,11 +18,14 @@ public class MongoVendorRepository: IVendorRepository
     public async Task<IEnumerable<Vendor>> GetAllAsync()
     {
         var docs = await _context.Vendors.Find(_ => true).ToListAsync();
-        return docs.Select(d => new Vendor 
+        return docs.Select(doc => new Vendor 
         { 
-            Id = d.Id, 
-            Name = d.Name,
-            CountryCode = d.CountryCode
+            Id = doc.Id, 
+            Name = doc.Name,
+            OriginalName = doc.OriginalName,
+            Description = doc.Description,
+            CountryCode = doc.CountryCode,
+            Logo = doc.Logo ?? ""
         });
     }
 
@@ -35,7 +38,10 @@ public class MongoVendorRepository: IVendorRepository
         { 
             Id = doc.Id, 
             Name = doc.Name,
-            CountryCode = doc.CountryCode
+            OriginalName = doc.OriginalName,
+            Description = doc.Description,
+            CountryCode = doc.CountryCode,
+            Logo = doc.Logo ?? ""
         };
     }
 
@@ -48,7 +54,10 @@ public class MongoVendorRepository: IVendorRepository
         {
             Id = id,
             Name = vendor.Name,
-            CountryCode = vendor.CountryCode
+            OriginalName = vendor.OriginalName,
+            Description = vendor.Description,
+            CountryCode = vendor.CountryCode,
+            Logo = vendor.Logo ?? ""
         };
 
         await _context.Vendors.InsertOneAsync(doc);

@@ -11,12 +11,18 @@ public class CategoryDocument
 
     [BsonElement("id")]
     public int Id { get; set; } // TODO: mb remove if unused
+    
+    [BsonElement("active_is")]
+    public bool IsActive { get; set; }
 
     [BsonElement("name")]
     public string Name { get; set; } = string.Empty;
-
-    [BsonElement("active_is")]
-    public bool IsActive { get; set; }
+    
+    [BsonElement("description")]
+    public string? Description { get; set; }
+    
+    [BsonElement("created_date")]
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     
     [BsonElement("groups")]
     public List<ProductGroupDoc> Groups { get; set; } = new();
@@ -32,4 +38,13 @@ public class ProductGroupDoc
 
     [BsonElement("active_is")]
     public bool IsActive { get; set; }
+    
+    [BsonElement("note")]
+    public string? Note { get; set; }
+
+    [BsonElement("created_date")]
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+
+    [BsonElement("autor")]
+    public string? Author { get; set; }
 }

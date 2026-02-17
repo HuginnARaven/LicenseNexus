@@ -44,7 +44,6 @@ public class ExtendedSqlContext : BaseSqlContext
             .HasOne(pt => pt.Product)
             .WithMany(p => p.ProductTags)
             .HasForeignKey(pt => pt.ProductId);
-
         modelBuilder.Entity<ProductTag>()
             .HasOne(pt => pt.Tag)
             .WithMany(t => t.ProductTags)
