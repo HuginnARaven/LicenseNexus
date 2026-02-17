@@ -4,7 +4,7 @@ namespace LicenseNexus.Application.Interfaces;
 
 public interface IProductGroupService
 {
-    Task<IEnumerable<ProductGroupResponseDTO>> GetAllProductGroups();
-    Task<ProductGroupResponseDTO?> GetProductGroupById(int id);
-    Task AddProductGroup(ProductGroupRequestDTO productGroup);
+    Task<IEnumerable<ProductGroupResponseDto>> GetAllProductGroups();
+    Task<ProductGroupResponseDto?> GetProductGroupById(int id);
+    Task AddProductGroup(ProductGroupRequestDto productGroup);
 }

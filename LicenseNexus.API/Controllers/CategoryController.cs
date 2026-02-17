@@ -28,7 +28,7 @@ namespace LicenseNexus.API.Controllers
         }
 
         [HttpPost("")]
-        public async Task<IActionResult> Create([FromBody] CategoryRequestDTO category)
+        public async Task<IActionResult> Create([FromBody] CategoryRequestDto category)
         {
             if (category == null)
             {

@@ -1,6 +1,71 @@
-@LicenseNexus.API_HostAddress = http://localhost:5000
+@API_HostAddress = http://localhost:5000/api
 
-GET {{LicenseNexus.API_HostAddress}}/weatherforecast/
+POST {{API_HostAddress}}/Category/
+Content-Type: application/json
+
+{
+  "categoryName": "Category3",
+  "isActive": true,
+  "description": "Category3 Description",
+  "author": "test"
+}
+
+###
+GET {{API_HostAddress}}/Category/
+Accept: application/json
+
+###
+GET {{API_HostAddress}}/Category/1/
+Accept: application/json
+
+###
+POST {{API_HostAddress}}/Currency/
+Content-Type: application/json
+
+{
+  "LiteralCode": "$",
+  "Name": "Dollar",
+  "CountryCode": "USA"
+}
+
+###
+GET {{API_HostAddress}}/Currency/
+Accept: application/json
+
+###
+GET {{API_HostAddress}}/Currency/1/
+Accept: application/json
+
+###
+POST {{API_HostAddress}}/ProductType/
+Content-Type: application/json
+
+{
+  "TypeName": "TestType"
+}
+
+###
+GET {{API_HostAddress}}/ProductType/
+Accept: application/json
+
+###
+GET {{API_HostAddress}}/ProductType/1/
+Accept: application/json
+
+###
+POST {{API_HostAddress}}/UnitMeasure/
+Content-Type: application/json
+
+{
+  "Name": "TestUnitMeasure"
+}
+
+###
+GET {{API_HostAddress}}/UnitMeasure/
+Accept: application/json
+
+###
+GET {{API_HostAddress}}/UnitMeasure/1/
 Accept: application/json
 
 ###

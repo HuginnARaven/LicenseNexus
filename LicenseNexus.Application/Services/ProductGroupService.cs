@@ -5,19 +5,12 @@ using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
 
-public class ProductGroupService : IProductGroupService
+public class ProductGroupService(IProductGroupRepository productGroupRepository) : IProductGroupService
 {
-    private readonly IProductGroupRepository _productGroupRepository;
-
-    public ProductGroupService(IProductGroupRepository productGroupRepository)
+    public async Task<IEnumerable<ProductGroupResponseDto>> GetAllProductGroups()
     {
-        _productGroupRepository = productGroupRepository;
-    }
-
-    public async Task<IEnumerable<ProductGroupResponseDTO>> GetAllProductGroups()
-    {
-        var groups = await _productGroupRepository.GetAllAsync();
-        return groups.Select(g => new ProductGroupResponseDTO
+        var groups = await productGroupRepository.GetAllAsync();
+        return groups.Select(g => new ProductGroupResponseDto
         {
             Id = g.Id,
             Name = g.Name,
@@ -29,15 +22,15 @@ public class ProductGroupService : IProductGroupService
         });
     }
 
-    public async Task<ProductGroupResponseDTO?> GetProductGroupById(int id)
+    public async Task<ProductGroupResponseDto?> GetProductGroupById(int id)
     {
-        var group = await _productGroupRepository.GetByIdAsync(id);
+        var group = await productGroupRepository.GetByIdAsync(id);
         if (group == null)
         {
             return null;
         }
 
-        return new ProductGroupResponseDTO
+        return new ProductGroupResponseDto
         {
             Id = group.Id,
             Name = group.Name,
@@ -49,7 +42,7 @@ public class ProductGroupService : IProductGroupService
         };
     }
 
-    public async Task AddProductGroup(ProductGroupRequestDTO groupDto)
+    public async Task AddProductGroup(ProductGroupRequestDto groupDto)
     {
         var group = new ProductGroup
         {
@@ -61,6 +54,6 @@ public class ProductGroupService : IProductGroupService
             CreatedDate = DateTime.UtcNow
         };
 
-        await _productGroupRepository.AddAsync(group);
+        await productGroupRepository.AddAsync(group);
     }
 }

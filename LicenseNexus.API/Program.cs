@@ -33,6 +33,9 @@ if (archMode == "Redis")
     builder.Services.AddScoped<IVendorRepository, RedisVendorRepository>();
     builder.Services.AddScoped<ICategoryRepository, RedisCategoryRepository>();
     builder.Services.AddScoped<IProductGroupRepository, RedisProductGroupRepository>();
+    builder.Services.AddScoped<ICurrencyRepository, RedisCurrencyRepository>();
+    builder.Services.AddScoped<IUnitMeasureRepository, RedisUnitMeasureRepository>();
+    builder.Services.AddScoped<IProductTypeRepository, RedisProductTypeRepository>();
     
     builder.Services.AddScoped<IProductAggregatorService, ProductAggregatorService>();
 }
@@ -45,7 +48,9 @@ else // Mongo
     builder.Services.AddScoped<IVendorRepository, MongoVendorRepository>();
     builder.Services.AddScoped<ICategoryRepository, MongoCategoryRepository>();
     builder.Services.AddScoped<IProductGroupRepository, MongoProductGroupRepository>();
-    
+    builder.Services.AddScoped<ICurrencyRepository, MongoCurrencyRepository>();
+    builder.Services.AddScoped<IUnitMeasureRepository, MongoUnitMeasureRepository>();
+    builder.Services.AddScoped<IProductTypeRepository, MongoProductTypeRepository>();
 }
 
 builder.Services.AddScoped<IOrderRepository, SqlOrderRepository>();
@@ -53,6 +58,10 @@ builder.Services.AddScoped<IOrderRepository, SqlOrderRepository>();
 builder.Services.AddScoped<IVendorService, VendorService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductGroupService, ProductGroupService>();
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
+builder.Services.AddScoped<IUnitMeasureService, UnitMeasureService>();
+builder.Services.AddScoped<IProductTypeService, ProductTypeService>();
+
 
 var app = builder.Build();
 

@@ -5,19 +5,12 @@ using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
 
-public class CategoryService : ICategoryService
+public class CategoryService(ICategoryRepository categoryRepository) : ICategoryService
 {
-    private readonly ICategoryRepository _categoryRepository;
-
-    public CategoryService(ICategoryRepository categoryRepository)
+    public async Task<IEnumerable<CategoryResponseDto>> GetAllCategories()
     {
-        _categoryRepository = categoryRepository;
-    }
-
-    public async Task<IEnumerable<CategoryResponseDTO>> GetAllCategories()
-    {
-        var categories = await _categoryRepository.GetAllAsync();
-        return categories.Select(c => new CategoryResponseDTO
+        var categories = await categoryRepository.GetAllAsync();
+        return categories.Select(c => new CategoryResponseDto
         {
             Id = c.Id,
             CategoryName = c.CategoryName,
@@ -28,15 +21,15 @@ public class CategoryService : ICategoryService
         });
     }
 
-    public async Task<CategoryResponseDTO?> GetCategoryById(int id)
+    public async Task<CategoryResponseDto?> GetCategoryById(int id)
     {
-        var category = await _categoryRepository.GetByIdAsync(id);
+        var category = await categoryRepository.GetByIdAsync(id);
         if (category == null)
         {
             return null;
         }
 
-        return new CategoryResponseDTO
+        return new CategoryResponseDto
         {
             Id = category.Id,
             CategoryName = category.CategoryName,
@@ -47,7 +40,7 @@ public class CategoryService : ICategoryService
         };
     }
 
-    public async Task AddCategory(CategoryRequestDTO categoryDto)
+    public async Task AddCategory(CategoryRequestDto categoryDto)
     {
         var category = new Category
         {
@@ -58,6 +51,6 @@ public class CategoryService : ICategoryService
             CreatedDate = DateTime.UtcNow
         };
 
-        await _categoryRepository.AddAsync(category);
+        await categoryRepository.AddAsync(category);
     }
 }

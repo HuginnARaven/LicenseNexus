@@ -7,34 +7,34 @@ namespace LicenseNexus.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductGroupController(IProductGroupService productGroupService) : ControllerBase
+    public class CurrencyController(ICurrencyService currencyService) : ControllerBase
     {
         [HttpGet("")]
         public async Task<IActionResult> GetAll()
         {
-            var groups = await productGroupService.GetAllProductGroups();
-            return Ok(groups);
+            var currencies = await currencyService.GetAllCurrencies();
+            return Ok(currencies);
         }
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var group = await productGroupService.GetProductGroupById(id);
-            if (group == null)
+            var currency = await currencyService.GetCurrencyById(id);
+            if (currency == null)
             {
                 return NotFound();
             }
-            return Ok(group);
+            return Ok(currency);
         }
 
         [HttpPost("")]
-        public async Task<IActionResult> Create([FromBody] ProductGroupRequestDto group)
+        public async Task<IActionResult> Create([FromBody] CurrencyRequestDto currency)
         {
-            if (group == null)
+            if (currency == null)
             {
                 return BadRequest();
             }
-            await productGroupService.AddProductGroup(group);
+            await currencyService.AddCurrency(currency);
             return Ok();
         }
     }
