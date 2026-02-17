@@ -20,9 +20,6 @@ public class Category
     [Column("description")]
     public string? Description { get; set; }
 
-    [Column("vendor_id")]
-    public int VendorId { get; set; }
-
     [Column("created_date")]
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
@@ -30,8 +27,5 @@ public class Category
     public string? Author { get; set; }
 
     // Navigation Properties
-    [ForeignKey("VendorId")]
-    public Vendor? Vendor { get; set; }
-    
     public ICollection<ProductGroup> ProductGroups { get; set; } = new List<ProductGroup>();
 }

@@ -21,8 +21,10 @@ public class MongoCategoryRepository: ICategoryRepository
         return docs.Select(d => new Category 
         { 
             Id = d.Id, 
-            CategoryName = d.Name,
             IsActive = d.IsActive,
+            CategoryName = d.Name,
+            Description = d.Description,
+            CreatedDate = d.CreatedDate,
             ProductGroups = d.Groups.Select(g => new ProductGroup
             {
                 Id = g.Id,
@@ -38,7 +40,21 @@ public class MongoCategoryRepository: ICategoryRepository
         var doc = await _context.Categories.Find(c => c.Id == id).FirstOrDefaultAsync();
         if (doc == null) return null;
             
-        return new Category { Id = doc.Id, CategoryName = doc.Name, IsActive = doc.IsActive };
+        return new Category
+        {
+            Id = doc.Id, 
+            IsActive = doc.IsActive, 
+            CategoryName = doc.Name, 
+            Description = doc.Description,
+            CreatedDate = doc.CreatedDate,
+            ProductGroups = doc.Groups.Select(g => new ProductGroup
+            {
+                Id = g.Id,
+                Name = g.Name,
+                IsActive = g.IsActive,
+                CategoryId = doc.Id
+            }).ToList()
+        };
     }
 
     public async Task AddAsync(Category category)
@@ -49,8 +65,9 @@ public class MongoCategoryRepository: ICategoryRepository
         var doc = new CategoryDocument
         {
             Id = id,
+            IsActive = category.IsActive,
             Name = category.CategoryName,
-            IsActive = category.IsActive
+            Description = category.Description,
         };
 
         await _context.Categories.InsertOneAsync(doc);

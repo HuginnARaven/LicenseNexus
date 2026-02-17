@@ -1,3 +1,5 @@
+using LicenseNexus.Application.DTOs;
+using LicenseNexus.Application.Interfaces;
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Domain.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -6,12 +8,12 @@ namespace LicenseNexus.API.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class DevController(IProductRepository repository) : ControllerBase
+public class DevController(IProductRepository productRepository, IVendorService vendorService) : ControllerBase
 {
     [HttpGet("product/{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var product = await repository.GetByIdAsync(id);
+        var product = await productRepository.GetByIdAsync(id);
         if (product == null)
         {
             return NotFound();
@@ -22,7 +24,7 @@ public class DevController(IProductRepository repository) : ControllerBase
     [HttpGet("product")]
     public async Task<IActionResult> GetAll()
     {
-        var products = await repository.GetAllAsync();
+        var products = await productRepository.GetAllAsync();
         return Ok(products);
     }
 
@@ -33,7 +35,7 @@ public class DevController(IProductRepository repository) : ControllerBase
         {
             return BadRequest();
         }
-        await repository.AddAsync(product);
+        await productRepository.AddAsync(product);
         return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
     }
 
@@ -45,26 +47,26 @@ public class DevController(IProductRepository repository) : ControllerBase
             return BadRequest();
         }
         
-        var existingProduct = await repository.GetByIdAsync(id);
+        var existingProduct = await productRepository.GetByIdAsync(id);
         if (existingProduct == null)
         {
             return NotFound();
         }
 
-        await repository.UpdateAsync(product);
+        await productRepository.UpdateAsync(product);
         return NoContent();
     }
 
     [HttpDelete("product/{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var existingProduct = await repository.GetByIdAsync(id);
+        var existingProduct = await productRepository.GetByIdAsync(id);
         if (existingProduct == null)
         {
             return NotFound();
         }
 
-        await repository.DeleteAsync(id);
+        await productRepository.DeleteAsync(id);
         return NoContent();
     }
 }
