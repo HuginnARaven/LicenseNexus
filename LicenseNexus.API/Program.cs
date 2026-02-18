@@ -61,7 +61,7 @@ builder.Services.AddScoped<IProductGroupService, ProductGroupService>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<IUnitMeasureService, UnitMeasureService>();
 builder.Services.AddScoped<IProductTypeService, ProductTypeService>();
-
+builder.Services.AddScoped<IProductService, ProductService>();
 
 var app = builder.Build();
 

@@ -69,3 +69,63 @@ GET {{API_HostAddress}}/UnitMeasure/1/
 Accept: application/json
 
 ###
+POST {{API_HostAddress}}/Product/
+Content-Type: application/json
+
+{
+  "sku": "SKU123",
+  "title": "Test Product",
+  "shortDescription": "A test product",
+  "vendorId": 1,
+  "productTypeId": 1,
+  "unitMeasureId": 1,
+  "currencyId": 1,
+  "productGroupId": 1,
+  "quantityMin": 1,
+  "quantityMax": 100,
+  "startDate": "2023-01-01T00:00:00Z",
+  "endDate": "2023-12-31T23:59:59Z",
+  "isPromo": false,
+  "isTop": true,
+  "isNew": true,
+  "logo": "http://example.com/logo.png",
+  "author": "Tester"
+}
+
+###
+GET {{API_HostAddress}}/Product/
+Accept: application/json
+
+###
+GET {{API_HostAddress}}/Product/3/
+Accept: application/json
+
+###
+PUT {{API_HostAddress}}/Product/3/
+Content-Type: application/json
+
+{
+  "sku": "SKU123-UPDATED",
+  "title": "Test Product Updated",
+  "shortDescription": "A test product updated",
+  "vendorId": 1,
+  "productTypeId": 1,
+  "unitMeasureId": 1,
+  "currencyId": 1,
+  "productGroupId": 1,
+  "quantityMin": 1,
+  "quantityMax": 100,
+  "startDate": "2023-01-01T00:00:00Z",
+  "endDate": "2023-12-31T23:59:59Z",
+  "isPromo": false,
+  "isTop": true,
+  "isNew": true,
+  "logo": "http://example.com/logo.png",
+  "author": "Tester"
+}
+
+###
+DELETE {{API_HostAddress}}/Product/3/
+Accept: application/json
+
+###

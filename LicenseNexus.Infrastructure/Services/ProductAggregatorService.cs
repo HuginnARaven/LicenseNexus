@@ -36,6 +36,15 @@ public class ProductAggregatorService : IProductAggregatorService
         }
     }
 
+    public async Task CacheProductModelAsync(ProductModel productModel)
+    {
+        var json = JsonSerializer.Serialize(productModel);
+        await _redisDb.StringSetAsync($"product:{productModel.Id}", json);
+
+        var indexKey = $"category:{productModel.Classification.Group.CategoryId}:products";
+        await _redisDb.SetAddAsync(indexKey, productModel.Id.ToString());
+    }
+
     public async Task AggregateAllProductsAsync()
     {
         var allProducts = await GetBaseQuery().ToListAsync();
@@ -101,19 +110,19 @@ public class ProductAggregatorService : IProductAggregatorService
             
             Tags = p.ProductTags.Select(pt => pt.Tag?.Name ?? "").ToList(),
             
-            Classification = new Classification
+            Classification = new ClassificationModel
             {
                 TypeId = p.ProductTypeId,
                 TypeName = p.ProductType?.TypeName ?? "",
                 UnitMeasureId = p.UnitMeasureId,
                 UnitMeasureName = p.UnitMeasure?.Name ?? "",
-                Vendor = new Vendor
+                Vendor = new VendorModel
                 {
                     Id = p.VendorId,
                     Name = p.Vendor?.Name ?? "",
                     CountryCode = p.Vendor?.CountryCode ?? ""
                 },
-                Group = new Group
+                Group = new GroupModel
                 {
                     Id = p.ProductGroupId,
                     Name = p.ProductGroup?.Name ?? "",
@@ -122,7 +131,7 @@ public class ProductAggregatorService : IProductAggregatorService
                 }
             },
             
-            Attributes = new Attributes
+            Attributes = new AttributesModel
             {
                 ShortDescription = p.ShortDescription ?? "",
                 QuantityMin = p.QuantityMin,
@@ -137,17 +146,21 @@ public class ProductAggregatorService : IProductAggregatorService
                 Author = p.Author
             },
             
-            Descriptions = p.FullDescriptions.Select(d => new Description
+            Descriptions = p.FullDescriptions.Select(d => new DescriptionModel
             {
                 Id = d.Id,
                 FullText = d.FullText,
                 LanguageCode = d.LanguageCode
             }).ToList(),
             
-            CurrencyId = p.CurrencyId,
-            CurrencyCode = p.Currency?.LiteralCode ?? "",
+            Currency = new CurrencyModel
+            {
+                Id = p.CurrencyId,
+                LiteralCode = p.Currency?.LiteralCode ?? "",
+                Name = p.Currency?.Name ?? ""
+            },
             
-            Prices = p.Prices.Select(pr => new ProductPrice
+            Prices = p.Prices.Select(pr => new ProductPriceModel
             {
                 Id = pr.Id,
                 Price = pr.Price,

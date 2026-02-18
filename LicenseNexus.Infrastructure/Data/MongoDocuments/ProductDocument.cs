@@ -33,8 +33,8 @@ public class ProductDocument
     [BsonElement("description")]
     public List<DescriptionDoc> Descriptions { get; set; } = new();
     
-    [BsonElement("currency_code")]
-    public string CurrencyCode { get; set; } = string.Empty;
+    [BsonElement("currency")]
+    public CurrencyDoc Currency { get; set; } = new();
     
     [BsonElement("prices")]
     public List<ProductPriceDoc> Prices { get; set; } = new();
@@ -42,8 +42,14 @@ public class ProductDocument
 
 public class ClassificationDoc
 {
+    [BsonElement("type_id")]
+    public int TypeId { get; set; }
+
     [BsonElement("type_name")]
     public string TypeName { get; set; } = string.Empty;
+
+    [BsonElement("unit_measure_id")]
+    public int UnitMeasureId { get; set; }
 
     [BsonElement("unit_measure_name")]
     public string UnitMeasureName { get; set; } = string.Empty;
@@ -147,4 +153,16 @@ public class ProductPriceDoc
 
     [BsonElement("start_date")]
     public DateTime? StartDate { get; set; }
+}
+
+public class CurrencyDoc
+{
+    [BsonElement("id")]
+    public int Id { get; set; }
+
+    [BsonElement("literal_code")]
+    public string LiteralCode { get; set; } = string.Empty;
+
+    [BsonElement("name")]
+    public string Name { get; set; } = string.Empty;
 }

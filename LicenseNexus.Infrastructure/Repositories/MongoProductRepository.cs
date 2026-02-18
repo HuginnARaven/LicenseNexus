@@ -9,10 +9,12 @@ namespace LicenseNexus.Infrastructure.Repositories;
 public class MongoProductRepository : IProductRepository
 {
     private readonly IMongoCollection<ProductDocument> _collection;
+    private readonly MongoContext _context;
 
     public MongoProductRepository(MongoContext context)
     {
         _collection = context.Products;
+        _context = context;
     }
 
     public async Task<ProductModel?> GetByIdAsync(int id)
@@ -29,14 +31,18 @@ public class MongoProductRepository : IProductRepository
 
     public async Task AddAsync(ProductModel product)
     {
+        var id = await _context.GetNextSequenceValueAsync("product_id");
+        product.Id = id;
         var doc = MapToDocument(product);
         await _collection.InsertOneAsync(doc);
     }
 
     public async Task UpdateAsync(ProductModel product)
     {
-        var doc = MapToDocument(product);
-        await _collection.ReplaceOneAsync(x => x.ProductId == product.Id, doc);
+        var newDoc = MapToDocument(product);
+        var oldDoc = await _collection.Find(x => x.ProductId == product.Id).Limit(100).FirstAsync();
+        newDoc.InternalId = oldDoc.InternalId;
+        await _collection.ReplaceOneAsync(x => x.ProductId == product.Id, newDoc);
     }
 
     public async Task DeleteAsync(int id)
@@ -90,7 +96,12 @@ public class MongoProductRepository : IProductRepository
                 FullText = d.FullText,
                 LanguageCode = d.LanguageCode
             }).ToList(),
-            CurrencyCode = model.CurrencyCode,
+            Currency = new CurrencyDoc
+            {
+                Id = model.Currency.Id,
+                LiteralCode = model.Currency.LiteralCode,
+                Name = model.Currency.Name
+            },
             Prices = model.Prices.Select(p => new ProductPriceDoc
             {
                 Price = p.Price,
@@ -112,17 +123,17 @@ public class MongoProductRepository : IProductRepository
             Title = doc.Title,
             IsActive = doc.IsActive,
             Tags = doc.Tags,
-            Classification = new Classification
+            Classification = new ClassificationModel
             {
                 TypeName = doc.Classification.TypeName,
                 UnitMeasureName = doc.Classification.UnitMeasureName,
-                Vendor = new Vendor
+                Vendor = new VendorModel
                 {
                     Id = doc.Classification.Vendor.Id,
                     Name = doc.Classification.Vendor.Name,
                     CountryCode = doc.Classification.Vendor.CountryCode
                 },
-                Group = new Group
+                Group = new GroupModel
                 {
                     Id = doc.Classification.Group.Id,
                     Name = doc.Classification.Group.Name,
@@ -130,7 +141,7 @@ public class MongoProductRepository : IProductRepository
                     CategoryName = doc.Classification.Group.CategoryName
                 }
             },
-            Attributes = new Attributes
+            Attributes = new AttributesModel
             {
                 ShortDescription = doc.Attributes.ShortDescription ?? string.Empty,
                 QuantityMin = doc.Attributes.QuantityMin,
@@ -144,13 +155,18 @@ public class MongoProductRepository : IProductRepository
                 CreatedDate = doc.Attributes.CreatedDate,
                 Author = doc.Attributes.Author
             },
-            Descriptions = doc.Descriptions.Select(d => new Description
+            Descriptions = doc.Descriptions.Select(d => new DescriptionModel
             {
                 FullText = d.FullText,
                 LanguageCode = d.LanguageCode
             }).ToList(),
-            CurrencyCode = doc.CurrencyCode,
-            Prices = doc.Prices.Select(p => new ProductPrice
+            Currency = new CurrencyModel
+            {
+                Id = doc.Currency.Id,
+                LiteralCode = doc.Currency.LiteralCode,
+                Name = doc.Currency.Name
+            },
+            Prices = doc.Prices.Select(p => new ProductPriceModel
             {
                 Price = p.Price,
                 TermDuration = p.TermDuration,

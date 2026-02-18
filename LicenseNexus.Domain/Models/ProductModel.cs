@@ -7,33 +7,32 @@ public class ProductModel
     public string Title { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public List<string> Tags { get; set; } = new();
-    public Classification Classification { get; set; } = new();
-    public Attributes Attributes { get; set; } = new();
-    public List<Description> Descriptions { get; set; } = new();
-    public int? CurrencyId { get; set; } // Only for updating Product.Currency in mssql
-    public string CurrencyCode { get; set; } = string.Empty;
-    public List<ProductPrice> Prices { get; set; } = new();
+    public ClassificationModel Classification { get; set; } = new();
+    public AttributesModel Attributes { get; set; } = new();
+    public List<DescriptionModel> Descriptions { get; set; } = new();
+    public CurrencyModel Currency { get; set; } = new();
+    public List<ProductPriceModel> Prices { get; set; } = new();
 }
 
-public class Classification
+public class ClassificationModel
 {
-    public int? TypeId { get; set; } // Only for updating Product.Product_type in mssql
+    public int TypeId { get; set; }
     public string TypeName { get; set; } = string.Empty;
-    public int? UnitMeasureId { get; set; } // Only for updating Product.Unit_measure in mssql
+    public int UnitMeasureId { get; set; }
     public string UnitMeasureName { get; set; } = string.Empty;
         
-    public Vendor Vendor { get; set; } = new();
-    public Group Group { get; set; } = new();
+    public VendorModel Vendor { get; set; } = new();
+    public GroupModel Group { get; set; } = new();
 }
 
-public class Vendor
+public class VendorModel
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string CountryCode { get; set; } = string.Empty;
 }
 
-public class Group
+public class GroupModel
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -41,7 +40,7 @@ public class Group
     public string CategoryName { get; set; } = string.Empty;
 }
 
-public class Attributes
+public class AttributesModel
 {
     public string ShortDescription { get; set; } = string.Empty;
     public int QuantityMin { get; set; }
@@ -56,14 +55,14 @@ public class Attributes
     public string? Author { get; set; }
 }
 
-public class Description
+public class DescriptionModel
 {
     public int? Id { get; set; } // Only for updating Product.Full_description in mssql
     public string FullText { get; set; } = string.Empty;
     public string LanguageCode { get; set; } = string.Empty;
 }
 
-public class ProductPrice
+public class ProductPriceModel
 {
     public int? Id { get; set; } // Only for updating Product.Product_price in mssql
     public decimal Price { get; set; }
@@ -72,4 +71,11 @@ public class ProductPrice
     public string? Segment { get; set; }
     public string? CountryCode { get; set; }
     public DateTime? StartDate { get; set; }
+}
+
+public class CurrencyModel
+{
+    public int Id { get; set; }
+    public string LiteralCode { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
 }

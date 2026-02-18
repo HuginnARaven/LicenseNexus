@@ -28,6 +28,7 @@ public class RedisProductRepository: IProductRepository
 
         if (json.IsNullOrEmpty)
         {
+            Console.WriteLine($"[REDIS]: product:{id} not found");
             var product = await _sqlContext.Products
                 .Include(p => p.Vendor) 
                 .FirstOrDefaultAsync(p => p.Id == id);
@@ -70,9 +71,14 @@ public class RedisProductRepository: IProductRepository
     {
         var product = MapToDomain(productModel);
         _sqlContext.Products.Add(product);
-        await _sqlContext.SaveChangesAsync();
         
-        await _aggregator.AggregateProductAsync(product.Id);
+        var res = await _sqlContext.SaveChangesAsync();
+        if (res > 0)
+        {
+            productModel.Id = product.Id;
+            await _aggregator.CacheProductModelAsync(productModel);
+            Console.WriteLine($"[REDIS]: cached product:{product.Id}");
+        }
     }
 
     public async Task UpdateAsync(ProductModel productModel)
@@ -105,9 +111,9 @@ public class RedisProductRepository: IProductRepository
             Title = model.Title,
             ShortDescription = model.Attributes.ShortDescription,
             VendorId = model.Classification.Vendor.Id,
-            ProductTypeId = model.Classification.TypeId ?? 0,
-            UnitMeasureId = model.Classification.UnitMeasureId ?? 0,
-            CurrencyId = model.CurrencyId ?? 0,
+            ProductTypeId = model.Classification.TypeId,
+            UnitMeasureId = model.Classification.UnitMeasureId,
+            CurrencyId = model.Currency.Id,
             ProductGroupId = model.Classification.Group.Id,
             QuantityMin = model.Attributes.QuantityMin,
             QuantityMax = model.Attributes.QuantityMax,

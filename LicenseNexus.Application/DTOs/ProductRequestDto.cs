@@ -2,8 +2,8 @@
 
 public class ProductRequestDTO
 {
-    public string? Sku { get; set; }
-    public string Title { get; set; }
+    public string Sku { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
     public string? ShortDescription { get; set; }
     public int VendorId { get; set; }
     public int ProductTypeId { get; set; }
