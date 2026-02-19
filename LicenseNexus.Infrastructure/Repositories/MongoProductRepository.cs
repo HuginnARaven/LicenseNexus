@@ -29,12 +29,73 @@ public class MongoProductRepository : IProductRepository
         return docs.Select(MapToModel);
     }
 
-    public async Task AddAsync(ProductModel product)
+    public async Task<PaginatedResult<ProductModel>> GetPaginatedAsync(
+        int page, int pageSize, 
+        int? categoryId, int? groupId, 
+        int? vendorId, string? search,
+        double? priceFrom, double? priceTo)
+    {
+        var builder = Builders<ProductDocument>.Filter;
+        var filter = builder.Empty;
+
+        if (categoryId.HasValue)
+        {
+            filter &= builder.Eq(x => x.Classification.Group.CategoryId, categoryId.Value);
+        }
+
+        if (groupId.HasValue)
+        {
+            filter &= builder.Eq(x => x.Classification.Group.Id, groupId.Value);
+        }
+
+        if (vendorId.HasValue)
+        {
+            filter &= builder.Eq(x => x.Classification.Vendor.Id, vendorId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            filter &= builder.Regex(x => x.Title, new MongoDB.Bson.BsonRegularExpression(search, "i")) |
+                      builder.Regex(x => x.Sku, new MongoDB.Bson.BsonRegularExpression(search, "i"));
+        }
+
+        if (priceFrom.HasValue || priceTo.HasValue)
+        {
+            var priceFilter = Builders<ProductPriceDoc>.Filter.Empty;
+            if (priceFrom.HasValue)
+            {
+                priceFilter &= Builders<ProductPriceDoc>.Filter.Gte(p => p.Price, (decimal)priceFrom.Value);
+            }
+            if (priceTo.HasValue)
+            {
+                priceFilter &= Builders<ProductPriceDoc>.Filter.Lte(p => p.Price, (decimal)priceTo.Value);
+            }
+            filter &= builder.ElemMatch(x => x.Prices, priceFilter);
+        }
+
+        var totalCount = await _collection.CountDocumentsAsync(filter);
+        
+        var documents = await _collection.Find(filter)
+            .Skip((page - 1) * pageSize)
+            .Limit(pageSize)
+            .ToListAsync();
+
+        return new PaginatedResult<ProductModel>
+        {
+            Items = documents.Select(MapToModel).ToList(),
+            TotalCount = (int)totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
+    public async Task<ProductModel?> AddAsync(ProductModel product)
     {
         var id = await _context.GetNextSequenceValueAsync("product_id");
         product.Id = id;
         var doc = MapToDocument(product);
         await _collection.InsertOneAsync(doc);
+        return product;
     }
 
     public async Task UpdateAsync(ProductModel product)

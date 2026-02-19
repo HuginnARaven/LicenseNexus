@@ -22,7 +22,7 @@ builder.Services.AddSingleton<RedisContext>();
 
 
 var archMode = builder.Configuration["ArchitectureMode"];
-Console.WriteLine(archMode);
+
 if (archMode == "Redis")
 {
     builder.Services.AddScoped<DbContext>(provider => provider.GetRequiredService<ExtendedSqlContext>());
@@ -37,7 +37,7 @@ if (archMode == "Redis")
     builder.Services.AddScoped<IUnitMeasureRepository, RedisUnitMeasureRepository>();
     builder.Services.AddScoped<IProductTypeRepository, RedisProductTypeRepository>();
     
-    builder.Services.AddScoped<IProductAggregatorService, ProductAggregatorService>();
+    builder.Services.AddScoped<IProductCacheService, ProductCacheService>();
 }
 else // Mongo
 {
@@ -69,6 +69,29 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+}
+
+if (archMode == "Redis")
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        try
+        {
+            var cacheService = services.GetRequiredService<IProductCacheService>();
+            
+            Console.WriteLine("Redis cache filling begins...");
+            
+            await cacheService.CacheAllProductsAsync();
+            
+            Console.WriteLine("Redis cache successfully filled!");
+        }
+        catch (Exception ex)
+        {
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogError(ex, "Error populating Redis cache.");
+        }
+    }
 }
 
 app.UseHttpsRedirection();

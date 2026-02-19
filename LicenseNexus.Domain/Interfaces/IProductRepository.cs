@@ -7,7 +7,12 @@ public interface IProductRepository
 {
     Task<ProductModel?> GetByIdAsync(int id);
     Task<IEnumerable<ProductModel>> GetAllAsync();
-    Task AddAsync(ProductModel product);
+    Task<PaginatedResult<ProductModel>> GetPaginatedAsync(
+        int page, int pageSize, 
+        int? categoryId, int? groupId, 
+        int? vendorId, string? search,
+        double? priceFrom, double? priceTo);
+    Task<ProductModel?> AddAsync(ProductModel product);
     Task UpdateAsync(ProductModel product);
     Task DeleteAsync(int id);
 }

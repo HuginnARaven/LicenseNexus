@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using LicenseNexus.API.Helpers;
 using LicenseNexus.Domain.Models;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
@@ -6,18 +7,18 @@ using StackExchange.Redis;
 
 namespace LicenseNexus.Infrastructure.Services;
 
-public class ProductAggregatorService : IProductAggregatorService
+public class ProductCacheService : IProductCacheService
 {
     private readonly ExtendedSqlContext _sqlContext;
     private readonly IDatabase _redisDb;
 
-    public ProductAggregatorService(ExtendedSqlContext sqlContext, RedisContext redisContext)
+    public ProductCacheService(ExtendedSqlContext sqlContext, RedisContext redisContext)
     {
         _sqlContext = sqlContext;
         _redisDb = redisContext.Database;
     }
 
-    public async Task AggregateProductAsync(int productId)
+    public async Task CacheProductByIdAsync(int productId)
     {
         var productEntity = await GetBaseQuery()
             .FirstOrDefaultAsync(p => p.Id == productId);
@@ -25,39 +26,114 @@ public class ProductAggregatorService : IProductAggregatorService
         if (productEntity == null) return;
             
         var redisModel = MapToRedisModel(productEntity);
-        var json = JsonSerializer.Serialize(redisModel);
-
-        await _redisDb.StringSetAsync($"product:{productEntity.Id}", json);
         
-        if (productEntity.ProductGroup != null)
-        {
-            var indexKey = $"category:{productEntity.ProductGroup.CategoryId}:products";
-            await _redisDb.SetAddAsync(indexKey, productEntity.Id.ToString());
-        }
+        await CacheProductModelAsync(redisModel);
     }
 
     public async Task CacheProductModelAsync(ProductModel productModel)
     {
         var json = JsonSerializer.Serialize(productModel);
-        await _redisDb.StringSetAsync($"product:{productModel.Id}", json);
+        var batch = _redisDb.CreateBatch();
+        
+        var productKey = $"product:{productModel.Id}";
+        _ = batch.StringSetAsync(productKey, json);
+        
+        if (productModel.Classification?.Group.CategoryId != null)
+        {
+            var categoryIndexKey = $"idx:category:{productModel.Classification.Group.CategoryId}:products";
+            _ = batch.SetAddAsync(categoryIndexKey, productModel.Id);
+        }
+        
+        if (productModel.Classification?.Group.Id != null)
+        {
+            var groupKey = $"idx:group:{productModel.Classification?.Group.Id}:products";
+            _ = batch.SetAddAsync(groupKey, productModel.Id);
+        }
+        
+        if (productModel.Classification?.Vendor?.Id != null)
+        {
+            var vendorKey = $"idx:vendor:{productModel.Classification?.Vendor.Id}:products";
+            _ = batch.SetAddAsync(vendorKey, productModel.Id);
+        }
+        
+        var minPrice = productModel.Prices?
+            .Where(p => p.Price > 0)
+            .Select(p => p.Price)
+            .DefaultIfEmpty(0)
+            .Min();
+        
+        if (minPrice > 0)
+        {
+            _ = batch.SortedSetAddAsync("idx:price:products", productModel.Id, (double)minPrice);
+        }
+        
+        var tokens = SearchTokenizer.Tokenize(productModel.Title);
+        foreach (var token in tokens)
+        {
+            _ = batch.SetAddAsync($"idx:word:{token}:products", productModel.Id);
+        }
+        
+        batch.Execute();
+        await Task.CompletedTask;
+    }
+    
+    public async Task RemoveProductCacheAsync(int productId)
+    {
+        var productKey = $"product:{productId}";
+        
+        var oldJson = await _redisDb.StringGetAsync(productKey);
+        if (oldJson.IsNullOrEmpty) return;
 
-        var indexKey = $"category:{productModel.Classification.Group.CategoryId}:products";
-        await _redisDb.SetAddAsync(indexKey, productModel.Id.ToString());
+        var oldModel = JsonSerializer.Deserialize<ProductModel>((string)oldJson!);
+        if (oldModel == null) return;
+        
+        var batch = _redisDb.CreateBatch();
+        
+        if (oldModel.Classification.Group?.CategoryId != null)
+        {
+            var oldCatKey = $"idx:category:{oldModel.Classification.Group?.CategoryId}:products";
+            _ = batch.SetRemoveAsync(oldCatKey, productId);
+        }
+        
+        if (oldModel.Classification.Group?.Id != null)
+        {
+            var oldGroupKey = $"idx:group:{oldModel.Classification.Group?.Id}:products";
+            _ = batch.SetRemoveAsync(oldGroupKey, productId);
+        }
+        
+        if (oldModel.Classification?.Vendor?.Id != null)
+        {
+            var oldVendorKey = $"idx:vendor:{oldModel.Classification?.Vendor.Id}:products";
+            _ = batch.SetRemoveAsync(oldVendorKey, productId);
+        }
+        
+        var oldTokens = SearchTokenizer.Tokenize(oldModel.Title);
+        foreach (var token in oldTokens)
+        {
+            _ = batch.SetRemoveAsync($"idx:word:{token}:products", productId);
+        }
+        
+        _ = batch.SortedSetRemoveAsync("idx:price:products", productId);
+        
+        _ = batch.KeyDeleteAsync(productKey);
+        
+        batch.Execute();
+        await Task.CompletedTask;
     }
 
-    public async Task AggregateAllProductsAsync()
+    public async Task CacheAllProductsAsync()
     {
         var allProducts = await GetBaseQuery().ToListAsync();
 
         foreach (var product in allProducts)
         {
             var redisModel = MapToRedisModel(product);
-            var json = JsonSerializer.Serialize(redisModel);
-            await _redisDb.StringSetAsync($"product:{product.Id}", json);
+            await RemoveProductCacheAsync(product.Id);
+            await CacheProductModelAsync(redisModel);
         }
     }
     
-    public async Task BuildIndexesAsync()
+    public async Task BuildIndexesAsync()  // obsolete
     {
         var products = await _sqlContext.Products
             .Include(p => p.ProductGroup)
@@ -83,6 +159,16 @@ public class ProductAggregatorService : IProductAggregatorService
                 await _redisDb.SetAddAsync(redisKey, productIds);
             }
         }
+    }
+    
+    private static IEnumerable<string> OLDTokenize(string text) // obsolete
+    {
+        if (string.IsNullOrWhiteSpace(text)) return Enumerable.Empty<string>();
+
+        return text.ToLower()
+            .Split(new[] { ' ', ',', '.', '-', '_', '/', '(', ')' }, StringSplitOptions.RemoveEmptyEntries)
+            .Where(w => w.Length > 2)
+            .Distinct();
     }
 
     private IQueryable<Domain.Entities.Product> GetBaseQuery()

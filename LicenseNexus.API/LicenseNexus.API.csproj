@@ -23,10 +23,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Extensions\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\LicenseNexus.Application\LicenseNexus.Application.csproj" />
       <ProjectReference Include="..\LicenseNexus.Infrastructure\LicenseNexus.Infrastructure.csproj" />
     </ItemGroup>

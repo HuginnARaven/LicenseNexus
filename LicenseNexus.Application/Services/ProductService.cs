@@ -25,10 +25,24 @@ public class ProductService(
         return await productRepository.GetAllAsync();
     }
 
-    public async Task AddAsync(ProductRequestDTO product)
+    public async Task<PaginatedResult<ProductModel>> GetPaginatedAsync(ProductFilterDto filter)
+    {
+        Console.WriteLine("GetPaginatedAsync");
+        return await productRepository.GetPaginatedAsync(
+            filter.Page, 
+            filter.PageSize, 
+            filter.CategoryId, 
+            filter.GroupId, 
+            filter.VendorId, 
+            filter.Search, 
+            filter.PriceFrom, 
+            filter.PriceTo);
+    }
+
+    public async Task<ProductModel?> AddAsync(ProductRequestDTO product)
     {
         var model = await MapDtoToModel(product);
-        await productRepository.AddAsync(model);
+        return await productRepository.AddAsync(model);
     }
 
     public async Task UpdateAsync(int id, ProductRequestDTO product)

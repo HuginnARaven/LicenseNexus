@@ -26,6 +26,14 @@ namespace LicenseNexus.API.Controllers
             var products = await productService.GetAllAsync();
             return Ok(products);
         }
+        
+        [HttpGet("catalog")]
+        public async Task<IActionResult> GetPaginated([FromQuery] ProductFilterDto filter)
+        {
+            var products = await productService.GetPaginatedAsync(filter);
+            Console.WriteLine(filter);
+            return Ok(products);
+        }
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ProductRequestDTO product)
@@ -34,8 +42,8 @@ namespace LicenseNexus.API.Controllers
             {
                 return BadRequest();
             }
-            await productService.AddAsync(product);
-            return Ok();
+            
+            return Ok(await productService.AddAsync(product));
         }
 
         [HttpPut("{id}")]
