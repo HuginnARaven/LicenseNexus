@@ -9,5 +9,6 @@ public interface IVendorRepository
     Task<IEnumerable<Vendor>> GetAllAsync();
     Task<Vendor?> GetByIdAsync(int id);
     Task AddAsync(Vendor vendor);
-    //TODO: mb add Update/Delete 
+    Task UpdateAsync(Vendor vendor);
+    //TODO: mb add Delete 
 }

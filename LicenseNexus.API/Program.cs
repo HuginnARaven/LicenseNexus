@@ -19,7 +19,9 @@ builder.Services.AddDbContext<ExtendedSqlContext>(options => options.UseSqlServe
 builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDbSettings")); // mb need to change MongoDbSettings to MongoContext.MongoDbSettings?
 builder.Services.AddScoped<MongoContext>();
 builder.Services.AddSingleton<RedisContext>();
-
+builder.Services.AddSingleton<InMemoryEventBus>();
+builder.Services.AddSingleton<IEventPublisher>(sp => sp.GetRequiredService<InMemoryEventBus>());
+builder.Services.AddHostedService<EventProcessorBackgroundService>();
 
 var archMode = builder.Configuration["ArchitectureMode"];
 
@@ -38,6 +40,7 @@ if (archMode == "Redis")
     builder.Services.AddScoped<IProductTypeRepository, RedisProductTypeRepository>();
     
     builder.Services.AddScoped<IProductCacheService, ProductCacheService>();
+    builder.Services.AddScoped<IProductSyncService, RedisProductSyncService>();
 }
 else // Mongo
 {
@@ -51,6 +54,8 @@ else // Mongo
     builder.Services.AddScoped<ICurrencyRepository, MongoCurrencyRepository>();
     builder.Services.AddScoped<IUnitMeasureRepository, MongoUnitMeasureRepository>();
     builder.Services.AddScoped<IProductTypeRepository, MongoProductTypeRepository>();
+    
+    builder.Services.AddScoped<IProductSyncService, MongoProductSyncService>();
 }
 
 builder.Services.AddScoped<IOrderRepository, SqlOrderRepository>();

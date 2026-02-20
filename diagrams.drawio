@@ -1,6 +1,6 @@
-﻿<mxfile host="drawio-plugin" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" modified="2026-02-17T16:48:20.903Z" etag="br39uXhu_bPoAnxsGdsP" version="22.1.22" type="embed" pages="6">
+﻿<mxfile host="drawio-plugin" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" modified="2026-02-20T01:06:13.645Z" etag="wg1uZDwk2tnCDPQDl_sx" version="22.1.22" type="embed" pages="5">
   <diagram name="ER" id="unp3gNoAm-v971zJSexf">
-    <mxGraphModel dx="1660" dy="1023" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1629" dy="1116" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1458,7 +1458,7 @@
     </mxGraphModel>
   </diagram>
   <diagram name="MSSQL" id="-28MuuwLWmlta0-BOqob">
-    <mxGraphModel dx="1660" dy="1023" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1629" dy="1116" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -3125,7 +3125,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="7gAKToE3CsmMWY2pDovg" name="MSSQL + MongoDB">
-    <mxGraphModel dx="935" dy="1175" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1629" dy="1116" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -4419,7 +4419,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="NRRcfZ0x7V9zw5DQ0l02" name="MySQL + Redis">
-    <mxGraphModel dx="-2" dy="716" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="429" dy="716" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -6412,14 +6412,6 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="0Uzf3Ccoai6CjhJSTotj-294" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;" parent="1" source="0Uzf3Ccoai6CjhJSTotj-138" target="0Uzf3Ccoai6CjhJSTotj-45" edge="1">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="2540" y="1100" />
-              <mxPoint x="2540" y="1669" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
         <mxCell id="0Uzf3Ccoai6CjhJSTotj-295" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERmandOne;startFill=0;endArrow=ERoneToMany;endFill=0;" parent="1" source="0Uzf3Ccoai6CjhJSTotj-33" target="0Uzf3Ccoai6CjhJSTotj-22" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
@@ -6802,7 +6794,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="U4YPvqupHr4DAJOArxd7" name="Сторінка-5">
-    <mxGraphModel dx="1994" dy="1116" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1629" dy="1116" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -6907,14 +6899,6 @@
         <mxCell id="S5tyYsxZgZuj_OtXvddQ-30" value="DataBase" style="verticalAlign=top;align=left;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;whiteSpace=wrap;" parent="1" vertex="1">
           <mxGeometry x="930" y="420" width="180" height="120" as="geometry" />
         </mxCell>
-      </root>
-    </mxGraphModel>
-  </diagram>
-  <diagram id="2jAv5ezOh-r0a2NfEvWp" name="Page-6">
-    <mxGraphModel dx="1994" dy="1116" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
-      <root>
-        <mxCell id="0" />
-        <mxCell id="1" parent="0" />
       </root>
     </mxGraphModel>
   </diagram>

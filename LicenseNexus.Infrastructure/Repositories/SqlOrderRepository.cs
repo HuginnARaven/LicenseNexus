@@ -16,7 +16,10 @@ public class SqlOrderRepository: IOrderRepository
     
     public async Task<Order?> GetByIdAsync(int id)
     {
-        return await _context.Orders.Include(o => o.OrderProducts) .Include(o => o.Customer) .FirstOrDefaultAsync(o => o.Id == id);
+        return await _context.Orders
+            .Include(o => o.OrderProducts)
+            .Include(o => o.Customer)
+            .FirstOrDefaultAsync(o => o.Id == id);
     }
 
     public async Task AddAsync(Order order)

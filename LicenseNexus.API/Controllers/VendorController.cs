@@ -37,5 +37,16 @@ namespace LicenseNexus.API.Controllers
             await vendorService.AddVendor(vendor);
             return Ok();
         }
+        
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] VendorRequestDTO vendor)
+        {
+            if (vendor == null)
+            {
+                return BadRequest();
+            }
+            await vendorService.UpdateVendor(id, vendor);
+            return Ok();
+        }
     }
 }

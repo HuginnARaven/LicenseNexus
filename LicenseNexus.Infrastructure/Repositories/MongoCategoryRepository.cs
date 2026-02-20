@@ -72,22 +72,4 @@ public class MongoCategoryRepository: ICategoryRepository
 
         await _context.Categories.InsertOneAsync(doc);
     }
-
-    public async Task AddGroupAsync(int categoryId, ProductGroup group)
-    {
-        var groupId = await _context.GetNextSequenceValueAsync("product_group_id");
-        group.Id = groupId;
-        
-        var groupDoc = new ProductGroupDoc
-        {
-            Id = groupId,
-            Name = group.Name,
-            IsActive = group.IsActive
-        };
-        
-        var filter = Builders<CategoryDocument>.Filter.Eq(c => c.Id, categoryId);
-        var update = Builders<CategoryDocument>.Update.Push(c => c.Groups, groupDoc);
-
-        await _context.Categories.UpdateOneAsync(filter, update);
-    }
 }

@@ -7,10 +7,10 @@ public class VendorDocument
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
-    public string InternalId { get; set; }
+    public string InternalId { get; set; } = string.Empty;
 
     [BsonElement("id")]
-    public int Id { get; set; } //TODO: mb remove if unused
+    public int Id { get; set; }
 
     [BsonElement("name")]
     public string Name { get; set; } = string.Empty;

@@ -28,4 +28,17 @@ public class RedisVendorRepository: IVendorRepository
         _context.Vendors.Add(vendor);
         await _context.SaveChangesAsync();
     }
+
+    public async Task UpdateAsync(Vendor vendor)
+    {
+        var oldVendor = await _context.Vendors.FindAsync(vendor.Id);
+        if (oldVendor != null)
+        {
+            oldVendor.Name = vendor.Name;
+            oldVendor.OriginalName = vendor.OriginalName;
+            oldVendor.Description = vendor.Description;
+            oldVendor.CountryCode = vendor.CountryCode;
+            await  _context.SaveChangesAsync();
+        }
+    }
 }

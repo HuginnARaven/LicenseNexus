@@ -10,7 +10,7 @@ public class RedisContext
     public RedisContext(IConfiguration configuration)
     {
         var connectionString = configuration["RedisSettings:ConnectionString"];
-        _redis = ConnectionMultiplexer.Connect(connectionString);
+        _redis = ConnectionMultiplexer.Connect(connectionString!);
     }
     
     public IDatabase Database => _redis.GetDatabase();

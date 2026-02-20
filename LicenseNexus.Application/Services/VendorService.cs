@@ -5,7 +5,7 @@ using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
 
-public class VendorService(IVendorRepository vendorRepository) : IVendorService
+public class VendorService(IVendorRepository vendorRepository, IEventPublisher eventPublisher) : IVendorService
 {
     public async Task<IEnumerable<VendorResponceDTO>> GetAllVendors()
     {
@@ -35,6 +35,21 @@ public class VendorService(IVendorRepository vendorRepository) : IVendorService
             Logo = vendor.Logo ?? ""
         };
         await vendorRepository.AddAsync(newVendor);
+    }
+
+    public async Task UpdateVendor(int id, VendorRequestDTO vendor)
+    {
+        var newVendor = new Vendor
+        {
+            Id = id,
+            Name = vendor.Name,
+            OriginalName = vendor.OriginalName,
+            Description = vendor.Description,
+            CountryCode = vendor.CountryCode,
+            Logo = vendor.Logo
+        };
+        await vendorRepository.UpdateAsync(newVendor);
+        await eventPublisher.PublishAsync(new VendorUpdatedEvent(newVendor));
     }
 
     private VendorResponceDTO MapModelToDto(Vendor vendor)

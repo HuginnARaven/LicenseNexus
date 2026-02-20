@@ -10,7 +10,7 @@ public class CategoryDocument
     public string InternalId { get; set; }
 
     [BsonElement("id")]
-    public int Id { get; set; } // TODO: mb remove if unused
+    public int Id { get; set; }
     
     [BsonElement("active_is")]
     public bool IsActive { get; set; }
@@ -31,7 +31,7 @@ public class CategoryDocument
 public class ProductGroupDoc
 {
     [BsonElement("id")]
-    public int Id { get; set; }  // TODO: mb remove if unused
+    public int Id { get; set; }
 
     [BsonElement("name")]
     public string Name { get; set; } = string.Empty;

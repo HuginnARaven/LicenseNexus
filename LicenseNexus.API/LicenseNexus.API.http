@@ -8,7 +8,7 @@ Content-Type: application/json
   "sku": "SKU332",
   "title": "Best Test",
   "shortDescription": "The Best Test",
-  "vendorId": 1,
+  "vendorId": 8,
   "productTypeId": 1,
   "unitMeasureId": 1,
   "currencyId": 1,
@@ -74,3 +74,19 @@ Content-Type: application/json
 ### deleteProduct
 DELETE {{API_HostAddress}}/Product/{{new_product_id}}/
 Accept: application/json
+
+### getAllVendors
+GET {{API_HostAddress}}/Vendor/
+Accept: application/json
+
+### editlVendor
+PUT {{API_HostAddress}}/Vendor/1/
+Content-Type: application/json
+
+{
+  "name": "TestVendor1",
+  "originalName": "Vendor1",
+  "description": "Vendor1 description",
+  "countryCode": "TST",
+  "logo": "123123123"
+}

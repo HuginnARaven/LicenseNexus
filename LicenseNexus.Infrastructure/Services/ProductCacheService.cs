@@ -152,7 +152,7 @@ public class ProductCacheService : IProductCacheService
             .Select(p => new 
             { 
                 p.Id, 
-                CategoryId = p.ProductGroup.CategoryId 
+                CategoryId = p.ProductGroup!.CategoryId 
             })
             .ToListAsync();
         

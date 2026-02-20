@@ -8,10 +8,12 @@ namespace LicenseNexus.Infrastructure.Repositories;
 
 public class MongoVendorRepository: IVendorRepository
 {
+    private readonly IMongoCollection<VendorDocument> _collection;
     private readonly MongoContext _context;
     
     public MongoVendorRepository(MongoContext context)
     {
+        _collection = context.Vendors;
         _context = context;
     }
     
@@ -61,5 +63,21 @@ public class MongoVendorRepository: IVendorRepository
         };
 
         await _context.Vendors.InsertOneAsync(doc);
+    }
+
+    public async Task UpdateAsync(Vendor vendor)
+    {
+        var oldDoc = await _context.Vendors.Find(x => x.Id == vendor.Id).FirstOrDefaultAsync();
+        var newDoc = new VendorDocument
+        {
+            Id = vendor.Id,
+            Name = vendor.Name,
+            OriginalName = vendor.OriginalName,
+            Description = vendor.Description,
+            CountryCode = vendor.CountryCode,
+        };
+        newDoc.InternalId = oldDoc.InternalId;
+        await _collection.ReplaceOneAsync(x => x.Id == vendor.Id, newDoc);
+        
     }
 }
