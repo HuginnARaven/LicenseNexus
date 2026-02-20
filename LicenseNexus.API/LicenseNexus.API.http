@@ -61,6 +61,16 @@ Content-Type: application/json
   "author": "Tester"
 }
 
+### patchProduct
+PATCH {{API_HostAddress}}/Product/{{new_product_id}}/
+Content-Type: application/json
+
+{
+  "sku": "SKU321-UPDATED",
+  "title": "Quest Product Updated",
+  "shortDescription": "A test product updated twice"
+}
+
 ### deleteProduct
 DELETE {{API_HostAddress}}/Product/{{new_product_id}}/
 Accept: application/json

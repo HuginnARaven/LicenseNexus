@@ -106,6 +106,122 @@ public class MongoProductRepository : IProductRepository
         await _collection.ReplaceOneAsync(x => x.ProductId == product.Id, newDoc);
     }
 
+    public async Task PatchAsync(int id, ProductPatchFields updates)
+    {
+        var updateDefinitions = new List<UpdateDefinition<ProductDocument>>();
+        var builder = Builders<ProductDocument>.Update;
+
+        if (!string.IsNullOrWhiteSpace(updates.Sku))
+            updateDefinitions.Add(builder.Set(x => x.Sku, updates.Sku));
+        
+        if (!string.IsNullOrWhiteSpace(updates.Title))
+            updateDefinitions.Add(builder.Set(x => x.Title, updates.Title));
+        
+        if (!string.IsNullOrWhiteSpace(updates.ShortDescription))
+            updateDefinitions.Add(builder.Set(x => x.Attributes.ShortDescription, updates.ShortDescription));
+        
+        if (updates.QuantityMin.HasValue)
+            updateDefinitions.Add(builder.Set(x => x.Attributes.QuantityMin, updates.QuantityMin.Value));
+        
+        if (updates.QuantityMax.HasValue)
+            updateDefinitions.Add(builder.Set(x => x.Attributes.QuantityMin, updates.QuantityMax.Value));
+        
+        if (updates.StartDate.HasValue)
+            updateDefinitions.Add(builder.Set(x => x.Attributes.StartDate, updates.StartDate));
+        
+        if (updates.EndDate.HasValue)
+            updateDefinitions.Add(builder.Set(x => x.Attributes.EndDate, updates.EndDate));
+        
+        if (updates.IsPromo.HasValue)
+            updateDefinitions.Add(builder.Set(x => x.Attributes.IsPromo, updates.IsPromo));
+        
+        if (updates.IsTop.HasValue)
+            updateDefinitions.Add(builder.Set(x => x.Attributes.IsTop, updates.IsTop));
+        
+        if (updates.IsNew.HasValue)
+            updateDefinitions.Add(builder.Set(x => x.Attributes.IsNew, updates.IsNew));
+        
+        if (!string.IsNullOrWhiteSpace(updates.Logo))
+            updateDefinitions.Add(builder.Set(x => x.Attributes.Logo, updates.Logo));
+        
+        if (!string.IsNullOrWhiteSpace(updates.Author))
+            updateDefinitions.Add(builder.Set(x => x.Attributes.Author, updates.Author));
+        
+        if (updates.VendorId.HasValue)
+        {
+            var vendor = await _context.Vendors.Find(v => v.Id == updates.VendorId).FirstOrDefaultAsync();
+            if (vendor != null)
+            {
+                var vendorSubset = new VendorDoc
+                { 
+                    Id = vendor.Id, 
+                    Name = vendor.Name, 
+                    CountryCode = vendor.CountryCode 
+                };
+                updateDefinitions.Add(builder.Set(x => x.Classification.Vendor, vendorSubset));
+            }
+        }
+        
+        if (updates.ProductTypeId.HasValue)
+        {
+            var productType = await _context.ProductTypes.Find(v => v.Id == updates.ProductTypeId).FirstOrDefaultAsync();
+            if (productType != null)
+            {
+                updateDefinitions.Add(builder.Set(x => x.Classification.TypeId, productType.Id));
+                updateDefinitions.Add(builder.Set(x => x.Classification.TypeName, productType.TypeName));
+            }
+        }
+        
+        if (updates.UnitMeasureId.HasValue)
+        {
+            var unitMeasure = await _context.UnitMeasures.Find(v => v.Id == updates.UnitMeasureId).FirstOrDefaultAsync();
+            if (unitMeasure != null)
+            {
+                updateDefinitions.Add(builder.Set(x => x.Classification.UnitMeasureId, unitMeasure.Id));
+                updateDefinitions.Add(builder.Set(x => x.Classification.UnitMeasureName, unitMeasure.Name));
+            }
+        }
+        
+        if (updates.CurrencyId.HasValue)
+        {
+            var currency = await _context.Currencies.Find(v => v.Id == updates.CurrencyId).FirstOrDefaultAsync();
+            if (currency != null)
+            {
+                var currencySubset = new CurrencyDoc()
+                { 
+                    Id = currency.Id,
+                    LiteralCode = currency.LiteralCode,
+                    Name = currency.Name
+                };
+                updateDefinitions.Add(builder.Set(x => x.Currency, currencySubset));
+            }
+        }
+        
+        if (updates.ProductGroupId.HasValue)
+        {
+            var filter = Builders<CategoryDocument>.Filter.ElemMatch(c => c.Groups, g => g.Id == updates.ProductGroupId);
+            var category = await _context.Categories.Find(filter).FirstOrDefaultAsync();
+            var productGroup = category.Groups.FirstOrDefault(g => g.Id == id);
+            if (category != null && productGroup != null)
+            {
+                var GroupSubset = new GroupDoc()
+                { 
+                    Id = productGroup.Id,
+                    Name = productGroup.Name,
+                    CategoryId = category.Id,
+                    CategoryName = category.Name
+                };
+                updateDefinitions.Add(builder.Set(x => x.Classification.Group, GroupSubset));
+            }
+        }
+
+        if (updateDefinitions.Any())
+        {
+            var combinedUpdate = builder.Combine(updateDefinitions);
+            await _collection.UpdateOneAsync(x => x.ProductId == id, combinedUpdate);
+        }
+    }
+
     public async Task DeleteAsync(int id)
     {
         await _collection.DeleteOneAsync(x => x.ProductId == id);

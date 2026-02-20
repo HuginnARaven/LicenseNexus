@@ -1,5 +1,6 @@
 using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
+using LicenseNexus.Domain.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -61,6 +62,24 @@ namespace LicenseNexus.API.Controllers
             }
 
             await productService.UpdateAsync(id, product);
+            return NoContent();
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> Patch(int id, [FromBody] ProductPatchFields updates)
+        {
+            if (updates == null)
+            {
+                return BadRequest();
+            }
+
+            var existingProduct = await productService.GetByIdAsync(id);
+            if (existingProduct == null)
+            {
+                return NotFound();
+            }
+
+            await productService.PatchAsync(id, updates);
             return NoContent();
         }
 

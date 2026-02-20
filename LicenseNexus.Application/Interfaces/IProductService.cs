@@ -10,5 +10,6 @@ public interface IProductService
     Task<PaginatedResult<ProductModel>> GetPaginatedAsync(ProductFilterDto filter);
     Task<ProductModel?> AddAsync(ProductRequestDTO product);
     Task UpdateAsync(int id, ProductRequestDTO product);
+    Task PatchAsync(int id, ProductPatchFields updates);
     Task DeleteAsync(int id);
 }

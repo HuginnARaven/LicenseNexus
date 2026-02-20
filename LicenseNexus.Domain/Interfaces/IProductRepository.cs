@@ -14,5 +14,6 @@ public interface IProductRepository
         double? priceFrom, double? priceTo);
     Task<ProductModel?> AddAsync(ProductModel product);
     Task UpdateAsync(ProductModel product);
+    Task PatchAsync(int id, ProductPatchFields updates);
     Task DeleteAsync(int id);
 }

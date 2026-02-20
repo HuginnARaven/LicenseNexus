@@ -52,6 +52,11 @@ public class ProductService(
         await productRepository.UpdateAsync(model);
     }
 
+    public async Task PatchAsync(int id, ProductPatchFields updates)
+    {
+        await productRepository.PatchAsync(id, updates);
+    }
+
     public async Task DeleteAsync(int id)
     {
         await productRepository.DeleteAsync(id);

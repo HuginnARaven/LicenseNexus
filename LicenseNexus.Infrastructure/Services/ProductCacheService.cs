@@ -50,6 +50,12 @@ public class ProductCacheService : IProductCacheService
             _ = batch.SetAddAsync(groupKey, productModel.Id);
         }
         
+        if (productModel.Classification?.TypeId != null)
+        {
+            var typeKey = $"idx:product_type:{productModel.Classification?.TypeId}:products";
+            _ = batch.SetAddAsync(typeKey, productModel.Id);
+        }
+        
         if (productModel.Classification?.Vendor?.Id != null)
         {
             var vendorKey = $"idx:vendor:{productModel.Classification?.Vendor.Id}:products";
@@ -99,6 +105,12 @@ public class ProductCacheService : IProductCacheService
         {
             var oldGroupKey = $"idx:group:{oldModel.Classification.Group?.Id}:products";
             _ = batch.SetRemoveAsync(oldGroupKey, productId);
+        }
+        
+        if (oldModel.Classification?.TypeId != null)
+        {
+            var oldTypeKey = $"idx:product_type:{oldModel.Classification?.TypeId}:products";
+            _ = batch.SetRemoveAsync(oldTypeKey, productId);
         }
         
         if (oldModel.Classification?.Vendor?.Id != null)

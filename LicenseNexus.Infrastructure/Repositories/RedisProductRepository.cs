@@ -29,9 +29,7 @@ public class RedisProductRepository: IProductRepository
 
         if (json.IsNullOrEmpty)
         {
-            var product = await _sqlContext.Products
-                .Include(p => p.Vendor) 
-                .FirstOrDefaultAsync(p => p.Id == id);
+            var product = await _sqlContext.Products.FirstOrDefaultAsync(p => p.Id == id);
         
             if (product != null)
             {
@@ -178,6 +176,218 @@ public class RedisProductRepository: IProductRepository
         
         await _cache.RemoveProductCacheAsync(product.Id);
         await _cache.CacheProductByIdAsync(product.Id);
+    }
+
+    public async Task PatchAsync(int id,  ProductPatchFields updates) // consider refactoring
+    {
+        var product = await _sqlContext.Products.FindAsync(id);
+        if (product == null)
+        {
+            await _cache.RemoveProductCacheAsync(id);
+            return;
+        }
+        
+        var json = await _redisDb.StringGetAsync($"product:{id}");
+        var isCached = !json.IsNullOrEmpty;
+        var modelForCacheUpdate = isCached ? JsonSerializer.Deserialize<ProductModel>((string)json!) : null;
+        var batch = _redisDb.CreateBatch();
+
+        if (!string.IsNullOrWhiteSpace(updates.Sku))
+        {
+            product.Sku = updates.Sku;
+            if (isCached) modelForCacheUpdate?.Sku = updates.Sku;
+        }
+
+        if (!string.IsNullOrWhiteSpace(updates.Title))
+        {
+            if (isCached)
+            {
+                var oldTokens = SearchTokenizer.Tokenize(product.Title);
+                foreach (var t in oldTokens)
+                    _ = batch.SetRemoveAsync($"idx:word:{t}:products", id);
+            }
+
+            product.Title = updates.Title;
+            if (isCached) modelForCacheUpdate?.Title = updates.Title;
+
+            if (isCached)
+            {
+                var newTokens = SearchTokenizer.Tokenize(product.Title);
+                foreach (var t in newTokens)
+                    _ = batch.SetAddAsync($"idx:word:{t}:products", id);
+            }
+        }
+        
+        if (!string.IsNullOrWhiteSpace(updates.ShortDescription))
+        {
+            product.ShortDescription = updates.ShortDescription;
+            if (isCached) modelForCacheUpdate?.Attributes?.ShortDescription = updates.ShortDescription;
+        }
+        
+        if (updates.QuantityMin.HasValue)
+        {
+            product.QuantityMin = (int)updates.QuantityMin;
+            if (isCached) modelForCacheUpdate?.Attributes?.QuantityMin = (int)updates.QuantityMin;
+        }
+        
+        if (updates.QuantityMax.HasValue)
+        {
+            product.QuantityMax = (int)updates.QuantityMax;
+            if (isCached) modelForCacheUpdate?.Attributes?.QuantityMax = (int)updates.QuantityMax;
+        }
+        
+        if (updates.StartDate.HasValue)
+        {
+            product.StartDate = updates.StartDate;
+            if (isCached) modelForCacheUpdate?.Attributes?.StartDate = updates.StartDate;
+        }
+        
+        if (updates.EndDate.HasValue)
+        {
+            product.EndDate = updates.EndDate;
+            if (isCached) modelForCacheUpdate?.Attributes?.EndDate = updates.EndDate;
+        }
+        
+        if (updates.IsPromo.HasValue)
+        {
+            product.IsPromo = (bool)updates.IsPromo;
+            if (isCached) modelForCacheUpdate?.Attributes?.IsPromo = (bool)updates.IsPromo;
+        }
+        
+        if (updates.IsTop.HasValue)
+        {
+            product.IsTop = (bool)updates.IsTop;
+            if (isCached) modelForCacheUpdate?.Attributes?.IsTop = (bool)updates.IsTop;
+        }
+        
+        if (updates.IsNew.HasValue)
+        {
+            product.IsNew = (bool)updates.IsNew;
+            if (isCached) modelForCacheUpdate?.Attributes?.IsNew = (bool)updates.IsNew;
+        }
+        
+        if (!string.IsNullOrWhiteSpace(updates.Logo))
+        {
+            product.Logo = updates.Logo;
+            if (isCached) modelForCacheUpdate?.Attributes?.Logo = updates.Logo;
+        }
+        
+        if (!string.IsNullOrWhiteSpace(updates.Author))
+        {
+            product.Author = updates.Author;
+            if (isCached) modelForCacheUpdate?.Attributes?.Author = updates.Author;
+        }
+        
+        if (updates.VendorId.HasValue)
+        {
+            var newVendor = await _sqlContext.Vendors
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.Id == updates.VendorId);
+            if (newVendor != null)
+            {
+                if (isCached) _ = batch.SetRemoveAsync($"idx:vendor:{product.VendorId}:products", id);
+                product.VendorId = newVendor.Id;
+                if (isCached) modelForCacheUpdate?.Classification.Vendor = new VendorModel
+                {
+                    Id = newVendor.Id,
+                    Name = newVendor.Name,
+                    CountryCode = newVendor.CountryCode
+                };
+                if (isCached) _ = batch.SetAddAsync($"idx:vendor:{newVendor.Id}:products", id);
+            }
+        }
+        
+        if (updates.ProductTypeId.HasValue)
+        {
+            var newType = await _sqlContext.ProductTypes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.Id == updates.ProductTypeId);
+            if (newType != null)
+            {
+                if (isCached) _ = batch.SetRemoveAsync($"idx:product_type:{product.ProductTypeId}:products", id);
+                product.ProductTypeId = newType.Id;
+                if (isCached) modelForCacheUpdate?.Classification.TypeId = newType.Id;
+                if (isCached) modelForCacheUpdate?.Classification.TypeName = newType.TypeName;
+                if (isCached) _ = batch.SetAddAsync($"idx:product_type:{newType.Id}:products", id);
+            }
+        }
+        
+        if (updates.UnitMeasureId.HasValue)
+        {
+            var newUnitMeasure = await _sqlContext.UnitMeasures
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.Id == updates.UnitMeasureId);
+            if (newUnitMeasure != null)
+            {
+                product.UnitMeasureId = newUnitMeasure.Id;
+                if (isCached) modelForCacheUpdate?.Classification.UnitMeasureId = newUnitMeasure.Id;
+                if (isCached) modelForCacheUpdate?.Classification.UnitMeasureName = newUnitMeasure.Name;
+            }
+        }
+        
+        if (updates.CurrencyId.HasValue)
+        {
+            var newCurrency = await _sqlContext.Currencies
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.Id == updates.CurrencyId);
+            if (newCurrency != null)
+            {
+                product.CurrencyId = newCurrency.Id;
+                if (isCached) modelForCacheUpdate?.Currency = new CurrencyModel()
+                {
+                    Id = newCurrency.Id,
+                    Name = newCurrency.Name,
+                    LiteralCode = newCurrency.LiteralCode
+                };
+            }
+        }
+        
+        if (updates.ProductGroupId.HasValue)
+        {
+            var newGroup = await _sqlContext.ProductGroups
+                .AsNoTracking()
+                .Include(e => e.Category)
+                .FirstOrDefaultAsync(e => e.Id == updates.ProductGroupId);
+            
+            if (newGroup != null && newGroup.Category != null)
+            {
+                if (isCached)
+                {
+                    var oldGroup = await _sqlContext.ProductGroups
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(e => e.Id == product.ProductGroupId);
+                    _ = batch.SetRemoveAsync($"idx:group:{product.ProductGroupId}:products", id);
+                    _ = batch.SetRemoveAsync($"idx:category:{oldGroup?.CategoryId}:products", id);
+                }
+
+                product.ProductGroupId = newGroup.Id;
+                if (isCached) modelForCacheUpdate?.Classification.Group = new GroupModel()
+                {
+                    Id = newGroup.Id,
+                    Name = newGroup.Name,
+                    CategoryId = newGroup.CategoryId,
+                    CategoryName = newGroup.Category.CategoryName
+                };
+
+                if (isCached)
+                {
+                    _ = batch.SetAddAsync($"idx:group:{newGroup.Id}:products", id);
+                    _ = batch.SetAddAsync($"idx:category:{newGroup.CategoryId}:products", id);
+                }
+            }
+        }
+
+        await _sqlContext.SaveChangesAsync();
+        if (isCached)
+        {
+            var updatedJson = JsonSerializer.Serialize(modelForCacheUpdate);
+            _ = batch.StringSetAsync($"product:{id}", updatedJson);
+            batch.Execute();
+        }
+        else
+        {
+            await _cache.CacheProductByIdAsync(id);
+        }
     }
 
     public async Task DeleteAsync(int id)
