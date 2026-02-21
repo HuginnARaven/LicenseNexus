@@ -1,0 +1,35 @@
+﻿### createProductGroup
+POST {{API_HostAddress}}/ProductGroup/
+Content-Type: application/json
+
+{
+  "name": "TestProductGroup2",
+  "isActive": true,
+  "note": "ProductGroup1 description",
+  "author": "Test",
+  "categoryId": 1
+}
+
+> {%
+    client.global.set("new_product_group_id", response.body.id);
+    client.log("Created Category ID: " + client.global.get("new_product_group_id"));
+%}
+
+### getAllProductGroups
+GET {{API_HostAddress}}/ProductGroup/
+Accept: application/json
+
+### getProductGroupByID
+GET {{API_HostAddress}}/ProductGroup/1/
+Accept: application/json
+
+### editlProductGroup
+PUT {{API_HostAddress}}/ProductGroup/1/
+Content-Type: application/json
+
+{
+  "name": "TestProductGroup1",
+  "isActive": true,
+  "note": "ProductGroup1 description",
+  "author": "Test"
+}

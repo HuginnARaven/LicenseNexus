@@ -1,6 +1,4 @@
-@API_HostAddress = http://localhost:5000/api
-
-### createProduct
+﻿### createProduct
 POST {{API_HostAddress}}/Product/
 Content-Type: application/json
 
@@ -68,25 +66,10 @@ Content-Type: application/json
 {
   "sku": "SKU321-PATCHED",
   "title": "Quest Product Updated",
-  "shortDescription": "A test product updated twice"
+  "shortDescription": "A test product updated twice",
+  "productTypeId": 2
 }
 
 ### deleteProduct
 DELETE {{API_HostAddress}}/Product/{{new_product_id}}/
 Accept: application/json
-
-### getAllVendors
-GET {{API_HostAddress}}/Vendor/
-Accept: application/json
-
-### editlVendor
-PUT {{API_HostAddress}}/Vendor/1/
-Content-Type: application/json
-
-{
-  "name": "QuestVendor1",
-  "originalName": "Vendor1",
-  "description": "Vendor1 description",
-  "countryCode": "TST",
-  "logo": "123123123"
-}

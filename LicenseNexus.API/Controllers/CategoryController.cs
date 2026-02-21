@@ -37,5 +37,16 @@ namespace LicenseNexus.API.Controllers
             await categoryService.AddCategory(category);
             return Ok();
         }
+        
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] CategoryRequestDto category)
+        {
+            if (category == null)
+            {
+                return BadRequest();
+            }
+            await categoryService.UpdateCategory(id, category);
+            return Ok();
+        }
     }
 }

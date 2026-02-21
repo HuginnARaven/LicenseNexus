@@ -1,0 +1,32 @@
+﻿### createCurrency
+POST {{API_HostAddress}}/Currency/
+Content-Type: application/json
+
+{
+  "literalCode": "$",
+  "name": "Dollar",
+  "countryCode": "USA"
+}
+
+> {%
+    client.global.set("new_currency_id", response.body.id);
+    client.log("Created Currency ID: " + client.global.get("new_currency_id"));
+%}
+
+### getAllCurrencies
+GET {{API_HostAddress}}/Currency/
+Accept: application/json
+
+### getCurrencyByID
+GET {{API_HostAddress}}/Currency/{{new_currency_id}}/
+Accept: application/json
+
+### editlCurrency
+PUT {{API_HostAddress}}/Currency/1/
+Content-Type: application/json
+
+{
+  "literalCode": "$",
+  "name": "Dollar",
+  "countryCode": "USA"
+}

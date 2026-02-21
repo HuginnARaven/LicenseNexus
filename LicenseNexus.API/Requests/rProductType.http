@@ -1,0 +1,28 @@
+﻿### createProductType
+POST {{API_HostAddress}}/ProductType/
+Content-Type: application/json
+
+{
+  "typeName": "QuestType"
+}
+
+> {%
+    client.global.set("new_product_type_id", response.body.id);
+    client.log("Created ProductType ID: " + client.global.get("new_product_type_id"));
+%}
+
+### getAllProductTypes
+GET {{API_HostAddress}}/ProductType/
+Accept: application/json
+
+### getProductTypeByID
+GET {{API_HostAddress}}/ProductType/{{new_product_type_id}}/
+Accept: application/json
+
+### editlProductType
+PUT {{API_HostAddress}}/ProductType/{{new_product_type_id}}/
+Content-Type: application/json
+
+{
+  "typeName": "TestBestType"
+}

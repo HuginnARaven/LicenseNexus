@@ -1,0 +1,36 @@
+﻿### createVendor
+POST {{API_HostAddress}}/Vendor/
+Content-Type: application/json
+
+{
+  "name": "TestVendor1",
+  "originalName": "Vendor1",
+  "description": "Vendor1 description",
+  "countryCode": "TST",
+  "logo": "TestVendor1.logo"
+}
+
+> {%
+    client.global.set("new_vendor_id", response.body.id);
+    client.log("Created Vendor ID: " + client.global.get("new_vendor_id"));
+%}
+
+### getAllVendors
+GET {{API_HostAddress}}/Vendor/
+Accept: application/json
+
+### getVendorByID
+GET {{API_HostAddress}}/Vendor/{{new_vendor_id}}/
+Accept: application/json
+
+### editlVendor
+PUT {{API_HostAddress}}/Vendor/1/
+Content-Type: application/json
+
+{
+  "name": "TestBestVendor1",
+  "originalName": "Vendor1",
+  "description": "Vendor1 description",
+  "countryCode": "TST",
+  "logo": "123123123"
+}

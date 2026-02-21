@@ -88,4 +88,16 @@ public class MongoProductGroupRepository: IProductGroupRepository
 
         await _context.Categories.UpdateOneAsync(filter, update);
     }
+
+    public async Task UpdateAsync(ProductGroup group)
+    {
+        var filter = Builders<CategoryDocument>.Filter.ElemMatch(c => c.Groups, g => g.Id == group.Id);
+        var update = Builders<CategoryDocument>.Update
+            .Set("Groups.$.Name", group.Name)
+            .Set("Groups.$.IsActive", group.IsActive)
+            .Set("Groups.$.Note", group.Note)
+            .Set("Groups.$.Author", group.Author);
+
+        await _context.Categories.UpdateOneAsync(filter, update);
+    }
 }

@@ -34,8 +34,14 @@ public class EventProcessorBackgroundService : BackgroundService
                 Task updateTask = domainEvent switch
                 {
                     VendorUpdatedEvent v => productSyncService.UpdateVendorAsync(v.vendor, stoppingToken),
+                    CategoryUpdatedEvent c => productSyncService.UpdateCategoryAsync(c.category, stoppingToken),
+                    ProductTypeUpdatedEvent t => productSyncService.UpdateProductTypeAsync(t.productType, stoppingToken),
+                    UnitMeasureUpdatedEvent u => productSyncService.UpdateUnitMeasureAsync(u.unitMeasure, stoppingToken),
+                    CurrencyUpdatedEvent cr => productSyncService.UpdateCurrencyAsync(cr.currency, stoppingToken),
+                    GroupUpdatedEvent g => productSyncService.UpdateGroupAsync(g.group, stoppingToken),
                     _ => Task.CompletedTask
                 };
+                await updateTask;
             }
             catch (Exception ex)
             {

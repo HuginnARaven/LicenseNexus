@@ -6,6 +6,8 @@ using LicenseNexus.Domain.Models;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using LicenseNexus.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using NRedisStack;
+using NRedisStack.RedisStackCommands;
 using StackExchange.Redis;
 
 namespace LicenseNexus.Infrastructure.Repositories;
@@ -25,41 +27,40 @@ public class RedisProductRepository: IProductRepository
     
     public async Task<ProductModel?> GetByIdAsync(int id)
     {
-        var json = await _redisDb.StringGetAsync($"product:{id}");
-
-        if (json.IsNullOrEmpty)
+        var product = await _redisDb.JSON().GetAsync<ProductModel>($"product:{id}");
+        if (product == null)
         {
-            var product = await _sqlContext.Products.FirstOrDefaultAsync(p => p.Id == id);
-        
-            if (product != null)
+            var dbProduct = await _sqlContext.Products.FirstOrDefaultAsync(p => p.Id == id);
+    
+            if (dbProduct != null)
             {
                 await _cache.CacheProductByIdAsync(id);
-                json = await _redisDb.StringGetAsync($"product:{id}");
+                product = await _redisDb.JSON().GetAsync<ProductModel>($"product:{id}");
             }
         }
-        
-        if (json.IsNullOrEmpty) return null;
-        return JsonSerializer.Deserialize<ProductModel>((string)json!);
+    
+        return product;
     }
 
     public async Task<IEnumerable<ProductModel>> GetAllAsync()
     {
         var server = _redisDb.Multiplexer.GetServer(_redisDb.Multiplexer.GetEndPoints().First());
-        var keys = server.Keys(pattern: "product:*");
-        
         var products = new List<ProductModel>();
-
-        foreach (var key in keys)
+        var keysToFetch = new List<string>();
+    
+        await foreach (var key in server.KeysAsync(pattern: "product:*"))
         {
-            var json = await _redisDb.StringGetAsync(key);
-            if (!json.IsNullOrEmpty)
+            keysToFetch.Add(key!);
+            
+            if (keysToFetch.Count >= 1000)
             {
-                var product = JsonSerializer.Deserialize<ProductModel>((string)json!);
-                if (product != null)
-                {
-                    products.Add(product);
-                }
+                await FetchAndAddProductsAsync(keysToFetch, products);
+                keysToFetch.Clear();
             }
+        }
+        if (keysToFetch.Count > 0)
+        {
+            await FetchAndAddProductsAsync(keysToFetch, products);
         }
 
         return products;
@@ -116,8 +117,7 @@ public class RedisProductRepository: IProductRepository
         double maxPrice = priceTo.HasValue ? (double)priceTo.Value : double.PositiveInfinity;
         
         var totalCount = await _redisDb.SortedSetLengthAsync(searchKey, minPrice, maxPrice);
-        Console.WriteLine(searchKey);
-        Console.WriteLine(totalCount);
+
         if (totalCount == 0)
         {
             if (isTempKey) await _redisDb.KeyDeleteAsync(searchKey);
@@ -134,12 +134,19 @@ public class RedisProductRepository: IProductRepository
             take);
         
         var productKeys = productIds.Select(id => (RedisKey)$"product:{id}").ToArray();
-        var jsonResults = await _redisDb.StringGetAsync(productKeys);
-
-        var products = jsonResults
-            .Where(json => !json.IsNullOrEmpty)
-            .Select(json => JsonSerializer.Deserialize<ProductModel>((string)json!))
-            .ToList();
+        var jsonResults = await _redisDb.JSON().MGetAsync(productKeys, "$");
+        var products = new List<ProductModel>();
+        foreach (var result in jsonResults)
+        {
+            if (!result.IsNull)
+            {
+                var deserializedArray = JsonSerializer.Deserialize<ProductModel[]>((string)result!);
+                if (deserializedArray != null && deserializedArray.Length > 0)
+                {
+                    products.Add(deserializedArray[0]);
+                }
+            }
+        }
         
         if (isTempKey) await _redisDb.KeyDeleteAsync(searchKey);
 
@@ -178,7 +185,7 @@ public class RedisProductRepository: IProductRepository
         await _cache.CacheProductByIdAsync(product.Id);
     }
 
-    public async Task PatchAsync(int id,  ProductPatchFields updates) // consider refactoring
+    public async Task PatchAsync(int id,  ProductPatchFields updates)
     {
         var product = await _sqlContext.Products.FindAsync(id);
         if (product == null)
@@ -187,15 +194,15 @@ public class RedisProductRepository: IProductRepository
             return;
         }
         
-        var json = await _redisDb.StringGetAsync($"product:{id}");
-        var isCached = !json.IsNullOrEmpty;
-        var modelForCacheUpdate = isCached ? JsonSerializer.Deserialize<ProductModel>((string)json!) : null;
-        var batch = _redisDb.CreateBatch();
-
+        var productKey = $"product:{id}";
+        var isCached = await _redisDb.KeyExistsAsync(productKey);
+        var pipeline = isCached ? new Pipeline(_redisDb) : null;
+        var cacheTasks = new List<Task>();
+        
         if (!string.IsNullOrWhiteSpace(updates.Sku))
         {
             product.Sku = updates.Sku;
-            if (isCached) modelForCacheUpdate?.Sku = updates.Sku;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Sku", $"\"{updates.Sku}\""));
         }
 
         if (!string.IsNullOrWhiteSpace(updates.Title))
@@ -204,78 +211,78 @@ public class RedisProductRepository: IProductRepository
             {
                 var oldTokens = SearchTokenizer.Tokenize(product.Title);
                 foreach (var t in oldTokens)
-                    _ = batch.SetRemoveAsync($"idx:word:{t}:products", id);
+                    cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:word:{t}:products", id));
             }
 
             product.Title = updates.Title;
-            if (isCached) modelForCacheUpdate?.Title = updates.Title;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Title", $"\"{updates.Title}\""));
 
             if (isCached)
             {
                 var newTokens = SearchTokenizer.Tokenize(product.Title);
                 foreach (var t in newTokens)
-                    _ = batch.SetAddAsync($"idx:word:{t}:products", id);
+                    cacheTasks.Add(pipeline!.Db.SetAddAsync($"idx:word:{t}:products", id));
             }
         }
         
         if (!string.IsNullOrWhiteSpace(updates.ShortDescription))
         {
             product.ShortDescription = updates.ShortDescription;
-            if (isCached) modelForCacheUpdate?.Attributes?.ShortDescription = updates.ShortDescription;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.ShortDescription", $"\"{updates.ShortDescription}\"" ));
         }
         
         if (updates.QuantityMin.HasValue)
         {
             product.QuantityMin = (int)updates.QuantityMin;
-            if (isCached) modelForCacheUpdate?.Attributes?.QuantityMin = (int)updates.QuantityMin;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.QuantityMin", (int)updates.QuantityMin));
         }
         
         if (updates.QuantityMax.HasValue)
         {
             product.QuantityMax = (int)updates.QuantityMax;
-            if (isCached) modelForCacheUpdate?.Attributes?.QuantityMax = (int)updates.QuantityMax;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.QuantityMax", (int)updates.QuantityMax));
         }
         
         if (updates.StartDate.HasValue)
         {
             product.StartDate = updates.StartDate;
-            if (isCached) modelForCacheUpdate?.Attributes?.StartDate = updates.StartDate;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.StartDate", $"\"{updates.StartDate}\""));
         }
         
         if (updates.EndDate.HasValue)
         {
             product.EndDate = updates.EndDate;
-            if (isCached) modelForCacheUpdate?.Attributes?.EndDate = updates.EndDate;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.EndDate", $"\"{updates.EndDate}\""));
         }
         
         if (updates.IsPromo.HasValue)
         {
             product.IsPromo = (bool)updates.IsPromo;
-            if (isCached) modelForCacheUpdate?.Attributes?.IsPromo = (bool)updates.IsPromo;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.IsPromo", updates.IsPromo));
         }
         
         if (updates.IsTop.HasValue)
         {
             product.IsTop = (bool)updates.IsTop;
-            if (isCached) modelForCacheUpdate?.Attributes?.IsTop = (bool)updates.IsTop;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.IsTop", updates.IsTop));
         }
         
         if (updates.IsNew.HasValue)
         {
             product.IsNew = (bool)updates.IsNew;
-            if (isCached) modelForCacheUpdate?.Attributes?.IsNew = (bool)updates.IsNew;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.IsNew", updates.IsNew));
         }
         
         if (!string.IsNullOrWhiteSpace(updates.Logo))
         {
             product.Logo = updates.Logo;
-            if (isCached) modelForCacheUpdate?.Attributes?.Logo = updates.Logo;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.Logo", $"\"{updates.Logo}\""));
         }
         
         if (!string.IsNullOrWhiteSpace(updates.Author))
         {
             product.Author = updates.Author;
-            if (isCached) modelForCacheUpdate?.Attributes?.Author = updates.Author;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.Author", $"\"{updates.Author}\""));
         }
         
         if (updates.VendorId.HasValue)
@@ -285,15 +292,15 @@ public class RedisProductRepository: IProductRepository
                 .FirstOrDefaultAsync(e => e.Id == updates.VendorId);
             if (newVendor != null)
             {
-                if (isCached) _ = batch.SetRemoveAsync($"idx:vendor:{product.VendorId}:products", id);
+                if (isCached) cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:vendor:{product.VendorId}:products", id));
                 product.VendorId = newVendor.Id;
-                if (isCached) modelForCacheUpdate?.Classification.Vendor = new VendorModel
+                if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.Vendor",  new VendorModel
                 {
                     Id = newVendor.Id,
                     Name = newVendor.Name,
                     CountryCode = newVendor.CountryCode
-                };
-                if (isCached) _ = batch.SetAddAsync($"idx:vendor:{newVendor.Id}:products", id);
+                }));
+                if (isCached) cacheTasks.Add(pipeline!.Db.SetAddAsync($"idx:vendor:{newVendor.Id}:products", id));
             }
         }
         
@@ -304,11 +311,11 @@ public class RedisProductRepository: IProductRepository
                 .FirstOrDefaultAsync(e => e.Id == updates.ProductTypeId);
             if (newType != null)
             {
-                if (isCached) _ = batch.SetRemoveAsync($"idx:product_type:{product.ProductTypeId}:products", id);
+                if (isCached) cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:product_type:{product.ProductTypeId}:products", id));
                 product.ProductTypeId = newType.Id;
-                if (isCached) modelForCacheUpdate?.Classification.TypeId = newType.Id;
-                if (isCached) modelForCacheUpdate?.Classification.TypeName = newType.TypeName;
-                if (isCached) _ = batch.SetAddAsync($"idx:product_type:{newType.Id}:products", id);
+                if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.TypeId", newType.Id));
+                if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.TypeName", $"\"{newType.TypeName}\""));
+                if (isCached) cacheTasks.Add(pipeline!.Db.SetAddAsync($"idx:product_type:{newType.Id}:products", id));
             }
         }
         
@@ -320,8 +327,8 @@ public class RedisProductRepository: IProductRepository
             if (newUnitMeasure != null)
             {
                 product.UnitMeasureId = newUnitMeasure.Id;
-                if (isCached) modelForCacheUpdate?.Classification.UnitMeasureId = newUnitMeasure.Id;
-                if (isCached) modelForCacheUpdate?.Classification.UnitMeasureName = newUnitMeasure.Name;
+                if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.UnitMeasureId", newUnitMeasure.Id));
+                if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.UnitMeasureName", $"\"{newUnitMeasure.Name}\""));
             }
         }
         
@@ -333,12 +340,12 @@ public class RedisProductRepository: IProductRepository
             if (newCurrency != null)
             {
                 product.CurrencyId = newCurrency.Id;
-                if (isCached) modelForCacheUpdate?.Currency = new CurrencyModel()
+                if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Currency",  new CurrencyModel
                 {
                     Id = newCurrency.Id,
                     Name = newCurrency.Name,
                     LiteralCode = newCurrency.LiteralCode
-                };
+                }));
             }
         }
         
@@ -356,23 +363,24 @@ public class RedisProductRepository: IProductRepository
                     var oldGroup = await _sqlContext.ProductGroups
                         .AsNoTracking()
                         .FirstOrDefaultAsync(e => e.Id == product.ProductGroupId);
-                    _ = batch.SetRemoveAsync($"idx:group:{product.ProductGroupId}:products", id);
-                    _ = batch.SetRemoveAsync($"idx:category:{oldGroup?.CategoryId}:products", id);
+                    cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:group:{product.ProductGroupId}:products", id));
+                    cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:category:{oldGroup?.CategoryId}:products", id));
                 }
 
                 product.ProductGroupId = newGroup.Id;
-                if (isCached) modelForCacheUpdate?.Classification.Group = new GroupModel()
+                
+                if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.Group",  new GroupModel()
                 {
                     Id = newGroup.Id,
                     Name = newGroup.Name,
                     CategoryId = newGroup.CategoryId,
                     CategoryName = newGroup.Category.CategoryName
-                };
+                }));
 
                 if (isCached)
                 {
-                    _ = batch.SetAddAsync($"idx:group:{newGroup.Id}:products", id);
-                    _ = batch.SetAddAsync($"idx:category:{newGroup.CategoryId}:products", id);
+                    cacheTasks.Add(pipeline!.Db.SetAddAsync($"idx:group:{newGroup.Id}:products", id));
+                    cacheTasks.Add(pipeline!.Db.SetAddAsync($"idx:category:{newGroup.CategoryId}:products", id));
                 }
             }
         }
@@ -380,14 +388,14 @@ public class RedisProductRepository: IProductRepository
         await _sqlContext.SaveChangesAsync();
         if (isCached)
         {
-            var updatedJson = JsonSerializer.Serialize(modelForCacheUpdate);
-            _ = batch.StringSetAsync($"product:{id}", updatedJson);
-            batch.Execute();
+            pipeline!.Execute();
+            await Task.WhenAll(cacheTasks);
         }
         else
         {
             await _cache.CacheProductByIdAsync(id);
         }
+        
     }
 
     public async Task DeleteAsync(int id)
@@ -426,5 +434,20 @@ public class RedisProductRepository: IProductRepository
             CreatedDate = model.Attributes.CreatedDate,
             Author = model.Attributes.Author,
         };
+    }
+    
+    private async Task FetchAndAddProductsAsync(List<string> keys, List<ProductModel> products)
+    {
+        var jsonResults = await _redisDb.JSON().MGetAsync(keys.Select(k => (RedisKey)k).ToArray(), "$");
+
+        foreach (var result in jsonResults)
+        {
+            if (result.IsNull) continue;
+            var deserializedArray = JsonSerializer.Deserialize<ProductModel[]>((string)result!);
+            if (deserializedArray != null && deserializedArray.Length > 0)
+            {
+                products.Add(deserializedArray[0]);
+            }
+        }
     }
 }

@@ -50,4 +50,16 @@ public class MongoUnitMeasureRepository: IUnitMeasureRepository
 
         await _context.UnitMeasures.InsertOneAsync(doc);
     }
+
+    public async Task UpdateAsync(UnitMeasure unitMeasure)
+    {
+        var oldDoc = await _context.UnitMeasures.Find(um => um.Id == unitMeasure.Id).FirstOrDefaultAsync();
+        var newDoc = new UnitMeasureDocument
+        {
+            Id = unitMeasure.Id,
+            Name = unitMeasure.Name
+        };
+        newDoc.InternalId = oldDoc.InternalId;
+        await _context.UnitMeasures.ReplaceOneAsync(um => um.Id == unitMeasure.Id, newDoc);
+    }
 }

@@ -5,7 +5,7 @@ using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
 
-public class UnitMeasureService(IUnitMeasureRepository unitMeasureRepository) : IUnitMeasureService
+public class UnitMeasureService(IUnitMeasureRepository unitMeasureRepository, IEventPublisher eventPublisher) : IUnitMeasureService
 {
     public async Task<IEnumerable<UnitMeasureResponseDto>> GetAllUnitMeasures()
     {
@@ -40,5 +40,17 @@ public class UnitMeasureService(IUnitMeasureRepository unitMeasureRepository) : 
         };
 
         await unitMeasureRepository.AddAsync(unitMeasure);
+    }
+    
+    public async Task UpdateUnitMeasure(int id, UnitMeasureRequestDto unitMeasureDto)
+    {
+        var unitMeasure = new UnitMeasure
+        {
+            Id = id,
+            Name = unitMeasureDto.Name,
+        };
+
+        await unitMeasureRepository.UpdateAsync(unitMeasure);
+        await eventPublisher.PublishAsync(new UnitMeasureUpdatedEvent(unitMeasure));
     }
 }

@@ -7,4 +7,5 @@ public interface IProductGroupService
     Task<IEnumerable<ProductGroupResponseDto>> GetAllProductGroups();
     Task<ProductGroupResponseDto?> GetProductGroupById(int id);
     Task AddProductGroup(ProductGroupRequestDto productGroup);
+    Task UpdateProductGroup(int id, ProductGroupEditRequestDto productGroup);
 }

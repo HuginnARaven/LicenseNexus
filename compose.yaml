@@ -43,9 +43,9 @@
       - mongo_data:/data/db
 
   redis:
-    image: redis:alpine
+    image: redis/redis-stack-server:latest
     container_name: licensenexus_redis
-    command: redis-server --appendonly yes
+    command: redis-stack-server --appendonly yes
     ports:
       - "6379:6379"
     volumes:

@@ -29,4 +29,10 @@ public class RedisCategoryRepository: ICategoryRepository
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();
     }
+
+    public async Task UpdateAsync(Category category)
+    {
+        _context.Categories.Update(category);
+        await _context.SaveChangesAsync();
+    }
 }

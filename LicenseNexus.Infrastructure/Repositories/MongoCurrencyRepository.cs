@@ -56,4 +56,15 @@ public class MongoCurrencyRepository: ICurrencyRepository
 
         await _context.Currencies.InsertOneAsync(doc);
     }
+
+    public async Task UpdateAsync(Currency currency)
+    {
+        var filter = Builders<CurrencyDocument>.Filter.Eq(c => c.Id, currency.Id);
+        var update = Builders<CurrencyDocument>.Update
+            .Set(c => c.LiteralCode, currency.LiteralCode)
+            .Set(c => c.Name, currency.Name)
+            .Set(c => c.CountryCode, currency.CountryCode);
+
+        await _context.Currencies.UpdateOneAsync(filter, update);
+    }
 }

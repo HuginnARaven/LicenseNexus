@@ -29,4 +29,14 @@ public class RedisProductGroupRepository: IProductGroupRepository
         _context.ProductGroups.Add(group);
         await _context.SaveChangesAsync();
     }
+
+    public async Task UpdateAsync(ProductGroup group)
+    {
+        await _context.ProductGroups.Where(g => g.Id == group.Id).ExecuteUpdateAsync(setters => setters
+            .SetProperty(g => g.Name, group.Name)
+            .SetProperty(g => g.IsActive, group.IsActive)
+            .SetProperty(g => g.Note, group.Note)
+            .SetProperty(g => g.Author, group.Author)
+        );
+    }
 }

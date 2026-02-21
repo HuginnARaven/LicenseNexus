@@ -1,0 +1,28 @@
+﻿### createUnitMeasure
+POST {{API_HostAddress}}/UnitMeasure/
+Content-Type: application/json
+
+{
+  "name": "QuestUnitMeasure"
+}
+
+> {%
+    client.global.set("new_unit_measure_id", response.body.id);
+    client.log("Created UnitMeasure ID: " + client.global.get("new_unit_measure_id"));
+%}
+
+### getAllUnitMeasures
+GET {{API_HostAddress}}/UnitMeasure/
+Accept: application/json
+
+### getUnitMeasureByID
+GET {{API_HostAddress}}/UnitMeasure/{{new_unit_measure_id}}/
+Accept: application/json
+
+### editlUnitMeasure
+PUT {{API_HostAddress}}/UnitMeasure/1/
+Content-Type: application/json
+
+{
+  "name": "TestUnitMeasure"
+}

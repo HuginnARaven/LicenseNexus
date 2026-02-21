@@ -5,7 +5,7 @@ using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
 
-public class ProductGroupService(IProductGroupRepository productGroupRepository) : IProductGroupService
+public class ProductGroupService(IProductGroupRepository productGroupRepository, IEventPublisher eventPublisher) : IProductGroupService
 {
     public async Task<IEnumerable<ProductGroupResponseDto>> GetAllProductGroups()
     {
@@ -55,5 +55,20 @@ public class ProductGroupService(IProductGroupRepository productGroupRepository)
         };
 
         await productGroupRepository.AddAsync(group);
+    }
+
+    public async Task UpdateProductGroup(int id, ProductGroupEditRequestDto productGroup)
+    {
+        var group = new ProductGroup
+        {
+            Id = id,
+            Name = productGroup.Name,
+            IsActive = productGroup.IsActive,
+            Note = productGroup.Note,
+            Author = productGroup.Author
+        };
+
+        await productGroupRepository.UpdateAsync(group);
+        await eventPublisher.PublishAsync(new GroupUpdatedEvent(group));
     }
 }

@@ -28,4 +28,10 @@ public class RedisProductTypeRepository: IProductTypeRepository
         _context.ProductTypes.Add(productType);
         await _context.SaveChangesAsync();
     }
+
+    public async Task UpdateAsync(ProductType productType)
+    {
+        _context.ProductTypes.Update(productType);
+        await _context.SaveChangesAsync();
+    }
 }

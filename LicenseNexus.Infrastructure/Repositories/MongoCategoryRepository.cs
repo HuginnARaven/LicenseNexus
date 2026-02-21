@@ -72,4 +72,15 @@ public class MongoCategoryRepository: ICategoryRepository
 
         await _context.Categories.InsertOneAsync(doc);
     }
+
+    public async Task UpdateAsync(Category category)
+    {
+        var filter = Builders<CategoryDocument>.Filter.Eq(c => c.Id, category.Id);
+        var update = Builders<CategoryDocument>.Update
+            .Set(c => c.Name, category.CategoryName)
+            .Set(c => c.IsActive, category.IsActive)
+            .Set(c => c.Description, category.Description);
+            
+        await _context.Categories.UpdateOneAsync(filter, update);
+    }
 }

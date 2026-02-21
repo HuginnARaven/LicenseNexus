@@ -1,0 +1,35 @@
+﻿### createCategory
+POST {{API_HostAddress}}/Category/
+Content-Type: application/json
+
+{
+  "categoryName": "TestCategory1",
+  "isActive": true,
+  "description": "Category1 description",
+  "Author": "Tester"
+}
+
+> {%
+    client.global.set("new_category_id", response.body.id);
+    client.log("Created Category ID: " + client.global.get("new_category_id"));
+%}
+
+### getAllCategories
+GET {{API_HostAddress}}/Category/
+Accept: application/json
+
+### getCategoryByID
+GET {{API_HostAddress}}/Category/1/
+Accept: application/json
+
+### editlCategory
+PUT {{API_HostAddress}}/Category/1/
+Content-Type: application/json
+
+{
+  "id": 1,
+  "categoryName": "TestBestCategory1",
+  "isActive": true,
+  "description": "Category1 Description",
+  "author": null
+}

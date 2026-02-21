@@ -37,5 +37,16 @@ namespace LicenseNexus.API.Controllers
             await productTypeService.AddProductType(productType);
             return Ok();
         }
+        
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] ProductTypeRequestDto productType)
+        {
+            if (productType == null)
+            {
+                return BadRequest();
+            }
+            await productTypeService.UpdateProductType(id, productType);
+            return Ok();
+        }
     }
 }

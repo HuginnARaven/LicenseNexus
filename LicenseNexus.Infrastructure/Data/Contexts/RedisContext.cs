@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
+using NRedisStack;
 
 namespace LicenseNexus.Infrastructure.Data.Contexts;
 

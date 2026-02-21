@@ -5,7 +5,7 @@ using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
 
-public class CurrencyService(ICurrencyRepository currencyRepository) : ICurrencyService
+public class CurrencyService(ICurrencyRepository currencyRepository, IEventPublisher eventPublisher) : ICurrencyService
 {
     public async Task<IEnumerable<CurrencyResponseDto>> GetAllCurrencies()
     {
@@ -46,5 +46,20 @@ public class CurrencyService(ICurrencyRepository currencyRepository) : ICurrency
         };
 
         await currencyRepository.AddAsync(currency);
+        
+    }
+
+    public async Task UpdateCurrency(int id, CurrencyRequestDto currencyDto)
+    {
+        var currency = new Currency
+        {
+            Id = id,
+            LiteralCode = currencyDto.LiteralCode,
+            Name = currencyDto.Name,
+            CountryCode = currencyDto.CountryCode
+        };
+
+        await currencyRepository.UpdateAsync(currency);
+        await eventPublisher.PublishAsync(new CurrencyUpdatedEvent(currency));
     }
 }

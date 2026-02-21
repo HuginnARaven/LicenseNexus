@@ -3,6 +3,8 @@ using LicenseNexus.API.Helpers;
 using LicenseNexus.Domain.Models;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
+using NRedisStack;
+using NRedisStack.RedisStackCommands;
 using StackExchange.Redis;
 
 namespace LicenseNexus.Infrastructure.Services;
@@ -32,34 +34,34 @@ public class ProductCacheService : IProductCacheService
 
     public async Task CacheProductModelAsync(ProductModel productModel)
     {
-        var json = JsonSerializer.Serialize(productModel);
-        var batch = _redisDb.CreateBatch();
+        var cacheTasks = new List<Task>();
+        var pipeline = new Pipeline(_redisDb);
         
         var productKey = $"product:{productModel.Id}";
-        _ = batch.StringSetAsync(productKey, json);
+        cacheTasks.Add(pipeline.Json.SetAsync(productKey, "$", productModel));
         
         if (productModel.Classification?.Group.CategoryId != null)
         {
             var categoryIndexKey = $"idx:category:{productModel.Classification.Group.CategoryId}:products";
-            _ = batch.SetAddAsync(categoryIndexKey, productModel.Id);
+            cacheTasks.Add(pipeline.Db.SetAddAsync(categoryIndexKey, productModel.Id));
         }
         
         if (productModel.Classification?.Group.Id != null)
         {
             var groupKey = $"idx:group:{productModel.Classification?.Group.Id}:products";
-            _ = batch.SetAddAsync(groupKey, productModel.Id);
+            cacheTasks.Add(pipeline.Db.SetAddAsync(groupKey, productModel.Id));
         }
         
         if (productModel.Classification?.TypeId != null)
         {
             var typeKey = $"idx:product_type:{productModel.Classification?.TypeId}:products";
-            _ = batch.SetAddAsync(typeKey, productModel.Id);
+            cacheTasks.Add(pipeline.Db.SetAddAsync(typeKey, productModel.Id));
         }
         
         if (productModel.Classification?.Vendor?.Id != null)
         {
             var vendorKey = $"idx:vendor:{productModel.Classification?.Vendor.Id}:products";
-            _ = batch.SetAddAsync(vendorKey, productModel.Id);
+            cacheTasks.Add(pipeline.Db.SetAddAsync(vendorKey, productModel.Id));
         }
         
         var minPrice = productModel.Prices?
@@ -70,27 +72,24 @@ public class ProductCacheService : IProductCacheService
         
         if (minPrice > 0)
         {
-            _ = batch.SortedSetAddAsync("idx:price:products", productModel.Id, (double)minPrice);
+            cacheTasks.Add(pipeline.Db.SortedSetAddAsync("idx:price:products", productModel.Id, (double)minPrice));
         }
         
         var tokens = SearchTokenizer.Tokenize(productModel.Title);
         foreach (var token in tokens)
         {
-            _ = batch.SetAddAsync($"idx:word:{token}:products", productModel.Id);
+            cacheTasks.Add(pipeline.Db.SetAddAsync($"idx:word:{token}:products", productModel.Id));
         }
         
-        batch.Execute();
-        await Task.CompletedTask;
+        pipeline.Execute();
+        await Task.WhenAll(cacheTasks);
     }
     
     public async Task RemoveProductCacheAsync(int productId)
     {
         var productKey = $"product:{productId}";
-        
-        var oldJson = await _redisDb.StringGetAsync(productKey);
-        if (oldJson.IsNullOrEmpty) return;
-
-        var oldModel = JsonSerializer.Deserialize<ProductModel>((string)oldJson!);
+        if (!await _redisDb.KeyExistsAsync(productKey)) return;
+        var oldModel = await _redisDb.JSON().GetAsync<ProductModel?>(productKey);
         if (oldModel == null) return;
         
         var batch = _redisDb.CreateBatch();

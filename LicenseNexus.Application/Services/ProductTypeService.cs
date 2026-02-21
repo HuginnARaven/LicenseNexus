@@ -5,7 +5,7 @@ using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
 
-public class ProductTypeService(IProductTypeRepository productTypeRepository) : IProductTypeService
+public class ProductTypeService(IProductTypeRepository productTypeRepository, IEventPublisher eventPublisher) : IProductTypeService
 {
     public async Task<IEnumerable<ProductTypeResponseDto>> GetAllProductTypes()
     {
@@ -40,5 +40,17 @@ public class ProductTypeService(IProductTypeRepository productTypeRepository) : 
         };
 
         await productTypeRepository.AddAsync(productType);
+    }
+
+    public async Task UpdateProductType(int id, ProductTypeRequestDto productTypeDto)
+    {
+        var productType = new ProductType
+        {
+            Id = id,
+            TypeName = productTypeDto.TypeName,
+        };
+
+        await productTypeRepository.UpdateAsync(productType);
+        await eventPublisher.PublishAsync(new ProductTypeUpdatedEvent(productType));
     }
 }

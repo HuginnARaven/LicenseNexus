@@ -50,4 +50,13 @@ public class MongoProductTypeRepository: IProductTypeRepository
 
         await _context.ProductTypes.InsertOneAsync(doc);
     }
+
+    public async Task UpdateAsync(ProductType productType)
+    {
+        var filter = Builders<ProductTypeDocument>.Filter.Eq(pt => pt.Id, productType.Id);
+        var update = Builders<ProductTypeDocument>.Update
+            .Set(pt => pt.TypeName, productType.TypeName);
+
+        await _context.ProductTypes.UpdateOneAsync(filter, update);
+    }
 }

@@ -37,5 +37,17 @@ namespace LicenseNexus.API.Controllers
             await productGroupService.AddProductGroup(group);
             return Ok();
         }
+        
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] ProductGroupEditRequestDto group)
+        {
+            if (group == null)
+            {
+                return BadRequest();
+            }
+
+            await productGroupService.UpdateProductGroup(id, group);
+            return Ok();
+        }
     }
 }

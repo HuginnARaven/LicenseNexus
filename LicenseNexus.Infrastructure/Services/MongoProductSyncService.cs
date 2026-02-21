@@ -30,4 +30,47 @@ public class MongoProductSyncService: IProductSyncService
         var update = Builders<ProductDocument>.Update.Set(p => p.Classification.Vendor, newVendorDoc);
         await _collection.UpdateManyAsync(filter, update, cancellationToken: ct);
     }
+
+    public async Task UpdateCategoryAsync(Category category, CancellationToken ct)
+    {
+        var filter = Builders<ProductDocument>.Filter.Eq(p => p.Classification.Group.CategoryId, category.Id);
+        var update = Builders<ProductDocument>.Update.Set(p => p.Classification.Group.CategoryName, category.CategoryName);
+        await _collection.UpdateManyAsync(filter, update, cancellationToken: ct);
+    }
+
+    public Task UpdateGroupAsync(ProductGroup group, CancellationToken ct)
+    {
+        var filter = Builders<ProductDocument>.Filter.Eq(p => p.Classification.Group.Id, group.Id);
+        var update = Builders<ProductDocument>.Update.Set(p => p.Classification.Group.Name, group.Name);
+        return _collection.UpdateManyAsync(filter, update, cancellationToken: ct);
+    }
+
+    public async Task UpdateProductTypeAsync(ProductType productType, CancellationToken ct)
+    {
+        var filter = Builders<ProductDocument>.Filter.Eq(p => p.Classification.TypeId, productType.Id);
+        var update = Builders<ProductDocument>.Update.Set(p => p.Classification.TypeName, productType.TypeName);
+        await _collection.UpdateManyAsync(filter, update, cancellationToken: ct);
+    }
+
+    public async Task UpdateUnitMeasureAsync(UnitMeasure unitMeasure, CancellationToken ct)
+    {
+        var filter = Builders<ProductDocument>.Filter.Eq(p => p.Classification.UnitMeasureId, unitMeasure.Id);
+        var update = Builders<ProductDocument>.Update.Set(p => p.Classification.UnitMeasureName, unitMeasure.Name);
+        await _collection.UpdateManyAsync(filter, update, cancellationToken: ct);
+    }
+
+    public async Task UpdateCurrencyAsync(Currency currency, CancellationToken ct)
+    {
+        var filter = Builders<ProductDocument>.Filter.Eq(p => p.Currency.Id, currency.Id);
+
+        var newCurrencyDoc = new CurrencyDoc
+        {
+            Id = currency.Id,
+            LiteralCode = currency.LiteralCode,
+            Name = currency.Name
+        };
+        
+        var update = Builders<ProductDocument>.Update.Set(p => p.Currency, newCurrencyDoc);
+        await _collection.UpdateManyAsync(filter, update, cancellationToken: ct);
+    }
 }

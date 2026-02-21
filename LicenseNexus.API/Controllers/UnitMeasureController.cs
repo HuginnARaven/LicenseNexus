@@ -37,5 +37,16 @@ namespace LicenseNexus.API.Controllers
             await unitMeasureService.AddUnitMeasure(unitMeasure);
             return Ok();
         }
+        
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] UnitMeasureRequestDto unitMeasure)
+        {
+            if (unitMeasure == null)
+            {
+                return BadRequest();
+            }
+            await unitMeasureService.UpdateUnitMeasure(id, unitMeasure);
+            return Ok();
+        }
     }
 }

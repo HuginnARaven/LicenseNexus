@@ -28,4 +28,10 @@ public class RedisUnitMeasureRepository: IUnitMeasureRepository
         _context.UnitMeasures.Add(unitMeasure);
         await _context.SaveChangesAsync();
     }
+
+    public async Task UpdateAsync(UnitMeasure unitMeasure)
+    {
+        _context.UnitMeasures.Update(unitMeasure);
+        await _context.SaveChangesAsync();
+    }
 }

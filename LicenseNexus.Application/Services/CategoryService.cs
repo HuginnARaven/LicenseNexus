@@ -5,7 +5,7 @@ using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
 
-public class CategoryService(ICategoryRepository categoryRepository) : ICategoryService
+public class CategoryService(ICategoryRepository categoryRepository, IEventPublisher eventPublisher) : ICategoryService
 {
     public async Task<IEnumerable<CategoryResponseDto>> GetAllCategories()
     {
@@ -52,5 +52,21 @@ public class CategoryService(ICategoryRepository categoryRepository) : ICategory
         };
 
         await categoryRepository.AddAsync(category);
+    }
+
+    public async Task UpdateCategory(int id, CategoryRequestDto category)
+    {
+        var updatedCategory = new Category
+        {
+            Id = id,
+            CategoryName = category.CategoryName,
+            IsActive = category.IsActive,
+            Description = category.Description,
+            Author = category.Author,
+            CreatedDate = DateTime.UtcNow
+        };
+
+        await categoryRepository.UpdateAsync(updatedCategory);
+        await eventPublisher.PublishAsync(new CategoryUpdatedEvent(updatedCategory));
     }
 }

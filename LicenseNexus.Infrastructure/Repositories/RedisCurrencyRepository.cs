@@ -28,4 +28,10 @@ public class RedisCurrencyRepository: ICurrencyRepository
         _context.Currencies.Add(currency);
         await _context.SaveChangesAsync();
     }
+
+    public async Task UpdateAsync(Currency currency)
+    {
+        _context.Currencies.Update(currency);
+        await _context.SaveChangesAsync();
+    }
 }

@@ -37,5 +37,16 @@ namespace LicenseNexus.API.Controllers
             await currencyService.AddCurrency(currency);
             return Ok();
         }
+        
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] CurrencyRequestDto currency)
+        {
+            if (currency == null)
+            {
+                return BadRequest();
+            }
+            await currencyService.UpdateCurrency(id, currency);
+            return Ok();
+        }
     }
 }
