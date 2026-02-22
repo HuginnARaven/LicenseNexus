@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Domain.Entities;
 
 [Table("Orders")]
-public class Order
+public class Order : IEntity
 {
     [Key]
     [Column("id")]

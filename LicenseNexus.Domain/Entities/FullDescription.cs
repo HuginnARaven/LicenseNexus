@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Domain.Entities;
 
 [Table("Full_description")]
-public class FullDescription
+public class FullDescription : IEntity
 {
     [Key] [Column("id")] 
     public int Id { get; set; }

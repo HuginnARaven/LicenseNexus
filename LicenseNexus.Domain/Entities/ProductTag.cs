@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Domain.Entities;
 
 [Table("Product_tag")]
-public class ProductTag
+public class ProductTag : IEntity
 {
     [Key]
     [Column("id")]

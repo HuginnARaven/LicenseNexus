@@ -7,21 +7,21 @@ namespace LicenseNexus.Application.Services;
 
 public class PartnerService(IPartnerRepository repository) : IPartnerService
 {
-    public async Task<IEnumerable<PartnerResponseDto>> GetAllAsync()
+    public async Task<IEnumerable<PartnerResponseDto>> GetAllPartnersAsync()
     {
-        var partners = await repository.GetAllAsync();
+        var partners = await repository.GetAllAsync(false, p => p.Addresses, p => p.Customers);
         return partners.Select(MapPartnerToDto);
     }
 
-    public async Task<PartnerResponseDto?> GetByIdAsync(int id)
+    public async Task<PartnerResponseDto?> GetPartnerByIdAsync(int id)
     {
-        var partner = await repository.GetByIdAsync(id);
+        var partner = await repository.GetByIdAsync(id, false, p => p.Addresses, p => p.Customers);
         if (partner == null)
             return null;
         return MapPartnerToDto(partner);
     }
 
-    public async Task<PartnerResponseDto?> CreateAsync(PartnerRequestDto partnerDto)
+    public async Task<PartnerResponseDto?> CreatePartnerAsync(PartnerRequestDto partnerDto)
     {
         var partner = new Partner
         {
@@ -42,7 +42,7 @@ public class PartnerService(IPartnerRepository repository) : IPartnerService
         return MapPartnerToDto(createdPartner);
     }
 
-    public async Task UpdateAsync(int id, PartnerRequestDto partnerDto)
+    public async Task UpdatePartnerAsync(int id, PartnerRequestDto partnerDto)
     {
         var partner = new Partner
         {
@@ -59,7 +59,7 @@ public class PartnerService(IPartnerRepository repository) : IPartnerService
         await repository.UpdateAsync(partner);
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task DeletePartnerAsync(int id)
     {
         await repository.DeleteAsync(id);
     }

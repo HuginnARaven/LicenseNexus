@@ -5,39 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LicenseNexus.Infrastructure.Repositories;
 
-public class SqlOrderRepository: IOrderRepository
+public class SqlOrderRepository(BaseSqlContext context) : BaseSqlRepository<Order>(context), IOrderRepository
 {
-    private readonly BaseSqlContext _context;
-
-    public SqlOrderRepository(BaseSqlContext context)
-    {
-        _context = context;
-    }
-    
-    public async Task<Order?> GetByIdAsync(int id)
-    {
-        return await _context.Orders
-            .FirstOrDefaultAsync(o => o.Id == id);
-    }
-
-    public async Task<Order?> AddAsync(Order order)
-    {
-        await _context.Orders.AddAsync(order);
-        var res = await _context.SaveChangesAsync();
-        if (res > 0)
-            return order;
-        return null;
-    }
-
-    public async Task<IEnumerable<Order>> GetAllAsync()
-    {
-        return await _context.Orders
-            .Include(o => o.OrderProducts)
-            .Include(o => o.Customer)
-            .ToListAsync();
-    }
-
-    public async Task UpdateAsync(Order order)
+    public override async Task UpdateAsync(Order order)
     {
         await _context.Orders.Where(o => o.Id == order.Id).ExecuteUpdateAsync(setters => setters
             .SetProperty(o => o.CustomerId, order.CustomerId)
@@ -47,13 +17,6 @@ public class SqlOrderRepository: IOrderRepository
             .SetProperty(o => o.PostingDate, order.PostingDate)
             .SetProperty(o => o.InvoiceRequested, order.InvoiceRequested)
         );
-    }
-
-    public async Task DeleteAsync(int id)
-    {
-        await _context.Orders
-            .Where(o => o.Id == id)
-            .ExecuteDeleteAsync();
     }
 
     public async Task<OrderProduct?> AddOrderProduct(OrderProduct orderProduct)

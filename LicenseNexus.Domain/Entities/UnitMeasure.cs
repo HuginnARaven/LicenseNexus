@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Domain.Entities;
 
 [Table("Unit_measure")]
-public class UnitMeasure
+public class UnitMeasure : IEntity
 {
     [Key]
     [Column("id")]

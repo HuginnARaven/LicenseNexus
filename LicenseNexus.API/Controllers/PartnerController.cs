@@ -13,13 +13,13 @@ namespace LicenseNexus.API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<string>>> Get()
         {
-            return Ok(await service.GetAllAsync());
+            return Ok(await service.GetAllPartnersAsync());
         }
         
         [HttpGet("{id}")]
         public async Task<ActionResult<Partner?>> Get(int id)
         {
-            var order = await service.GetByIdAsync(id);
+            var order = await service.GetPartnerByIdAsync(id);
             if (order == null)
             {
                 return NotFound();
@@ -30,20 +30,20 @@ namespace LicenseNexus.API.Controllers
         [HttpPost]
         public async Task<ActionResult<Partner?>> Post([FromBody] PartnerRequestDto partner)
         {
-            return Ok(await service.CreateAsync(partner));
+            return Ok(await service.CreatePartnerAsync(partner));
         }
         
         [HttpPut("{id}")]
         public async Task<ActionResult> Put(int id, [FromBody] PartnerRequestDto partner)
         {
-            await service.UpdateAsync(id, partner);
+            await service.UpdatePartnerAsync(id, partner);
             return Ok();
         }
         
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(int id)
         {
-            await service.DeleteAsync(id);
+            await service.DeletePartnerAsync(id);
             return Ok();
         }
     }

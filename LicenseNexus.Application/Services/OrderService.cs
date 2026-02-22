@@ -9,13 +9,17 @@ public class OrderService(IOrderRepository orderRepository, IProductRepository p
 {
     public async Task<IEnumerable<OrderResponseDto>> GetAllOrdersAsync()
     {
-        var orders = await orderRepository.GetAllAsync();
+        var orders = await orderRepository.GetAllAsync(
+            false,
+            o => o.OrderProducts, 
+            o => o.Customer!
+            );
         return orders.Select(MapOrderToDto);
     }
 
     public async Task<OrderResponseDto?> GetOrderByIdAsync(int id)
     {
-        var order = await orderRepository.GetByIdAsync(id);
+        var order = await orderRepository.GetByIdAsync(id, false, o => o.OrderProducts, o => o.Customer!);
         if (order == null)
             return null;
         return MapOrderToDto(order);

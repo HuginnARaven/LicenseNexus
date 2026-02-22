@@ -5,9 +5,9 @@ namespace LicenseNexus.Application.Interfaces;
 
 public interface IPartnerService
 {
-    Task<IEnumerable<PartnerResponseDto>> GetAllAsync();
-    Task<PartnerResponseDto?> GetByIdAsync(int id);
-    Task<PartnerResponseDto?> CreateAsync(PartnerRequestDto partner);
-    Task UpdateAsync(int id, PartnerRequestDto partner);
-    Task DeleteAsync(int id);
+    Task<IEnumerable<PartnerResponseDto>> GetAllPartnersAsync();
+    Task<PartnerResponseDto?> GetPartnerByIdAsync(int id);
+    Task<PartnerResponseDto?> CreatePartnerAsync(PartnerRequestDto partner);
+    Task UpdatePartnerAsync(int id, PartnerRequestDto partner);
+    Task DeletePartnerAsync(int id);
 }

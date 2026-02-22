@@ -17,7 +17,17 @@ public class CategoryService(ICategoryRepository categoryRepository, IEventPubli
             IsActive = c.IsActive,
             Description = c.Description,
             CreatedDate = c.CreatedDate,
-            Author = c.Author
+            Author = c.Author,
+            CategoryGroups = c.ProductGroups.Select(pg => new ProductGroupResponseDto
+            {
+                Id = pg.Id,
+                Name = pg.Name,
+                IsActive = pg.IsActive,
+                Note = pg.Note,
+                CreatedDate = pg.CreatedDate,
+                Author = pg.Author,
+                CategoryId = pg.CategoryId
+            }).ToList()
         });
     }
 
@@ -36,7 +46,17 @@ public class CategoryService(ICategoryRepository categoryRepository, IEventPubli
             IsActive = category.IsActive,
             Description = category.Description,
             CreatedDate = category.CreatedDate,
-            Author = category.Author
+            Author = category.Author,
+            CategoryGroups = category.ProductGroups.Select(pg => new ProductGroupResponseDto
+            {
+                Id = pg.Id,
+                Name = pg.Name,
+                IsActive = pg.IsActive,
+                Note = pg.Note,
+                CreatedDate = pg.CreatedDate,
+                Author = pg.Author,
+                CategoryId = pg.CategoryId
+            }).ToList()
         };
     }
 

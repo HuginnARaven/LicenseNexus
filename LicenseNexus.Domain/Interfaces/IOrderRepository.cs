@@ -2,14 +2,8 @@
 
 namespace LicenseNexus.Domain.Interfaces;
 
-public interface IOrderRepository
+public interface IOrderRepository: IBaseRepository<Order>
 {
-    Task<Order?> GetByIdAsync(int id);
-    Task<Order?> AddAsync(Order order);
-    Task<IEnumerable<Order>> GetAllAsync();
-    Task UpdateAsync(Order order);
-    Task DeleteAsync(int id);
-    
     Task<OrderProduct?> AddOrderProduct(OrderProduct orderProduct);
     Task DeleteOrderProduct(int id);
 }

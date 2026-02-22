@@ -8,4 +8,6 @@ public class CategoryResponseDto
     public string? Description { get; set; }
     public DateTime CreatedDate { get; set; }
     public string? Author { get; set; }
+    
+    public List<ProductGroupResponseDto> CategoryGroups { get; set; } = [];
 }
