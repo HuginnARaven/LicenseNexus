@@ -8,5 +8,5 @@ public interface ICurrencyRepository
     Task<Currency?> GetByIdAsync(int id);
     Task AddAsync(Currency currency);
     Task UpdateAsync(Currency currency);
-    //TODO: mb add Update/Delete 
+    //TODO: mb add Delete 
 }

@@ -43,7 +43,7 @@ Content-Type: application/json
   "sku": "SKU123-UPDATED",
   "title": "Test Product Updated",
   "shortDescription": "A test product updated",
-  "vendorId": 1,
+  "vendorId": 8,
   "productTypeId": 1,
   "unitMeasureId": 1,
   "currencyId": 1,
@@ -69,6 +69,45 @@ Content-Type: application/json
   "shortDescription": "A test product updated twice",
   "productTypeId": 2
 }
+
+### createPrice
+POST {{API_HostAddress}}/Product/{{new_product_id}}/price
+Content-Type: application/json
+
+{
+  "Price": 100,
+  "TermDuration": 10,
+  "BillingPlan": "TestBillingPlan",
+  "CountryCode": "TST",
+  "Segment": "TestSegment",
+  "startDate": "2023-01-01T00:00:00Z"
+}
+
+> {%
+    client.global.set("new_price_id", response.body.id);
+    client.log("Created Price ID: " + client.global.get("new_price_id"));
+%}
+
+### editPrice
+PUT {{API_HostAddress}}/Product/{{new_product_id}}/price/{{new_price_id}}/
+Content-Type: application/json
+
+{
+  "Price": 100,
+  "TermDuration": 10,
+  "BillingPlan": "QuestBillingPlan",
+  "CountryCode": "TST",
+  "Segment": "QuestSegment",
+  "startDate": "2023-01-01T00:00:00Z"
+}
+
+### getProductByID
+GET {{API_HostAddress}}/Product/{{new_product_id}}/
+Accept: application/json
+
+### deletePrice
+DELETE {{API_HostAddress}}/Product/{{new_product_id}}/price/{{new_price_id}}/
+Content-Type: application/json
 
 ### deleteProduct
 DELETE {{API_HostAddress}}/Product/{{new_product_id}}/

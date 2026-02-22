@@ -410,6 +410,58 @@ public class RedisProductRepository: IProductRepository
         }
     }
 
+    public async Task<ProductPrice?> GetPriceAsync(int productId, int priceId)
+    {
+        return await _sqlContext.ProductPrices.FirstOrDefaultAsync(p => p.Id == priceId && p.ProductId == productId);
+    }
+
+    public async Task<ProductPrice?> AddPrice(ProductPrice price)
+    {
+        _sqlContext.ProductPrices.Add(price);
+        var res = await _sqlContext.SaveChangesAsync();
+        if (res > 0)
+        {
+            var productKey = $"product:{price.ProductId}";
+            await _redisDb.JSON().ArrAppendAsync(productKey, "$.Prices", new ProductPriceModel
+            {
+                Id = price.Id,
+                Price = price.Price,
+                TermDuration = price.TermDuration,
+                BillingPlan = price.BillingPlan,
+                CountryCode = price.CountryCode,
+                Segment = price.Segment,
+                StartDate = price.StartDate
+            });
+            return price;
+        }
+            
+        return null;
+    }
+
+    public async Task UpdatePrice(ProductPrice price)
+    {
+        var res = await _sqlContext.ProductPrices.Where(p => p.Id == price.Id && p.ProductId == price.ProductId).ExecuteUpdateAsync(setters => setters
+            .SetProperty(p => p.Price, price.Price)
+            .SetProperty(p => p.TermDuration, price.TermDuration)
+            .SetProperty(p => p.BillingPlan, price.BillingPlan)
+            .SetProperty(p => p.CountryCode, price.CountryCode)
+            .SetProperty(p => p.Segment, price.Segment)
+            .SetProperty(p => p.StartDate, price.StartDate)
+        );
+
+        if (res > 0)
+        {
+            await _redisDb.JSON().SetAsync($"product:{price.ProductId}", $"$.Prices[?(@.Id=={price.Id})]", price);
+        }
+    }
+
+    public async Task DeletePrice(int productId, int priceId)
+    {
+        var res = await _sqlContext.ProductPrices.Where(p => p.Id == priceId).ExecuteDeleteAsync();
+        if (res > 0)
+            await _redisDb.JSON().DelAsync($"product:{productId}", $"$.Prices[?(@.Id=={priceId})]");
+    }
+
     private Product MapToDomain(ProductModel model)
     {
         return new Product

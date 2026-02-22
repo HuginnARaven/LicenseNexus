@@ -5,10 +5,10 @@ POST {{API_HostAddress}}/Product/
 Content-Type: application/json
 
 {
-  "sku": "SKU332",
+  "sku": "SKU123",
   "title": "Best Test",
   "shortDescription": "The Best Test",
-  "vendorId": 1,
+  "vendorId": 8,
   "productTypeId": 1,
   "unitMeasureId": 1,
   "currencyId": 1,
@@ -29,58 +29,12 @@ Content-Type: application/json
     client.log("Created Product ID: " + client.global.get("new_product_id"));
 %}
 
-### getAllProducts
-GET {{API_HostAddress}}/Product/
-Accept: application/json
-
 ### getProductByID
 GET {{API_HostAddress}}/Product/{{new_product_id}}/
 Accept: application/json
 
-### updateProduct
-PUT {{API_HostAddress}}/Product/{{new_product_id}}/
-Content-Type: application/json
-
-{
-  "sku": "SKU123-UPDATED",
-  "title": "Test Product Updated",
-  "shortDescription": "A test product updated",
-  "vendorId": 1,
-  "productTypeId": 1,
-  "unitMeasureId": 1,
-  "currencyId": 1,
-  "productGroupId": 1,
-  "quantityMin": 1,
-  "quantityMax": 100,
-  "startDate": "2023-01-01T00:00:00Z",
-  "endDate": "2023-12-31T23:59:59Z",
-  "isPromo": false,
-  "isTop": true,
-  "isNew": true,
-  "logo": "http://example.com/logo.png",
-  "author": "Tester"
-}
-
-### patchProduct
-PATCH {{API_HostAddress}}/Product/{{new_product_id}}/
-Content-Type: application/json
-
-{
-  "sku": "SKU321-PATCHED",
-  "title": "Quest Product Updated",
-  "shortDescription": "A test product updated twice"
-}
-
-### deleteProduct
-DELETE {{API_HostAddress}}/Product/{{new_product_id}}/
-Accept: application/json
-
-### getAllVendors
-GET {{API_HostAddress}}/Vendor/
-Accept: application/json
-
 ### editlVendor
-PUT {{API_HostAddress}}/Vendor/1/
+PUT {{API_HostAddress}}/Vendor/8/
 Content-Type: application/json
 
 {
@@ -90,3 +44,79 @@ Content-Type: application/json
   "countryCode": "TST",
   "logo": "123123123"
 }
+
+### getProductByID
+GET {{API_HostAddress}}/Product/{{new_product_id}}/
+Accept: application/json
+
+### editlCategory
+PUT {{API_HostAddress}}/Category/1/
+Content-Type: application/json
+
+{
+  "categoryName": "QuestCategory1",
+  "isActive": true,
+  "description": "Category1 Description",
+  "author": null
+}
+
+### getProductByID
+GET {{API_HostAddress}}/Product/{{new_product_id}}/
+Accept: application/json
+
+### editProductGroup
+PUT {{API_HostAddress}}/ProductGroup/1/
+Content-Type: application/json
+
+{
+  "name": "QuestGroup1",
+  "isActive": true,
+  "note": "ProductGroup1 description",
+  "author": "Test"
+}
+
+### getProductByID
+GET {{API_HostAddress}}/Product/{{new_product_id}}/
+Accept: application/json
+
+### editProductType
+PUT {{API_HostAddress}}/ProductType/1/
+Content-Type: application/json
+
+{
+  "typeName": "QuestType"
+}
+
+### getProductByID
+GET {{API_HostAddress}}/Product/{{new_product_id}}/
+Accept: application/json
+
+### editlUnitMeasure
+PUT {{API_HostAddress}}/UnitMeasure/1/
+Content-Type: application/json
+
+{
+  "name": "QuestUnitMeasure"
+}
+
+### getProductByID
+GET {{API_HostAddress}}/Product/{{new_product_id}}/
+Accept: application/json
+
+### editlCurrency
+PUT {{API_HostAddress}}/Currency/1/
+Content-Type: application/json
+
+{
+  "literalCode": "?",
+  "name": "QuestDollar",
+  "countryCode": "USA"
+}
+
+### getProductByID
+GET {{API_HostAddress}}/Product/{{new_product_id}}/
+Accept: application/json
+
+### deleteProduct
+DELETE {{API_HostAddress}}/Product/{{new_product_id}}/
+Accept: application/json

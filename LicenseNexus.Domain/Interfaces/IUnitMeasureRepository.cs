@@ -8,5 +8,5 @@ public interface IUnitMeasureRepository
     Task<UnitMeasure?> GetByIdAsync(int id);
     Task AddAsync(UnitMeasure unitMeasure);
     Task UpdateAsync(UnitMeasure unitMeasure);
-    //TODO: mb add Update/Delete 
+    //TODO: mb add Delete 
 }

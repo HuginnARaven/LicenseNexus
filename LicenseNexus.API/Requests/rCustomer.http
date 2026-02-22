@@ -1,0 +1,46 @@
+﻿### createCustomer
+POST {{API_HostAddress}}/Customer/
+Content-Type: application/json
+
+{
+  "PartnerId": 1,
+  "AccountName": "TestCustomer",
+  "Email": "TestCustomer@test.tst",
+  "LegalName": "TestCustomerInc",
+  "City": "TestCity",
+  "Region": "TestRegion",
+  "ZipCode": "0000000",
+  "CountryCode": "TST"
+}
+
+> {%
+    client.global.set("new_customer_id", response.body.id);
+    client.log("Created Customer ID: " + client.global.get("new_customer_id"));
+%}
+
+### getAllCustomers
+GET {{API_HostAddress}}/Customer/
+Accept: application/json
+
+### getCustomerByID
+GET {{API_HostAddress}}/Customer/{{new_customer_id}}/
+Accept: application/json
+
+### editlCustomer
+PUT {{API_HostAddress}}/Customer/{{new_customer_id}}/
+Content-Type: application/json
+
+{
+  "PartnerId": 2,
+  "AccountName": "BestTestCustomer",
+  "Email": "TestCustomer@test.tst",
+  "LegalName": "TestCustomerInc",
+  "City": "TestCity",
+  "Region": "TestRegion",
+  "ZipCode": "0000000",
+  "CountryCode": "TST"
+}
+
+### deleteCustomer
+DELETE {{API_HostAddress}}/Customer/{{new_customer_id}}/
+Accept: application/json

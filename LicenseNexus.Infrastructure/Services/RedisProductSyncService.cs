@@ -67,8 +67,6 @@ public class RedisProductSyncService : IProductSyncService
 
     public async Task UpdateGroupAsync(ProductGroup group, CancellationToken ct)
     {
-        Console.WriteLine("UpdateGroupAsync");
-        Console.WriteLine("group.Id" + group.Id);
         var indexKey = $"idx:group:{group.Id}:products";
         var productIds = await _redisDb.SetMembersAsync(indexKey);
     

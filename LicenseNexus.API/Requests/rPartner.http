@@ -1,0 +1,46 @@
+﻿### createPartner
+POST {{API_HostAddress}}/Partner/
+Content-Type: application/json
+
+{
+  "countryCode": "TST",
+  "FullCompanyName": "TestPartnerInc",
+  "RegistrationNumber": "32132131231212",
+  "TaxNumber": "123123123123",
+  "BankAccountNumber": "TST902054992913334149155556789",
+  "BankName": "TestBank",
+  "Phone": "000 000 000 000",
+  "Author": "Tester"
+}
+
+> {%
+    client.global.set("new_partner_id", response.body.id);
+    client.log("Created Partner ID: " + client.global.get("new_partner_id"));
+%}
+
+### getAllPartners
+GET {{API_HostAddress}}/Partner/
+Accept: application/json
+
+### getPartnerByID
+GET {{API_HostAddress}}/Partner/{{new_partner_id}}/
+Accept: application/json
+
+### editlPartner
+PUT {{API_HostAddress}}/Partner/{{new_partner_id}}/
+Content-Type: application/json
+
+{
+  "countryCode": "TST",
+  "FullCompanyName": "EditedTestPartnerInc",
+  "RegistrationNumber": "32132131231212",
+  "TaxNumber": "123123123123",
+  "BankAccountNumber": "TST902054992913334149155556789",
+  "BankName": "TestBank",
+  "Phone": "000 000 000 000",
+  "Author": "Tester"
+}
+
+### deletePartner
+DELETE {{API_HostAddress}}/Partner/{{new_partner_id}}/
+Accept: application/json

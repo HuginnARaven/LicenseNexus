@@ -1,0 +1,58 @@
+﻿### createOrder
+POST {{API_HostAddress}}/Order/
+Content-Type: application/json
+
+{
+  "CustomerId": 2,
+  "OrderStatusId": 1,
+  "DocumentNum": "123123123123qwe",
+  "PostingDate": "2023-01-01T00:00:00Z",
+  "InvoiceRequested": false
+}
+
+> {%
+    client.global.set("new_order_id", response.body.id);
+    client.log("Created Order ID: " + client.global.get("new_order_id"));
+%}
+
+### getAllOrders
+GET {{API_HostAddress}}/Order/
+Accept: application/json
+
+### getOrderByID
+GET {{API_HostAddress}}/Order/{{new_order_id}}/
+Accept: application/json
+
+### editlOrder
+PUT {{API_HostAddress}}/Order/{{new_order_id}}/
+Content-Type: application/json
+
+{
+  "CustomerId": 2,
+  "OrderStatusId": 1002,
+  "DocumentNum": "123123123123qwe",
+  "PostingDate": "2023-01-01T00:00:00Z",
+  "InvoiceRequested": true
+}
+
+### createOrderProduct
+POST {{API_HostAddress}}/Order/OrderProduct/
+Content-Type: application/json
+
+{
+  "ProductId": 12002,
+  "PriceId": 2002,
+  "OrderId": 3,
+  "Quantity": 10,
+  "CustomerPrice": 10,
+  "Status": "Created"
+}
+
+> {%
+    client.global.set("new_order_product_id", response.body.id);
+    client.log("Created OrderProduct ID: " + client.global.get("new_order_product_id"));
+%}
+
+### deleteOrder
+DELETE {{API_HostAddress}}/Order/{{new_order_id}}/
+Accept: application/json

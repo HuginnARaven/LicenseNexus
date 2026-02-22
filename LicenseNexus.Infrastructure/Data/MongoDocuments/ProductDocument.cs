@@ -135,6 +135,9 @@ public class DescriptionDoc
 
 public class ProductPriceDoc
 {
+    [BsonElement("id")]
+    public int Id { get; set; }
+    
     [BsonElement("price")]
     [BsonRepresentation(BsonType.Decimal128)]
     public decimal Price { get; set; }

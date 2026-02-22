@@ -1,5 +1,6 @@
 ﻿using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
+using LicenseNexus.Domain.Entities;
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Domain.Models;
 
@@ -60,6 +61,45 @@ public class ProductService(
     public async Task DeleteAsync(int id)
     {
         await productRepository.DeleteAsync(id);
+    }
+
+    public async Task<ProductPrice?> AddProductPrice(int productId, ProductPriceRequestDto priceDto)
+    {
+        var price = new ProductPrice
+        {
+            ProductId = productId,
+            Price = priceDto.Price,
+            TermDuration = priceDto.TermDuration,
+            BillingPlan = priceDto.BillingPlan,
+            CountryCode = priceDto.CountryCode,
+            Segment = priceDto.Segment,
+            StartDate = priceDto.StartDate
+        };
+        
+        return await productRepository.AddPrice(price);
+    }
+
+    public async Task UpdateProductPrice(int productId, int priceId, ProductPriceRequestDto price)
+    {
+        var productPrice = new ProductPrice
+        {
+            Id = priceId,
+            ProductId = productId,
+            Price = price.Price,
+            TermDuration = price.TermDuration,
+            BillingPlan = price.BillingPlan,
+            CountryCode = price.CountryCode,
+            Segment = price.Segment,
+            StartDate = price.StartDate
+        };
+
+        await productRepository.UpdatePrice(productPrice);
+    }
+
+    public async Task DeleteProductPrice(int productId, int priceId)
+    {
+        await productRepository.DeletePrice(productId, priceId);
+
     }
 
     private async Task<ProductModel> MapDtoToModel(ProductRequestDTO dto)

@@ -5,6 +5,10 @@ namespace LicenseNexus.Domain.Interfaces;
 public interface IOrderRepository
 {
     Task<Order?> GetByIdAsync(int id);
-    Task AddAsync(Order order);
-    //TODO: implement Update/Delete
+    Task<Order?> AddAsync(Order order);
+    Task<IEnumerable<Order>> GetAllAsync();
+    Task UpdateAsync(Order order);
+    Task DeleteAsync(int id);
+    
+    Task<OrderProduct?> AddOrderProduct(OrderProduct orderProduct);
 }

@@ -57,14 +57,14 @@ public class AttributesModel
 
 public class DescriptionModel
 {
-    public int? Id { get; set; } // Only for updating Product.Full_description in mssql
+    public int Id { get; set; }
     public string FullText { get; set; } = string.Empty;
     public string LanguageCode { get; set; } = string.Empty;
 }
 
 public class ProductPriceModel
 {
-    public int? Id { get; set; } // Only for updating Product.Product_price in mssql
+    public int Id { get; set; }
     public decimal Price { get; set; }
     public int? TermDuration { get; set; }
     public string? BillingPlan { get; set; }

@@ -95,5 +95,41 @@ namespace LicenseNexus.API.Controllers
             await productService.DeleteAsync(id);
             return NoContent();
         }
+        
+        [HttpPost("{productId}/price")]
+        public async Task<IActionResult> AddPrice(int productId, [FromBody] ProductPriceRequestDto priceDto)
+        {
+            if (priceDto == null)
+            {
+                return BadRequest();
+            }
+
+            var result = await productService.AddProductPrice(productId, priceDto);
+            if (result == null)
+            {
+                return BadRequest("Could not add price to the product.");
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPut("{productId}/price/{priceId}")]
+        public async Task<IActionResult> UpdatePrice(int productId, int priceId, [FromBody] ProductPriceRequestDto priceDto)
+        {
+            if (priceDto == null)
+            {
+                return BadRequest();
+            }
+
+            await productService.UpdateProductPrice(productId, priceId, priceDto);
+            return NoContent();
+        }
+
+        [HttpDelete("{productId}/price/{priceId}")]
+        public async Task<IActionResult> DeletePrice(int productId, int priceId)
+        {
+            await productService.DeleteProductPrice(productId, priceId);
+            return NoContent();
+        }
     }
 }

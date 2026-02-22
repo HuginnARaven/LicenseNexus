@@ -8,5 +8,5 @@ public interface IProductTypeRepository
     Task<ProductType?> GetByIdAsync(int id);
     Task AddAsync(ProductType productType);
     Task UpdateAsync(ProductType productType);
-    //TODO: mb add Update/Delete 
+    //TODO: mb add Delete 
 }

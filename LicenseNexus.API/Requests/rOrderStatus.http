@@ -1,0 +1,32 @@
+﻿### createOrderStatus
+POST {{API_HostAddress}}/OrderStatus/
+Content-Type: application/json
+
+{
+  "name": "TestOrderStatus"
+}
+
+> {%
+    client.global.set("new_order_status_id", response.body.id);
+    client.log("Created OrderStatus ID: " + client.global.get("new_order_status_id"));
+%}
+
+### getAllOrderStatuses
+GET {{API_HostAddress}}/OrderStatus/
+Accept: application/json
+
+### getOrderStatusByID
+GET {{API_HostAddress}}/OrderStatus/{{new_order_status_id}}/
+Accept: application/json
+
+### editlOrderStatus
+PUT {{API_HostAddress}}/OrderStatus/{{new_order_status_id}}/
+Content-Type: application/json
+
+{
+  "name": "TestOrderStatus"
+}
+
+### deleteOrderStatus
+DELETE {{API_HostAddress}}/OrderStatus/{{new_order_status_id}}/
+Accept: application/json

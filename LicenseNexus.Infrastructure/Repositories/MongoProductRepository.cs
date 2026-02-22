@@ -1,8 +1,10 @@
-﻿using LicenseNexus.Domain.Interfaces;
+﻿using LicenseNexus.Domain.Entities;
+using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Domain.Models;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using LicenseNexus.Infrastructure.Data.MongoDocuments;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 namespace LicenseNexus.Infrastructure.Repositories;
 
@@ -227,6 +229,84 @@ public class MongoProductRepository : IProductRepository
         await _collection.DeleteOneAsync(x => x.ProductId == id);
     }
 
+    public async Task<ProductPrice?> GetPriceAsync(int productId, int priceId)
+    {
+        var filter = Builders<ProductDocument>.Filter.And(
+            Builders<ProductDocument>.Filter.Eq(p => p.ProductId, productId),
+            Builders<ProductDocument>.Filter.ElemMatch(p => p.Prices, price => price.Id == priceId)
+        );
+        
+        var projection = Builders<ProductDocument>.Projection
+            .ElemMatch(p => p.Prices, price => price.Id == priceId)
+            .Include(p => p.Prices);
+
+        var document = await _collection
+            .Find(filter)
+            .Project<ProductDocument>(projection)
+            .FirstOrDefaultAsync();
+
+        var matchedPrice = document?.Prices?.FirstOrDefault();
+        if (matchedPrice == null) return null;
+
+        return new ProductPrice 
+        { 
+            Id = matchedPrice.Id, 
+            Price = matchedPrice.Price, 
+            TermDuration = matchedPrice.TermDuration, 
+            BillingPlan = matchedPrice.BillingPlan,
+            Segment = matchedPrice.Segment,
+            CountryCode = matchedPrice.CountryCode,
+            StartDate = matchedPrice.StartDate
+        };
+    }
+
+    public async Task<ProductPrice?> AddPrice(ProductPrice price)
+    {
+        var id = await _context.GetNextSequenceValueAsync("product_price_id");
+        var filter = Builders<ProductDocument>.Filter.Eq(p => p.ProductId, price.ProductId);
+        var update = Builders<ProductDocument>.Update.Push(p => p.Prices, new ProductPriceDoc
+        {
+            Id = id,
+            Price = price.Price,
+            TermDuration = price.TermDuration,
+            BillingPlan = price.BillingPlan,
+            Segment = price.Segment,
+            CountryCode = price.CountryCode,
+            StartDate = price.StartDate
+        });
+        await _collection.UpdateOneAsync(filter, update);
+        
+        price.Id = id;
+        return price;
+    }
+
+    public async Task UpdatePrice(ProductPrice price)
+    {
+        var filter = Builders<ProductDocument>.Filter.And(
+            Builders<ProductDocument>.Filter.Eq(p => p.ProductId, price.ProductId),
+            Builders<ProductDocument>.Filter.ElemMatch(p => p.Prices, p => p.Id == price.Id)
+        );
+        
+        var update = Builders<ProductDocument>.Update
+            .Set(p => p.Prices.FirstMatchingElement().Price, price.Price)
+            .Set(p => p.Prices.FirstMatchingElement().TermDuration, price.TermDuration)
+            .Set(p => p.Prices.FirstMatchingElement().BillingPlan, price.BillingPlan)
+            .Set(p => p.Prices.FirstMatchingElement().Segment, price.Segment)
+            .Set(p => p.Prices.FirstMatchingElement().CountryCode, price.CountryCode)
+            .Set(p => p.Prices.FirstMatchingElement().StartDate, price.StartDate);
+
+        await _collection.UpdateOneAsync(filter, update);
+    }
+
+    public async Task DeletePrice(int productId, int priceId)
+    {
+        var filter = Builders<ProductDocument>.Filter.Eq(p => p.ProductId, productId);
+        
+        var update = Builders<ProductDocument>.Update.PullFilter(p => p.Prices, p => p.Id == priceId);
+
+        await _collection.UpdateOneAsync(filter, update);
+    }
+
     private ProductDocument MapToDocument(ProductModel model)
     {
         return new ProductDocument
@@ -238,7 +318,9 @@ public class MongoProductRepository : IProductRepository
             Tags = model.Tags,
             Classification = new ClassificationDoc
             {
+                TypeId = model.Classification.TypeId,
                 TypeName = model.Classification.TypeName,
+                UnitMeasureId = model.Classification.UnitMeasureId,
                 UnitMeasureName = model.Classification.UnitMeasureName,
                 Vendor = new VendorDoc
                 {
@@ -281,6 +363,7 @@ public class MongoProductRepository : IProductRepository
             },
             Prices = model.Prices.Select(p => new ProductPriceDoc
             {
+                Id = p.Id,
                 Price = p.Price,
                 TermDuration = p.TermDuration,
                 BillingPlan = p.BillingPlan,
@@ -302,7 +385,9 @@ public class MongoProductRepository : IProductRepository
             Tags = doc.Tags,
             Classification = new ClassificationModel
             {
+                TypeId = doc.Classification.TypeId,
                 TypeName = doc.Classification.TypeName,
+                UnitMeasureId = doc.Classification.UnitMeasureId,
                 UnitMeasureName = doc.Classification.UnitMeasureName,
                 Vendor = new VendorModel
                 {
@@ -345,6 +430,7 @@ public class MongoProductRepository : IProductRepository
             },
             Prices = doc.Prices.Select(p => new ProductPriceModel
             {
+                Id = p.Id,
                 Price = p.Price,
                 TermDuration = p.TermDuration,
                 BillingPlan = p.BillingPlan,
