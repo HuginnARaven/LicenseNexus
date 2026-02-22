@@ -11,4 +11,5 @@ public interface IOrderRepository
     Task DeleteAsync(int id);
     
     Task<OrderProduct?> AddOrderProduct(OrderProduct orderProduct);
+    Task DeleteOrderProduct(int id);
 }

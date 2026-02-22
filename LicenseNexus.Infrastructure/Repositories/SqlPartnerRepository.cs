@@ -9,13 +9,18 @@ public class SqlPartnerRepository(BaseSqlContext sqlContext): IPartnerRepository
 {
     public async Task<IEnumerable<Partner>> GetAllAsync()
     {
-        return await sqlContext.Partners.ToListAsync();
+        return await sqlContext.Partners
+            .Include(p => p.Addresses)
+            .Include(p => p.Customers)
+            .ToListAsync();
     }
 
     public async Task<Partner?> GetByIdAsync(int id)
     {
         return await sqlContext.Partners
-            .FindAsync(id);
+            .Include(p => p.Addresses)
+            .Include(p => p.Customers)
+            .FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task<Partner?> AddAsync(Partner partner)

@@ -7,17 +7,21 @@ namespace LicenseNexus.Application.Services;
 
 public class OrderService(IOrderRepository orderRepository, IProductRepository productRepository): IOrderService
 {
-    public async Task<IEnumerable<Order>> GetAllOrdersAsync()
+    public async Task<IEnumerable<OrderResponseDto>> GetAllOrdersAsync()
     {
-        return await orderRepository.GetAllAsync();
+        var orders = await orderRepository.GetAllAsync();
+        return orders.Select(MapOrderToDto);
     }
 
-    public async Task<Order?> GetOrderByIdAsync(int id)
+    public async Task<OrderResponseDto?> GetOrderByIdAsync(int id)
     {
-        return await orderRepository.GetByIdAsync(id);
+        var order = await orderRepository.GetByIdAsync(id);
+        if (order == null)
+            return null;
+        return MapOrderToDto(order);
     }
 
-    public async Task<Order?> AddOrderAsync(OrderRequestDto orderDto)
+    public async Task<OrderResponseDto?> AddOrderAsync(OrderRequestDto orderDto)
     {
         var order = new Order
         {
@@ -28,8 +32,11 @@ public class OrderService(IOrderRepository orderRepository, IProductRepository p
             InvoiceRequested = orderDto.InvoiceRequested,
             OrderTotalSum = 0
         };
-
-        return await orderRepository.AddAsync(order);
+        
+        var orderRes = await orderRepository.AddAsync(order);
+        if (orderRes == null)
+            return null;
+        return MapOrderToDto(order);
     }
 
     public async Task UpdateOrderAsync(int id, OrderRequestDto orderDto)
@@ -53,7 +60,7 @@ public class OrderService(IOrderRepository orderRepository, IProductRepository p
 
     }
 
-    public async Task<OrderProduct?> AddOrderProductAsync(OrderProductRequestDto orderProductDto)
+    public async Task<OrderProductResponseDto?> AddOrderProductAsync(OrderProductRequestDto orderProductDto)
     {
         var price = await productRepository.GetPriceAsync(orderProductDto.ProductId, orderProductDto.PriceId);
         if (price == null)
@@ -73,6 +80,59 @@ public class OrderService(IOrderRepository orderRepository, IProductRepository p
             BillingCycle = price.BillingPlan
         };
         
-        return await orderRepository.AddOrderProduct(orderProduct);
+        var orderProdRes = await orderRepository.AddOrderProduct(orderProduct);
+        if (orderProdRes == null)
+            return null;
+        
+        return MapOrderProductProductToDto(orderProdRes);
+    }
+
+    public async Task DeleteOrderProductAsync(int id)
+    {
+        await orderRepository.DeleteOrderProduct(id);
+    }
+
+    private OrderResponseDto MapOrderToDto(Order order)
+    {
+        return new OrderResponseDto
+        {
+            Id = order.Id,
+            CustomerId = order.CustomerId,
+            OrderStatusId = order.OrderStatusId,
+            OrderTotalSum = order.OrderTotalSum,
+            DocumentNum = order.DocumentNum,
+            PostingDate = order.PostingDate,
+            InvoiceRequested = order.InvoiceRequested,
+            OrderProducts = order.OrderProducts.Select(op => new OrderProductResponseDto
+            {
+                Id = op.Id,
+                ProductId = op.ProductId,
+                Quantity = op.Quantity,
+                CustomerPrice = op.CustomerPrice,
+                PartnerPrice = op.PartnerPrice,
+                SumTotal = op.SumTotal,
+                ChargeType = op.ChargeType,
+                TermDuration = op.TermDuration,
+                BillingCycle = op.BillingCycle,
+                Status = op.Status
+            }).ToList()
+        };
+    }
+
+    private OrderProductResponseDto MapOrderProductProductToDto(OrderProduct op)
+    {
+        return new OrderProductResponseDto
+        {
+            Id = op.Id,
+            ProductId = op.ProductId,
+            Quantity = op.Quantity,
+            CustomerPrice = op.CustomerPrice,
+            PartnerPrice = op.PartnerPrice,
+            SumTotal = op.SumTotal,
+            ChargeType = op.ChargeType,
+            TermDuration = op.TermDuration,
+            BillingCycle = op.BillingCycle,
+            Status = op.Status
+        };
     }
 }

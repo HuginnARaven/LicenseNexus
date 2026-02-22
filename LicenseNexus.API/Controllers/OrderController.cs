@@ -79,5 +79,12 @@ namespace LicenseNexus.API.Controllers
             
             return Ok(orderProduct);
         }
+        
+        [HttpDelete("OrderProduct/{id:int}")]
+        public async Task<IActionResult> DeleteOrderProduct(int id)
+        {
+            await orderService.DeleteOrderProductAsync(id);
+            return NoContent();
+        }
     }
 }

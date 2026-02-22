@@ -17,27 +17,24 @@ public class SqlOrderRepository: IOrderRepository
     public async Task<Order?> GetByIdAsync(int id)
     {
         return await _context.Orders
-            .Include(o => o.OrderProducts)
-            .Include(o => o.Customer)
             .FirstOrDefaultAsync(o => o.Id == id);
     }
 
     public async Task<Order?> AddAsync(Order order)
     {
-        _context.Orders.Add(order);
+        await _context.Orders.AddAsync(order);
         var res = await _context.SaveChangesAsync();
         if (res > 0)
             return order;
         return null;
     }
 
-    public Task<IEnumerable<Order>> GetAllAsync()
+    public async Task<IEnumerable<Order>> GetAllAsync()
     {
-        return _context.Orders
+        return await _context.Orders
             .Include(o => o.OrderProducts)
             .Include(o => o.Customer)
-            .ToListAsync()
-            .ContinueWith(t => (IEnumerable<Order>)t.Result);
+            .ToListAsync();
     }
 
     public async Task UpdateAsync(Order order)
@@ -52,16 +49,21 @@ public class SqlOrderRepository: IOrderRepository
         );
     }
 
-    public Task DeleteAsync(int id)
+    public async Task DeleteAsync(int id)
     {
-        return _context.Orders
+        await _context.Orders
             .Where(o => o.Id == id)
             .ExecuteDeleteAsync();
     }
 
-    public Task<OrderProduct?> AddOrderProduct(OrderProduct orderProduct)
+    public async Task<OrderProduct?> AddOrderProduct(OrderProduct orderProduct)
     {
         _context.OrderProducts.Add(orderProduct);
-        return _context.SaveChangesAsync().ContinueWith(t => t.Result > 0 ? orderProduct : null);
+        return await _context.SaveChangesAsync().ContinueWith(t => t.Result > 0 ? orderProduct : null);
+    }
+
+    public async Task DeleteOrderProduct(int id)
+    {
+        await _context.OrderProducts.Where(op => op.Id == id).ExecuteDeleteAsync();
     }
 }
