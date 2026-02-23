@@ -4,8 +4,7 @@ Content-Type: application/json
 
 {
   "CustomerId": 2,
-  "OrderStatusId": 1,
-  "DocumentNum": "123123123123qwe",
+  "OrderStatusId": 1002,
   "PostingDate": "2023-01-01T00:00:00Z",
   "InvoiceRequested": false
 }
@@ -30,7 +29,6 @@ Content-Type: application/json
 {
   "CustomerId": 2,
   "OrderStatusId": 1002,
-  "DocumentNum": "123123123123qwe",
   "PostingDate": "2023-01-01T00:00:00Z",
   "InvoiceRequested": true
 }
@@ -40,8 +38,8 @@ POST {{API_HostAddress}}/Order/OrderProduct/
 Content-Type: application/json
 
 {
-  "ProductId": 12002,
-  "PriceId": 2002,
+  "ProductId": 10,
+  "PriceId": 8,
   "OrderId": {{new_order_id}},
   "Quantity": 10,
   "CustomerPrice": 10,

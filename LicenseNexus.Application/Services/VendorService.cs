@@ -1,11 +1,16 @@
-﻿using LicenseNexus.Application.DTOs;
+﻿using FluentValidation;
+using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
 using LicenseNexus.Domain.Entities;
 using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
 
-public class VendorService(IVendorRepository vendorRepository, IEventPublisher eventPublisher) : IVendorService
+public class VendorService(
+    IVendorRepository vendorRepository, 
+    IEventPublisher eventPublisher,
+    IValidator<VendorRequestDTO> validator
+    ) : IVendorService
 {
     public async Task<IEnumerable<VendorResponceDTO>> GetAllVendors()
     {
@@ -26,6 +31,7 @@ public class VendorService(IVendorRepository vendorRepository, IEventPublisher e
 
     public async Task AddVendor(VendorRequestDTO vendor)
     {
+        await validator.ValidateAndThrowAsync(vendor);
         var newVendor = new Vendor
         {
             Name = vendor.Name,
@@ -39,6 +45,7 @@ public class VendorService(IVendorRepository vendorRepository, IEventPublisher e
 
     public async Task UpdateVendor(int id, VendorRequestDTO vendor)
     {
+        await validator.ValidateAndThrowAsync(vendor);
         var newVendor = new Vendor
         {
             Id = id,

@@ -1,7 +1,10 @@
-﻿namespace LicenseNexus.Application.DTOs;
+﻿using FluentValidation;
 
-public class ProductRequestDTO
+namespace LicenseNexus.Application.DTOs;
+
+public class ProductRequestDto
 {
+    
     public string Sku { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string? ShortDescription { get; set; }
@@ -14,9 +17,55 @@ public class ProductRequestDTO
     public int QuantityMax { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
-    public bool IsPromo { get; set; }
-    public bool IsTop { get; set; }
+    public bool IsPromo { get; set; } = false;
+    public bool IsTop { get; set; } = false;
     public bool IsNew { get; set; }
     public string? Logo { get; set; }
     public string? Author { get; set; }
+}
+
+public class ProductRequestDtoValidator : AbstractValidator<ProductRequestDto>
+{
+    public ProductRequestDtoValidator()
+    {
+        RuleFor(x => x.Title)
+            .NotEmpty().WithMessage("Title cannot be empty.")
+            .MaximumLength(250).WithMessage("Title cannot exceed 250 characters.");
+        
+        RuleFor(x => x.ShortDescription)
+            .NotEmpty().WithMessage("ShortDescription cannot be empty.")
+            .MaximumLength(250).WithMessage("ShortDescription cannot exceed 250 characters.");
+
+        RuleFor(x => x.VendorId)
+            .NotEmpty().WithMessage("VendorId cannot be empty.");
+        
+        RuleFor(x => x.UnitMeasureId)
+            .NotEmpty().WithMessage("UnitMeasureId cannot be empty.");
+        
+        RuleFor(x => x.CurrencyId)
+            .NotEmpty().WithMessage("CurrencyId cannot be empty.");
+
+        RuleFor(x => x.ProductGroupId)
+            .NotEmpty().WithMessage("ProductGroupId cannot be empty.");
+
+        RuleFor(x => x.QuantityMin)
+            .GreaterThanOrEqualTo(0).WithMessage("QuantityMin must be 0 or greater.");
+
+        RuleFor(x => x.QuantityMax)
+            .GreaterThanOrEqualTo(x => x.QuantityMin).WithMessage("QuantityMax must be greater than or equal to QuantityMin.");
+
+        RuleFor(x => x.StartDate)
+            .LessThanOrEqualTo(x => x.EndDate)
+            .When(x => x.StartDate.HasValue && x.EndDate.HasValue)
+            .WithMessage("StartDate must be less than or equal to EndDate.");
+
+        RuleFor(x => x.EndDate)
+            .GreaterThanOrEqualTo(x => x.StartDate)
+            .When(x => x.StartDate.HasValue && x.EndDate.HasValue)
+            .WithMessage("EndDate must be greater than or equal to StartDate.");
+
+        RuleFor(x => x.Author)
+            .NotEmpty().WithMessage("Author cannot be empty.")
+            .MaximumLength(100).WithMessage("Author cannot exceed 100 characters.");
+    }
 }

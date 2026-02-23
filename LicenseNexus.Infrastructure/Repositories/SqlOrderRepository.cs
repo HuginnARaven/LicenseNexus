@@ -13,7 +13,6 @@ public class SqlOrderRepository(BaseSqlContext context) : BaseSqlRepository<Orde
             .SetProperty(o => o.CustomerId, order.CustomerId)
             .SetProperty(o => o.OrderStatusId, order.OrderStatusId)
             .SetProperty(o => o.OrderTotalSum, order.OrderTotalSum)
-            .SetProperty(o => o.DocumentNum, order.DocumentNum)
             .SetProperty(o => o.PostingDate, order.PostingDate)
             .SetProperty(o => o.InvoiceRequested, order.InvoiceRequested)
         );

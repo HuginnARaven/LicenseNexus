@@ -1,4 +1,5 @@
-﻿using LicenseNexus.Application.DTOs;
+﻿using FluentValidation;
+using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
 using LicenseNexus.Domain.Entities;
 using LicenseNexus.Domain.Interfaces;
@@ -13,7 +14,9 @@ public class ProductService(
     IProductTypeRepository productTypeRepository,
     IUnitMeasureRepository unitMeasureRepository,
     ICurrencyRepository currencyRepository,
-    ICategoryRepository categoryRepository
+    ICategoryRepository categoryRepository,
+    IValidator<ProductRequestDto> productRequestValidator,
+    IValidator<ProductPriceRequestDto> productPriceRequestValidator
     ): IProductService
 {
     public async Task<ProductModel?> GetByIdAsync(int id)
@@ -40,16 +43,23 @@ public class ProductService(
             filter.PriceTo);
     }
 
-    public async Task<ProductModel?> AddAsync(ProductRequestDTO product)
+    public async Task<ProductModel?> AddAsync(ProductRequestDto product)
     {
+        await productRequestValidator.ValidateAndThrowAsync(product);
+        
+        product.IsNew = true;
         var model = await MapDtoToModel(product);
+        
         return await productRepository.AddAsync(model);
     }
 
-    public async Task UpdateAsync(int id, ProductRequestDTO product)
+    public async Task UpdateAsync(int id, ProductRequestDto product)
     {
+        await productRequestValidator.ValidateAndThrowAsync(product);
+        
         var model = await MapDtoToModel(product);
         model.Id = id;
+        
         await productRepository.UpdateAsync(model);
     }
 
@@ -65,6 +75,8 @@ public class ProductService(
 
     public async Task<ProductPrice?> AddProductPrice(int productId, ProductPriceRequestDto priceDto)
     {
+        await productPriceRequestValidator.ValidateAndThrowAsync(priceDto);
+        
         var price = new ProductPrice
         {
             ProductId = productId,
@@ -81,6 +93,8 @@ public class ProductService(
 
     public async Task UpdateProductPrice(int productId, int priceId, ProductPriceRequestDto price)
     {
+        await productPriceRequestValidator.ValidateAndThrowAsync(price);
+        
         var productPrice = new ProductPrice
         {
             Id = priceId,
@@ -111,7 +125,7 @@ public class ProductService(
         await productRepository.DeleteTag(productId, tagId);
     }
 
-    private async Task<ProductModel> MapDtoToModel(ProductRequestDTO dto)
+    private async Task<ProductModel> MapDtoToModel(ProductRequestDto dto)
     {
         var vendor = await vendorRepository.GetByIdAsync(dto.VendorId);
         var group = await productGroupRepository.GetByIdAsync(dto.ProductGroupId);

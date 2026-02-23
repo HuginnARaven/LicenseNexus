@@ -1,11 +1,15 @@
-﻿using LicenseNexus.Application.DTOs;
+﻿using FluentValidation;
+using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
 using LicenseNexus.Domain.Entities;
 using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
 
-public class CustomerService(ICustomerRepository repository): ICustomerService
+public class CustomerService(
+    ICustomerRepository repository,
+    IValidator<CustomerRequestDto> validator
+    ): ICustomerService
 {
     public async Task<IEnumerable<CustomerResponseDto?>> GetAllCustomersAsync()
     {
@@ -23,6 +27,8 @@ public class CustomerService(ICustomerRepository repository): ICustomerService
 
     public async Task<CustomerResponseDto?> AddCustomerAsync(CustomerRequestDto customerDto)
     {
+        await validator.ValidateAndThrowAsync(customerDto);
+        
         var customer = new Customer
         {
             PartnerId = customerDto.PartnerId,
@@ -46,6 +52,8 @@ public class CustomerService(ICustomerRepository repository): ICustomerService
 
     public async Task UpdateCustomerAsync(int id, CustomerRequestDto customerDto)
     {
+        await validator.ValidateAndThrowAsync(customerDto);
+
         var customer = new Customer
         {
             Id = id,

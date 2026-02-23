@@ -37,7 +37,7 @@ namespace LicenseNexus.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] ProductRequestDTO product)
+        public async Task<IActionResult> Create([FromBody] ProductRequestDto product)
         {
             if (product == null)
             {
@@ -48,7 +48,7 @@ namespace LicenseNexus.API.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] ProductRequestDTO product)
+        public async Task<IActionResult> Update(int id, [FromBody] ProductRequestDto product)
         {
             if (product == null)
             {

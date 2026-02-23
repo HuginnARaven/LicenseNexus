@@ -1,3 +1,5 @@
+using FluentValidation;
+using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
 using LicenseNexus.Application.Services;
 using LicenseNexus.Domain.Interfaces;
@@ -76,6 +78,13 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ITagService, TagService>();
 
+builder.Services.AddValidatorsFromAssemblyContaining<ProductRequestDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<VendorRequestDTOValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CurrencyRequestDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<ProductPriceRequestDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CustomerRequestDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<OrderRequestDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<OrderProductRequestDtoValidator>();
 
 var app = builder.Build();
 

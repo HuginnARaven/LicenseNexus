@@ -1,11 +1,16 @@
-﻿using LicenseNexus.Application.DTOs;
+﻿using FluentValidation;
+using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
 using LicenseNexus.Domain.Entities;
 using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
 
-public class CurrencyService(ICurrencyRepository currencyRepository, IEventPublisher eventPublisher) : ICurrencyService
+public class CurrencyService(
+    ICurrencyRepository currencyRepository, 
+    IEventPublisher eventPublisher,
+    IValidator<CurrencyRequestDto> validator
+    ) : ICurrencyService
 {
     public async Task<IEnumerable<CurrencyResponseDto>> GetAllCurrencies()
     {
@@ -38,6 +43,8 @@ public class CurrencyService(ICurrencyRepository currencyRepository, IEventPubli
 
     public async Task AddCurrency(CurrencyRequestDto currencyDto)
     {
+        await validator.ValidateAndThrowAsync(currencyDto);
+        
         var currency = new Currency
         {
             LiteralCode = currencyDto.LiteralCode,
@@ -51,6 +58,8 @@ public class CurrencyService(ICurrencyRepository currencyRepository, IEventPubli
 
     public async Task UpdateCurrency(int id, CurrencyRequestDto currencyDto)
     {
+        await validator.ValidateAndThrowAsync(currencyDto);
+        
         var currency = new Currency
         {
             Id = id,
