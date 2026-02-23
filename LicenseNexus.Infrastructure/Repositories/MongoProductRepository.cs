@@ -307,6 +307,28 @@ public class MongoProductRepository : IProductRepository
         await _collection.UpdateOneAsync(filter, update);
     }
 
+    public async Task AddTag(int productId, int tagId)
+    {
+        var tag = await _context.Tags.Find(t => t.Id == tagId).FirstOrDefaultAsync();
+        if (tag != null)
+        {
+            var filter = Builders<ProductDocument>.Filter.Eq(p => p.ProductId, productId);
+            var update = Builders<ProductDocument>.Update.Push(p => p.Tags, new TagDoc
+            {
+                Id = tag.Id,
+                Name = tag.Name
+            });
+            await _collection.UpdateOneAsync(filter, update);
+        }
+    }
+
+    public async Task DeleteTag(int productId, int tagId)
+    {
+        var filter = Builders<ProductDocument>.Filter.Eq(p => p.ProductId, productId);
+        var update = Builders<ProductDocument>.Update.PullFilter(p => p.Tags, t => t.Id == tagId);
+        await _collection.UpdateOneAsync(filter, update);
+    }
+
     private ProductDocument MapToDocument(ProductModel model)
     {
         return new ProductDocument
@@ -315,7 +337,6 @@ public class MongoProductRepository : IProductRepository
             Sku = model.Sku,
             Title = model.Title,
             IsActive = model.IsActive,
-            Tags = model.Tags,
             Classification = new ClassificationDoc
             {
                 TypeId = model.Classification.TypeId,
@@ -350,6 +371,13 @@ public class MongoProductRepository : IProductRepository
                 CreatedDate = model.Attributes.CreatedDate,
                 Author = model.Attributes.Author
             },
+            
+            Tags = model.Tags.Select(pt => new TagDoc()
+            {
+                Id = pt.Id,
+                Name = pt.Name
+            }).ToList(),
+            
             Descriptions = model.Descriptions.Select(d => new DescriptionDoc
             {
                 FullText = d.FullText,
@@ -382,7 +410,13 @@ public class MongoProductRepository : IProductRepository
             Sku = doc.Sku,
             Title = doc.Title,
             IsActive = doc.IsActive,
-            Tags = doc.Tags,
+            
+            Tags = doc.Tags.Select(pt => new TagModel
+            {
+                Id = pt.Id,
+                Name = pt.Name
+            }).ToList(),
+            
             Classification = new ClassificationModel
             {
                 TypeId = doc.Classification.TypeId,

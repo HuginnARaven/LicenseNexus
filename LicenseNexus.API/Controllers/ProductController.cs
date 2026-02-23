@@ -131,5 +131,20 @@ namespace LicenseNexus.API.Controllers
             await productService.DeleteProductPrice(productId, priceId);
             return NoContent();
         }
+        
+        [HttpPost("{productId}/tag/{tagId}")]
+        public async Task<IActionResult> AddTag(int productId, int tagId)
+        {
+            await productService.AddProductTag(productId, tagId);
+            return Ok();
+        }
+
+        [HttpDelete("{productId}/tag/{tagId}")]
+        public async Task<IActionResult> DeleteTag(int productId, int tagId)
+        {
+            await productService.DeleteProductTag(productId, tagId);
+            return NoContent();
+        }
+
     }
 }

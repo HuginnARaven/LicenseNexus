@@ -21,4 +21,7 @@ public interface IProductRepository
     Task<ProductPrice?> AddPrice(ProductPrice price);
     Task UpdatePrice(ProductPrice price);
     Task DeletePrice(int productId, int priceId);
+    
+    Task AddTag(int productId, int tagId);
+    Task DeleteTag(int productId, int tagId);
 }

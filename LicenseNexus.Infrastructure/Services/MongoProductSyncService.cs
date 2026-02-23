@@ -3,6 +3,8 @@ using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using LicenseNexus.Infrastructure.Data.MongoDocuments;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
+using Tag = LicenseNexus.Domain.Entities.Tag;
 
 namespace LicenseNexus.Infrastructure.Services;
 
@@ -71,6 +73,13 @@ public class MongoProductSyncService: IProductSyncService
         };
         
         var update = Builders<ProductDocument>.Update.Set(p => p.Currency, newCurrencyDoc);
+        await _collection.UpdateManyAsync(filter, update, cancellationToken: ct);
+    }
+
+    public async Task UpdateTagAsync(Tag tag, CancellationToken ct)
+    {
+        var filter = Builders<ProductDocument>.Filter.ElemMatch(p => p.Tags, p => p.Id == tag.Id);
+        var update = Builders<ProductDocument>.Update.Set(p => p.Tags.FirstMatchingElement().Name, tag.Name);
         await _collection.UpdateManyAsync(filter, update, cancellationToken: ct);
     }
 }

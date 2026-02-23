@@ -99,7 +99,16 @@ public class ProductService(
     public async Task DeleteProductPrice(int productId, int priceId)
     {
         await productRepository.DeletePrice(productId, priceId);
+    }
 
+    public async Task AddProductTag(int productId, int tagId)
+    {
+        await productRepository.AddTag(productId, tagId);
+    }
+
+    public async Task DeleteProductTag(int productId, int tagId)
+    {
+        await productRepository.DeleteTag(productId, tagId);
     }
 
     private async Task<ProductModel> MapDtoToModel(ProductRequestDTO dto)
@@ -116,7 +125,7 @@ public class ProductService(
             Sku = dto.Sku,
             Title = dto.Title,
             IsActive = (group?.IsActive ?? false) && (category?.IsActive ?? false),
-            Tags = new List<string>(),
+            Tags = new List<TagModel>(),
             Classification = new ClassificationModel
             {
                 TypeId = dto.ProductTypeId,

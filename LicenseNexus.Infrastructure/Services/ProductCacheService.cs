@@ -205,8 +205,6 @@ public class ProductCacheService : IProductCacheService
             Title = p.Title,
             IsActive = (p.ProductGroup?.IsActive ?? false) && (p.ProductGroup?.Category?.IsActive ?? false),
             
-            Tags = p.ProductTags.Select(pt => pt.Tag?.Name ?? "").ToList(),
-            
             Classification = new ClassificationModel
             {
                 TypeId = p.ProductTypeId,
@@ -242,6 +240,12 @@ public class ProductCacheService : IProductCacheService
                 CreatedDate = p.CreatedDate,
                 Author = p.Author
             },
+            
+            Tags = p.ProductTags.Select(pt => new TagModel
+            {
+                Id = pt.TagId,
+                Name = pt.Tag?.Name ?? ""
+            }).ToList(),
             
             Descriptions = p.FullDescriptions.Select(d => new DescriptionModel
             {

@@ -24,6 +24,7 @@ public class MongoContext
     public IMongoCollection<ProductTypeDocument> ProductTypes => _database.GetCollection<ProductTypeDocument>("ProductTypes");
     public IMongoCollection<UnitMeasureDocument> UnitMeasures => _database.GetCollection<UnitMeasureDocument>("UnitMeasures");
     public IMongoCollection<CurrencyDocument> Currencies => _database.GetCollection<CurrencyDocument>("Currencies");
+    public IMongoCollection<TagDocument> Tags => _database.GetCollection<TagDocument>("Tags");
     
     public async Task<int> GetNextSequenceValueAsync(string sequenceName)
     {

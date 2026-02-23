@@ -38,6 +38,7 @@ if (archMode == "Redis")
     builder.Services.AddScoped<ICurrencyRepository, RedisCurrencyRepository>();
     builder.Services.AddScoped<IUnitMeasureRepository, RedisUnitMeasureRepository>();
     builder.Services.AddScoped<IProductTypeRepository, RedisProductTypeRepository>();
+    builder.Services.AddScoped<ITagRepository, RedisTagRepository>();
     
     builder.Services.AddScoped<IProductCacheService, ProductCacheService>();
     builder.Services.AddScoped<IProductSyncService, RedisProductSyncService>();
@@ -54,6 +55,7 @@ else // Mongo
     builder.Services.AddScoped<ICurrencyRepository, MongoCurrencyRepository>();
     builder.Services.AddScoped<IUnitMeasureRepository, MongoUnitMeasureRepository>();
     builder.Services.AddScoped<IProductTypeRepository, MongoProductTypeRepository>();
+    builder.Services.AddScoped<ITagRepository, MongoTagRepository>();
     
     builder.Services.AddScoped<IProductSyncService, MongoProductSyncService>();
 }
@@ -72,6 +74,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IPartnerService, PartnerService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ITagService, TagService>();
 
 
 var app = builder.Build();

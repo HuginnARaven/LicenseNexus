@@ -153,4 +153,24 @@ public class RedisProductSyncService : IProductSyncService
         pipeline.Execute();
         await Task.WhenAll(updateTasks);
     }
+
+    public async Task UpdateTagAsync(Tag tag, CancellationToken ct)
+    {
+        var productIds = await _sqlContext.ProductTags
+            .AsNoTracking()
+            .Where(p => p.TagId == tag.Id)
+            .Select(p => p.ProductId)
+            .ToListAsync(cancellationToken: ct);
+        var pipeline = new Pipeline(_redisDb);
+        var updateTasks = new List<Task>();
+
+        foreach (var productId in productIds)
+        {
+            var productKey = $"product:{productId}";
+            updateTasks.Add(pipeline.Json.SetAsync(productKey, $"$.Tags[?(@.Id=={tag.Id})].Name", $"\"{tag.Name}\""));
+        }
+        
+        pipeline.Execute();
+        await Task.WhenAll(updateTasks);
+    }
 }

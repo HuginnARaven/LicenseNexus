@@ -16,4 +16,6 @@ public interface IProductService
     Task<ProductPrice?> AddProductPrice(int productId, ProductPriceRequestDto price);
     Task UpdateProductPrice(int productId, int priceId, ProductPriceRequestDto price);
     Task DeleteProductPrice(int productId, int priceId);
+    Task AddProductTag(int productId, int tagId);
+    Task DeleteProductTag(int productId, int tagId);
 }

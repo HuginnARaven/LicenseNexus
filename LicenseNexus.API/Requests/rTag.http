@@ -1,0 +1,28 @@
+﻿### createTag
+POST {{API_HostAddress}}/Tag/
+Content-Type: application/json
+
+{
+  "Name": "TestTag"
+}
+
+> {%
+    client.global.set("new_tag_id", response.body.id);
+    client.log("Created Tag ID: " + client.global.get("new_tag_id"));
+%}
+
+### getAllTags
+GET {{API_HostAddress}}/Tag/
+Accept: application/json
+
+### getTagByID
+GET {{API_HostAddress}}/Tag/{{new_tag_id}}/
+Accept: application/json
+
+### editlTag
+PUT {{API_HostAddress}}/Tag/1/
+Content-Type: application/json
+
+{
+  "Name": "SuperTag"
+}

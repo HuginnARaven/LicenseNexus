@@ -39,6 +39,7 @@ public class EventProcessorBackgroundService : BackgroundService
                     UnitMeasureUpdatedEvent u => productSyncService.UpdateUnitMeasureAsync(u.unitMeasure, stoppingToken),
                     CurrencyUpdatedEvent cr => productSyncService.UpdateCurrencyAsync(cr.currency, stoppingToken),
                     GroupUpdatedEvent g => productSyncService.UpdateGroupAsync(g.group, stoppingToken),
+                    TagUpdatedEvent t => productSyncService.UpdateTagAsync(t.tag, stoppingToken),
                     _ => Task.CompletedTask
                 };
                 await updateTask;

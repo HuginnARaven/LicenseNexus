@@ -10,6 +10,7 @@ public record GroupUpdatedEvent(ProductGroup group) : IEntityUpdatedEvent;
 public record ProductTypeUpdatedEvent(ProductType productType) : IEntityUpdatedEvent;
 public record UnitMeasureUpdatedEvent(UnitMeasure unitMeasure) : IEntityUpdatedEvent;
 public record CurrencyUpdatedEvent(Currency currency) : IEntityUpdatedEvent;
+public record TagUpdatedEvent(Tag tag) : IEntityUpdatedEvent;
 
 public interface IEventPublisher
 {

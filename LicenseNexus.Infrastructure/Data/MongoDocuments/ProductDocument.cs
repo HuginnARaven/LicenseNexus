@@ -22,7 +22,7 @@ public class ProductDocument
     public bool IsActive { get; set; }
     
     [BsonElement("tags")]
-    public List<string> Tags { get; set; } = new();
+    public List<TagDoc> Tags { get; set; } = new();
     
     [BsonElement("classification")]
     public ClassificationDoc Classification { get; set; } = new();
@@ -38,6 +38,15 @@ public class ProductDocument
     
     [BsonElement("prices")]
     public List<ProductPriceDoc> Prices { get; set; } = new();
+}
+
+public class TagDoc
+{
+    [BsonElement("id")]
+    public int Id { get; set; }
+    
+    [BsonElement("name")]
+    public string Name { get; set; } = string.Empty;
 }
 
 public class ClassificationDoc

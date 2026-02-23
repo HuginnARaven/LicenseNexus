@@ -462,6 +462,32 @@ public class RedisProductRepository: IProductRepository
             await _redisDb.JSON().DelAsync($"product:{productId}", $"$.Prices[?(@.Id=={priceId})]");
     }
 
+    public async Task AddTag(int productId, int tagId)
+    {
+        var tag = await _sqlContext.Tags.FindAsync(tagId);
+        if (tag == null) throw new Exception("Tag not found");
+        
+        await _sqlContext.ProductTags.AddAsync(new ProductTag { TagId = tagId, ProductId = productId });
+        var res = await _sqlContext.SaveChangesAsync();
+        
+        if (res > 0)
+        {
+            var productKey = $"product:{productId}";
+            await _redisDb.JSON().ArrAppendAsync(productKey, "$.Tags", new TagModel
+            {
+                Id = tagId,
+                Name = tag.Name
+            });
+        }
+    }
+
+    public async Task DeleteTag(int productId, int tagId)
+    {
+        var res = await _sqlContext.ProductTags.Where(t => t.ProductId == productId && t.TagId == tagId).ExecuteDeleteAsync();
+        if (res > 0)
+            await _redisDb.JSON().DelAsync($"product:{productId}", $"$.Tags[?(@.Id=={tagId})]");
+    }
+
     private Product MapToDomain(ProductModel model)
     {
         return new Product

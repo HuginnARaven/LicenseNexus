@@ -10,4 +10,5 @@ public interface IProductSyncService
     Task UpdateProductTypeAsync(ProductType productType, CancellationToken ct);
     Task UpdateUnitMeasureAsync(UnitMeasure unitMeasure, CancellationToken ct);
     Task UpdateCurrencyAsync(Currency currency, CancellationToken ct);
+    Task UpdateTagAsync(Tag tag, CancellationToken ct);
 }

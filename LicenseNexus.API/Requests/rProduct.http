@@ -102,11 +102,19 @@ Content-Type: application/json
 }
 
 ### getProductByID
-GET {{API_HostAddress}}/Product/{{new_product_id}}/
+GET {{API_HostAddress}}/Product/10/
 Accept: application/json
 
 ### deletePrice
 DELETE {{API_HostAddress}}/Product/{{new_product_id}}/price/{{new_price_id}}/
+Content-Type: application/json
+
+### addTag
+POST {{API_HostAddress}}/Product/10/tag/1/
+Content-Type: application/json
+
+### deleteTag
+DELETE {{API_HostAddress}}/Product/10/tag/1/
 Content-Type: application/json
 
 ### deleteProduct
