@@ -16,14 +16,14 @@ public class VendorDocument
     public string Name { get; set; } = string.Empty;
     
     [BsonElement("original_name")]
-    public string? OriginalName { get; set; }
+    public string OriginalName { get; set; } = string.Empty;
     
     [BsonElement("description")]
     public string? Description { get; set; }
 
     [BsonElement("country_code")]
-    public string CountryCode { get; set; } = string.Empty;
+    public string? CountryCode { get; set; } = string.Empty;
     
     [BsonElement("logo")]
-    public string? Logo { get; set; }
+    public string Logo { get; set; } = string.Empty;
 }

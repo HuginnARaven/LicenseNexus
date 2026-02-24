@@ -189,7 +189,7 @@ public class ProductCacheService : IProductCacheService
             .Include(p => p.ProductType)
             .Include(p => p.UnitMeasure)
             .Include(p => p.Currency)
-            .Include(p => p.ProductGroup).ThenInclude(pg => pg.Category)
+            .Include(p => p.ProductGroup).ThenInclude(pg => pg!.Category)
             .Include(p => p.Prices)
             .Include(p => p.FullDescriptions)
             .Include(p => p.ProductTags).ThenInclude(pt => pt.Tag)

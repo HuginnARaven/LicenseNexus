@@ -16,15 +16,15 @@ public class Vendor : IEntity
     public string Name { get; set; } = string.Empty;
 
     [Column("original_name")]
-    public string? OriginalName { get; set; }
+    public string OriginalName { get; set; } = string.Empty;
 
     [Column("description")]
     public string? Description { get; set; }
 
     [Column("country_code")]
     [StringLength(3)]
-    public string CountryCode { get; set; } = string.Empty;
+    public string? CountryCode { get; set; }
 
     [Column("logo")]
-    public string? Logo { get; set; }
+    public string Logo { get; set; } = string.Empty;
 }

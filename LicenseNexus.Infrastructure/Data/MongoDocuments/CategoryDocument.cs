@@ -7,7 +7,7 @@ public class CategoryDocument
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
-    public string InternalId { get; set; }
+    public string InternalId { get; set; } = string.Empty;
 
     [BsonElement("id")]
     public int Id { get; set; }
@@ -46,5 +46,5 @@ public class ProductGroupDoc
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
     [BsonElement("autor")]
-    public string? Author { get; set; }
+    public string Author { get; set; } = string.Empty;
 }

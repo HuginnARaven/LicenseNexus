@@ -59,6 +59,7 @@ public class BaseSqlContext : DbContext
             .HasForeignKey(op => op.OrderId)
             .OnDelete(DeleteBehavior.Cascade);
         
+        modelBuilder.Entity<OrderProduct>().Property(o => o.ChargeType).HasConversion<string>();
         modelBuilder.Entity<Order>().Property(o => o.OrderTotalSum).HasPrecision(18, 2);
         modelBuilder.Entity<OrderProduct>().Property(op => op.CustomerPrice).HasPrecision(18, 2);
         modelBuilder.Entity<OrderProduct>().Property(op => op.PartnerPrice).HasPrecision(18, 2);

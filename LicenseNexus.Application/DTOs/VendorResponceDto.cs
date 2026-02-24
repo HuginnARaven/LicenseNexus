@@ -6,6 +6,6 @@ public class VendorResponceDTO
     public string Name { get; set; } = string.Empty;
     public string? OriginalName { get; set; }
     public string? Description { get; set; }
-    public string CountryCode { get; set; } = string.Empty;
+    public string? CountryCode { get; set; }
     public string? Logo { get; set; }
 }

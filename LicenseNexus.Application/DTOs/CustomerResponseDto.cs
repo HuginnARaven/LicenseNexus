@@ -10,5 +10,5 @@ public class CustomerResponseDto
     public string? City { get; set; }
     public string? Region { get; set; }
     public string? ZipCode { get; set; }
-    public string CountryCode { get; set; } = string.Empty;
+    public string? CountryCode { get; set; }
 }

@@ -10,4 +10,8 @@
       <Folder Include="ValueObjects\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="10.0.2" />
+    </ItemGroup>
+
 </Project>

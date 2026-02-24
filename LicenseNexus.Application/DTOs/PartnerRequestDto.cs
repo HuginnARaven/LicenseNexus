@@ -9,5 +9,5 @@ public class PartnerRequestDto
     public string BankAccountNumber { get; set; } = string.Empty;
     public string BankName { get; set; } = string.Empty;
     public string? Phone { get; set; }
-    public string? Author { get; set; }
+    public string Author { get; set; } = string.Empty;
 }

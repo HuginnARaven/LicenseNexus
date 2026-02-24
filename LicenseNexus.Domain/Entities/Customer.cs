@@ -1,10 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using LicenseNexus.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace LicenseNexus.Domain.Entities;
 
 [Table("Customer")]
+[Index(nameof(Email), IsUnique = true)]
+[Index(nameof(AccountName), IsUnique = true)]
 public class Customer : IEntity
 {
     [Key]
@@ -34,10 +37,10 @@ public class Customer : IEntity
 
     [Column("country_code")]
     [StringLength(3)]
-    public string CountryCode { get; set; } = string.Empty;
+    public string? CountryCode { get; set; }
 
     [Column("status")]
-    public string Status { get; set; } = string.Empty;
+    public string? Status { get; set; }
 
     [Column("created_date")]
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;

@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using LicenseNexus.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace LicenseNexus.Domain.Entities;
 
 [Table("Product_group")]
+[Index(nameof(CategoryId), nameof(Name), IsUnique = true)]
 public class ProductGroup : IEntity
 {
     [Key]
@@ -25,7 +27,7 @@ public class ProductGroup : IEntity
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
     [Column("autor")]
-    public string? Author { get; set; }
+    public string Author { get; set; } = string.Empty;
 
     [Column("category_id")]
     public int CategoryId { get; set; }

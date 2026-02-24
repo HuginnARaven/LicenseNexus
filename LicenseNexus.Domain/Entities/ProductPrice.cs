@@ -18,7 +18,7 @@ public class ProductPrice : IEntity
     public decimal Price { get; set; }
 
     [Column("term_duration")]
-    public int? TermDuration { get; set; }
+    public string? TermDuration { get; set; }
 
     [Column("billing_plan")]
     public string? BillingPlan { get; set; }
@@ -31,7 +31,7 @@ public class ProductPrice : IEntity
     public string? Segment { get; set; }
 
     [Column("start_date")]
-    public DateTime? StartDate { get; set; }
+    public DateTime StartDate { get; set; } = DateTime.UtcNow;
 
     // Navigation Properties
     [ForeignKey("ProductId")]

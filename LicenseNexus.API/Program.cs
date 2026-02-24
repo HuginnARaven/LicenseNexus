@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using FluentValidation;
 using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
@@ -86,6 +87,11 @@ builder.Services.AddValidatorsFromAssemblyContaining<CustomerRequestDtoValidator
 builder.Services.AddValidatorsFromAssemblyContaining<OrderRequestDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<OrderProductRequestDtoValidator>();
 
+builder.Services.AddControllers() .AddJsonOptions(options => 
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -99,20 +105,43 @@ if (archMode == "Redis")
     using (var scope = app.Services.CreateScope())
     {
         var services = scope.ServiceProvider;
+        var logger = services.GetRequiredService<ILogger<Program>>();
         try
         {
             var cacheService = services.GetRequiredService<IProductCacheService>();
             
-            Console.WriteLine("Redis cache filling begins...");
+            logger.LogInformation("Redis cache filling begins...");
             
             await cacheService.CacheAllProductsAsync();
             
-            Console.WriteLine("Redis cache successfully filled!");
+            logger.LogInformation("Redis cache successfully filled!");
         }
         catch (Exception ex)
         {
-            var logger = services.GetRequiredService<ILogger<Program>>();
+            
             logger.LogError(ex, "Error populating Redis cache.");
+        }
+    }
+}
+else
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        try
+        {
+            var mongoContext = services.GetRequiredService<MongoContext>();
+            
+            logger.LogInformation("MongoDB indexes configuration begins...");
+            
+            await mongoContext.ConfigureIndexesAsync();
+            
+            logger.LogInformation("MongoDB indexes successfully configured!");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error configuring MongoDB indexes.");
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using LicenseNexus.Domain.Enums;
 using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Domain.Entities;
@@ -21,7 +22,7 @@ public class OrderProduct : IEntity
     public int Quantity { get; set; }
     
     [Column("customer_price")]
-    public decimal CustomerPrice { get; set; }
+    public decimal? CustomerPrice { get; set; }
 
     [Column("partner_price")]
     public decimal PartnerPrice { get; set; }
@@ -30,10 +31,10 @@ public class OrderProduct : IEntity
     public decimal SumTotal { get; set; }
 
     [Column("charge_type")]
-    public string? ChargeType { get; set; }
+    public ChargeType? ChargeType { get; set; }
 
     [Column("term_duration")]
-    public int? TermDuration { get; set; }
+    public string? TermDuration { get; set; } = string.Empty;
 
     [Column("billing_cycle")]
     public string? BillingCycle { get; set; }

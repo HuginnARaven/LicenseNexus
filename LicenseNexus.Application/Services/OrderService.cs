@@ -2,6 +2,7 @@
 using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
 using LicenseNexus.Domain.Entities;
+using LicenseNexus.Domain.Enums;
 using LicenseNexus.Domain.Interfaces;
 using ValidationException = System.ComponentModel.DataAnnotations.ValidationException;
 
@@ -106,7 +107,7 @@ public class OrderService(
             Status = orderProductDto.Status,
             PartnerPrice = price.Price * (decimal)0.8, //TODO: create field price-coefficient in partner
             SumTotal = orderProductDto.Quantity * price.Price,
-            ChargeType = "one_time", //TODO: change for usage of enum
+            ChargeType = ChargeType.OneTime,
             TermDuration = price.TermDuration,
             BillingCycle = price.BillingPlan
         };

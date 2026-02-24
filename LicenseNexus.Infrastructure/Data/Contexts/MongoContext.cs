@@ -39,6 +39,95 @@ public class MongoContext
         var result = await Counters.FindOneAndUpdateAsync(filter, update, options);
         return result.Seq;
     }
+    
+    public async Task ConfigureIndexesAsync()
+    {
+        // Products
+        var productIndexes = new List<CreateIndexModel<ProductDocument>>
+        {
+            new CreateIndexModel<ProductDocument>(
+                Builders<ProductDocument>.IndexKeys.Ascending(p => p.ProductId),
+                new CreateIndexOptions { Unique = true }
+            ),
+            new CreateIndexModel<ProductDocument>(
+                Builders<ProductDocument>.IndexKeys.Ascending(p => p.Sku),
+                new CreateIndexOptions { Unique = true }
+            )
+        };
+        await Products.Indexes.CreateManyAsync(productIndexes);
+
+        // Categories
+        var categoryIndexes = new List<CreateIndexModel<CategoryDocument>>
+        {
+            new CreateIndexModel<CategoryDocument>(
+                Builders<CategoryDocument>.IndexKeys.Ascending(c => c.Id),
+                new CreateIndexOptions { Unique = true }
+            ),
+            new CreateIndexModel<CategoryDocument>(
+                Builders<CategoryDocument>.IndexKeys.Ascending(c => c.Name),
+                new CreateIndexOptions { Unique = true }
+            ),
+            new CreateIndexModel<CategoryDocument>(
+                Builders<CategoryDocument>.IndexKeys.Ascending("groups.Id"),
+                new CreateIndexOptions 
+                { 
+                    Unique = true,
+                    Sparse = true 
+                }
+            )
+        };
+        await Categories.Indexes.CreateManyAsync(categoryIndexes);
+
+        // Vendors
+        var vendorIndexes = new List<CreateIndexModel<VendorDocument>>
+        {
+            new CreateIndexModel<VendorDocument>(
+                Builders<VendorDocument>.IndexKeys.Ascending(v => v.Id),
+                new CreateIndexOptions { Unique = true }
+            )
+        };
+        await Vendors.Indexes.CreateManyAsync(vendorIndexes);
+    
+        // ProductTypes
+        var productTypeIndexes = new List<CreateIndexModel<ProductTypeDocument>>
+        {
+            new CreateIndexModel<ProductTypeDocument>(
+                Builders<ProductTypeDocument>.IndexKeys.Ascending(pt => pt.Id),
+                new CreateIndexOptions { Unique = true }
+            )
+        };
+        await ProductTypes.Indexes.CreateManyAsync(productTypeIndexes);
+
+        // UnitMeasures
+        var unitMeasureIndexes = new List<CreateIndexModel<UnitMeasureDocument>>
+        {
+            new CreateIndexModel<UnitMeasureDocument>(
+                Builders<UnitMeasureDocument>.IndexKeys.Ascending(u => u.Id),
+                new CreateIndexOptions { Unique = true }
+            )
+        };
+        await UnitMeasures.Indexes.CreateManyAsync(unitMeasureIndexes);
+
+        // Currencies
+        var currencyIndexes = new List<CreateIndexModel<CurrencyDocument>>
+        {
+            new CreateIndexModel<CurrencyDocument>(
+                Builders<CurrencyDocument>.IndexKeys.Ascending(c => c.Id),
+                new CreateIndexOptions { Unique = true }
+            )
+        };
+        await Currencies.Indexes.CreateManyAsync(currencyIndexes);
+
+        // Tags
+        var tagIndexes = new List<CreateIndexModel<TagDocument>>
+        {
+            new CreateIndexModel<TagDocument>(
+                Builders<TagDocument>.IndexKeys.Ascending(t => t.Id),
+                new CreateIndexOptions { Unique = true }
+            )
+        };
+        await Tags.Indexes.CreateManyAsync(tagIndexes);
+    }
 }
 
 public class MongoDbSettings

@@ -30,7 +30,7 @@ public class Order : IEntity
     public DateTime? PostingDate { get; set; }
 
     [Column("invoice_requested")]
-    public bool InvoiceRequested { get; set; }
+    public bool InvoiceRequested { get; set; } = false;
 
     // Navigation Properties
     [ForeignKey("CustomerId")]

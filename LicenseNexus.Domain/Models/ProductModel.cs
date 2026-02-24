@@ -35,7 +35,7 @@ public class VendorModel
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public string CountryCode { get; set; } = string.Empty;
+    public string? CountryCode { get; set; } = string.Empty;
 }
 
 public class GroupModel
@@ -58,7 +58,7 @@ public class AttributesModel
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public DateTime CreatedDate { get; set; }
-    public string? Author { get; set; }
+    public string Author { get; set; } = string.Empty;
 }
 
 public class DescriptionModel
@@ -72,11 +72,11 @@ public class ProductPriceModel
 {
     public int Id { get; set; }
     public decimal Price { get; set; }
-    public int? TermDuration { get; set; }
+    public string? TermDuration { get; set; }
     public string? BillingPlan { get; set; }
     public string? Segment { get; set; }
     public string? CountryCode { get; set; }
-    public DateTime? StartDate { get; set; }
+    public DateTime StartDate { get; set; } = DateTime.UtcNow;
 }
 
 public class CurrencyModel

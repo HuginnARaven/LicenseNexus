@@ -21,7 +21,7 @@ public class ProductRequestDto
     public bool IsTop { get; set; } = false;
     public bool IsNew { get; set; }
     public string? Logo { get; set; }
-    public string? Author { get; set; }
+    public string Author { get; set; } = string.Empty;
 }
 
 public class ProductRequestDtoValidator : AbstractValidator<ProductRequestDto>

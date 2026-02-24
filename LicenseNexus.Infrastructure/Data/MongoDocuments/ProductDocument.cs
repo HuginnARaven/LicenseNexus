@@ -79,7 +79,7 @@ public class VendorDoc
     public string Name { get; set; } = string.Empty;
 
     [BsonElement("country_code")]
-    public string CountryCode { get; set; } = string.Empty;
+    public string? CountryCode { get; set; } = string.Empty;
 }
 
 public class GroupDoc
@@ -130,7 +130,7 @@ public class AttributesDoc
     public DateTime CreatedDate { get; set; }
 
     [BsonElement("autor")]
-    public string? Author { get; set; }
+    public string Author { get; set; }  = string.Empty;
 }
 
 public class DescriptionDoc
@@ -152,7 +152,7 @@ public class ProductPriceDoc
     public decimal Price { get; set; }
 
     [BsonElement("term_duration")]
-    public int? TermDuration { get; set; }
+    public string? TermDuration { get; set; }
 
     [BsonElement("billing_plan")]
     public string? BillingPlan { get; set; }
@@ -164,7 +164,7 @@ public class ProductPriceDoc
     public string? CountryCode { get; set; }
 
     [BsonElement("start_date")]
-    public DateTime? StartDate { get; set; }
+    public DateTime StartDate { get; set; } = DateTime.UtcNow;
 }
 
 public class CurrencyDoc

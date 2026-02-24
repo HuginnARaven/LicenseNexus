@@ -4,7 +4,7 @@ public class PartnerResponseDto
 {
     public int Id { get; set; }
     public required string Status { get; set; }
-    public string CountryCode { get; set; } = string.Empty;
+    public string? CountryCode { get; set; }
     public string FullCompanyName { get; set; } = string.Empty;
     public string RegistrationNumber { get; set; } = string.Empty;
     public string TaxNumber { get; set; } = string.Empty;
@@ -12,7 +12,7 @@ public class PartnerResponseDto
     public string BankName { get; set; } = string.Empty;
     public string? Phone { get; set; }
     public required DateTime CreatedDate { get; set; }
-    public string? Author { get; set; }
+    public string Author { get; set; } = string.Empty;
     public List<PartnerAddressResponseDto> Addresses { get; set; } = [];
     public List<CustomerResponseDto> Customers { get; set; } = [];
 }

@@ -1,4 +1,6 @@
-﻿namespace LicenseNexus.Application.DTOs;
+﻿using LicenseNexus.Domain.Enums;
+
+namespace LicenseNexus.Application.DTOs;
 
 public class OrderResponseDto
 {
@@ -17,11 +19,11 @@ public class OrderProductResponseDto
     public int Id { get; set; }
     public int ProductId { get; set; }
     public int Quantity { get; set; }
-    public decimal CustomerPrice { get; set; }
+    public decimal? CustomerPrice { get; set; }
     public decimal PartnerPrice { get; set; }
     public decimal SumTotal { get; set; }
-    public string? ChargeType { get; set; }
-    public int? TermDuration { get; set; }
+    public ChargeType? ChargeType { get; set; }
+    public string? TermDuration { get; set; }
     public string? BillingCycle { get; set; }
     public string? Status { get; set; }
 }

@@ -1,10 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using LicenseNexus.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace LicenseNexus.Domain.Entities;
 
 [Table("Partner")]
+[Index(nameof(RegistrationNumber), IsUnique = true)]
+[Index(nameof(TaxNumber), IsUnique = true)]
+[Index(nameof(BankAccountNumber), IsUnique = true)]
 public class Partner : IEntity
 {
     [Key]
@@ -16,7 +20,7 @@ public class Partner : IEntity
 
     [Column("country_code")]
     [StringLength(3)]
-    public string CountryCode { get; set; } = string.Empty;
+    public string? CountryCode { get; set; }
 
     [Column("full_company_name")]
     [Required]
@@ -41,7 +45,7 @@ public class Partner : IEntity
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
     [Column("autor")]
-    public string? Author { get; set; }
+    public string Author { get; set; } = string.Empty;
     
     // Navigation Properties
     public ICollection<PartnerAddress> Addresses { get; set; } = new List<PartnerAddress>();
