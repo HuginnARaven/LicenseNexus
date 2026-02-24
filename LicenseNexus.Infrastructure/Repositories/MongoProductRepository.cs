@@ -31,6 +31,12 @@ public class MongoProductRepository : IProductRepository
         return docs.Select(MapToModel);
     }
 
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<ProductDocument>.Filter.Eq(v => v.ProductId, id);
+        return await _collection.Find(filter).AnyAsync(cancellationToken);
+    }
+
     public async Task<PaginatedResult<ProductModel>> GetPaginatedAsync(
         int page, int pageSize, 
         int? categoryId, int? groupId, 

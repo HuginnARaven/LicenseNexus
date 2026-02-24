@@ -7,6 +7,7 @@ public interface IProductRepository
 {
     Task<ProductModel?> GetByIdAsync(int id);
     Task<IEnumerable<ProductModel>> GetAllAsync();
+    Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default);
     Task<PaginatedResult<ProductModel>> GetPaginatedAsync(
         int page, int pageSize, 
         int? categoryId, int? groupId, 

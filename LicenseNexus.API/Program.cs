@@ -26,6 +26,9 @@ builder.Services.AddSingleton<InMemoryEventBus>();
 builder.Services.AddSingleton<IEventPublisher>(sp => sp.GetRequiredService<InMemoryEventBus>());
 builder.Services.AddHostedService<EventProcessorBackgroundService>();
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 var archMode = builder.Configuration["ArchitectureMode"];
 
 if (archMode == "Redis")
@@ -99,6 +102,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseExceptionHandler();
 
 if (archMode == "Redis")
 {

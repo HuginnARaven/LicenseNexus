@@ -9,6 +9,8 @@ public interface IBaseRepository<T> where T : class, IEntity
     Task<IEnumerable<T>> GetAllAsync(bool trackChanges = false, params Expression<Func<T, object>>[] includes);
     
     Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate, bool trackChanges = false, params Expression<Func<T, object>>[] includes);
+
+    Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default);
     
     Task<T?> AddAsync(T entity);
     

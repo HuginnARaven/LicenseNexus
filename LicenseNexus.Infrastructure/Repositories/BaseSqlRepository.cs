@@ -72,6 +72,11 @@ public class BaseSqlRepository<T>: IBaseRepository<T> where T : class, IEntity
         return await query.ToListAsync();
     }
 
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet.AnyAsync(v => v.Id == id, cancellationToken);
+    }
+
     public virtual async Task<T?> AddAsync(T entity)
     {
         await _dbSet.AddAsync(entity);

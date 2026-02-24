@@ -66,6 +66,11 @@ public class RedisProductRepository: IProductRepository
         return products;
     }
 
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+    {
+        return await _sqlContext.Products.AnyAsync(p => p.Id == id, cancellationToken);
+    }
+
     public async Task<PaginatedResult<ProductModel>> GetPaginatedAsync(
         int page, int pageSize, 
         int? categoryId, int? groupId, 

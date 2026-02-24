@@ -56,7 +56,12 @@ public class OrderService(
     public async Task UpdateOrderAsync(int id, OrderRequestDto orderDto)
     {
         await orderValidator.ValidateAndThrowAsync(orderDto);
-
+        
+        if (await orderRepository.ExistsAsync(id))
+        {
+            throw new ValidationException($"Order with ID {id} not found.");
+        }
+        
         var order = new Order
         {
             Id = id,

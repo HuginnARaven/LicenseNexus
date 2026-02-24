@@ -24,10 +24,14 @@ public class RedisProductGroupRepository: IProductGroupRepository
         return await _context.ProductGroups.FirstOrDefaultAsync(pg => pg.Id == id);
     }
 
-    public async Task AddAsync(ProductGroup group)
+    public async Task<ProductGroup?>  AddAsync(ProductGroup group)
     {
         _context.ProductGroups.Add(group);
-        await _context.SaveChangesAsync();
+        var res = await _context.SaveChangesAsync();
+        if (res > 0)
+            return group;
+        
+        return null;
     }
 
     public async Task UpdateAsync(ProductGroup group)

@@ -1,4 +1,5 @@
 ﻿using LicenseNexus.Domain.Entities;
+using LicenseNexus.Domain.Exceptions;
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using LicenseNexus.Infrastructure.Data.MongoDocuments;
@@ -68,7 +69,7 @@ public class MongoProductGroupRepository: IProductGroupRepository
         };
     }
 
-    public async Task AddAsync(ProductGroup group)
+    public async Task<ProductGroup?> AddAsync(ProductGroup group)
     {
         var id = await _context.GetNextSequenceValueAsync("product_group_id");
         group.Id = id;
@@ -82,13 +83,19 @@ public class MongoProductGroupRepository: IProductGroupRepository
             CreatedDate = DateTime.UtcNow,
             Author = group.Author
         };
-
-        var categoryFilter = Builders<CategoryDocument>.Filter.Eq(c => c.Id, group.CategoryId);
-        var uniquenessFilter = Builders<CategoryDocument>.Filter.Not(Builders<CategoryDocument>.Filter.ElemMatch(c => c.Groups, g => g.Name == groupDoc.Name));
-        var filter = Builders<CategoryDocument>.Filter.And(categoryFilter, uniquenessFilter);
+        
+        var filter = Builders<CategoryDocument>.Filter.And(
+            Builders<CategoryDocument>.Filter.Eq(c => c.Id, group.CategoryId),
+            Builders<CategoryDocument>.Filter.Not(
+                Builders<CategoryDocument>.Filter.ElemMatch(c => c.Groups, g => g.Name == groupDoc.Name)
+            )
+        );
         var update = Builders<CategoryDocument>.Update.Push(c => c.Groups, groupDoc);
-        // TODO: add throw validation error if not created
-        await _context.Categories.UpdateOneAsync(filter, update);
+        var res = await _context.Categories.UpdateOneAsync(filter, update);
+        
+        if (res.ModifiedCount <= 0)
+            throw new ConflictException($"Product group with name '{group.Name}' already exists in this category.");
+        return  group;
     }
 
     public async Task UpdateAsync(ProductGroup group)
