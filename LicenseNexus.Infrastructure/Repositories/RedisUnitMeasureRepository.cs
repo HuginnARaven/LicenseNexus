@@ -23,6 +23,11 @@ public class RedisUnitMeasureRepository: IUnitMeasureRepository
         return await _context.UnitMeasures.FirstOrDefaultAsync(um => um.Id == id);
     }
 
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+    {
+        return await _context.UnitMeasures.AnyAsync(um => um.Id == id, cancellationToken);
+    }
+    
     public async Task AddAsync(UnitMeasure unitMeasure)
     {
         _context.UnitMeasures.Add(unitMeasure);

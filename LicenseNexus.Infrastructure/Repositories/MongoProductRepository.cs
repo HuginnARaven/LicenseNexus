@@ -36,6 +36,12 @@ public class MongoProductRepository : IProductRepository
         var filter = Builders<ProductDocument>.Filter.Eq(v => v.ProductId, id);
         return await _collection.Find(filter).AnyAsync(cancellationToken);
     }
+    
+    public async Task<bool> ExistsPriceAsync(long priceId, long productId, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<ProductDocument>.Filter.ElemMatch(d => d.Prices, g => g.Id == priceId);
+        return await _collection.Find(filter).AnyAsync(cancellationToken);
+    }
 
     public async Task<PaginatedResult<ProductModel>> GetPaginatedAsync(
         int page, int pageSize, 

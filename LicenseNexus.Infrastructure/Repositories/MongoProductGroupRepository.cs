@@ -68,6 +68,12 @@ public class MongoProductGroupRepository: IProductGroupRepository
             CategoryId = category.Id
         };
     }
+    
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<CategoryDocument>.Filter.ElemMatch(d => d.Groups, g => g.Id == id);
+        return await _context.Categories.Find(filter).AnyAsync(cancellationToken);
+    }
 
     public async Task<ProductGroup?> AddAsync(ProductGroup group)
     {

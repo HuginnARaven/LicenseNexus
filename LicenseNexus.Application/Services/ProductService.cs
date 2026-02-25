@@ -2,6 +2,7 @@
 using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
 using LicenseNexus.Domain.Entities;
+using LicenseNexus.Domain.Exceptions;
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Domain.Models;
 
@@ -15,8 +16,10 @@ public class ProductService(
     IUnitMeasureRepository unitMeasureRepository,
     ICurrencyRepository currencyRepository,
     ICategoryRepository categoryRepository,
+    ITagRepository tagRepository,
     IValidator<ProductRequestDto> productRequestValidator,
-    IValidator<ProductPriceRequestDto> productPriceRequestValidator
+    IValidator<ProductPriceRequestDto> productPriceRequestValidator,
+    IValidator<ProductPatchFields> productPatchFieldsValidator
     ): IProductService
 {
     public async Task<ProductModel?> GetByIdAsync(int id)
@@ -31,7 +34,6 @@ public class ProductService(
 
     public async Task<PaginatedResult<ProductModel>> GetPaginatedAsync(ProductFilterDto filter)
     {
-        Console.WriteLine("GetPaginatedAsync");
         return await productRepository.GetPaginatedAsync(
             filter.Page, 
             filter.PageSize, 
@@ -56,6 +58,8 @@ public class ProductService(
     public async Task UpdateAsync(int id, ProductRequestDto product)
     {
         await productRequestValidator.ValidateAndThrowAsync(product);
+        if (!await productRepository.ExistsAsync(id))
+            throw new NotFoundException($"Product with ID {id} not found");
         
         var model = await MapDtoToModel(product);
         model.Id = id;
@@ -65,6 +69,9 @@ public class ProductService(
 
     public async Task PatchAsync(int id, ProductPatchFields updates)
     {
+        await productPatchFieldsValidator.ValidateAndThrowAsync(updates);
+        if (!await productRepository.ExistsAsync(id))
+            throw new NotFoundException($"Product with ID {id} not found");
         await productRepository.PatchAsync(id, updates);
     }
 
@@ -76,6 +83,8 @@ public class ProductService(
     public async Task<ProductPrice?> AddProductPrice(int productId, ProductPriceRequestDto priceDto)
     {
         await productPriceRequestValidator.ValidateAndThrowAsync(priceDto);
+        if (!await productRepository.ExistsAsync(productId))
+            throw new NotFoundException($"Product with ID {productId} not found");
         
         var price = new ProductPrice
         {
@@ -94,7 +103,9 @@ public class ProductService(
     public async Task UpdateProductPrice(int productId, int priceId, ProductPriceRequestDto price)
     {
         await productPriceRequestValidator.ValidateAndThrowAsync(price);
-        
+        if (!await productRepository.ExistsPriceAsync(productId, priceId))
+            throw new NotFoundException($"Price with ID {priceId} for product {productId} not found");
+
         var productPrice = new ProductPrice
         {
             Id = priceId,
@@ -112,16 +123,27 @@ public class ProductService(
 
     public async Task DeleteProductPrice(int productId, int priceId)
     {
+        if (!await productRepository.ExistsPriceAsync(productId, priceId))
+            throw new NotFoundException($"Price with ID {priceId} for product {productId} not found");
         await productRepository.DeletePrice(productId, priceId);
     }
 
     public async Task AddProductTag(int productId, int tagId)
     {
+        if (!await productRepository.ExistsAsync(productId))
+            throw new NotFoundException($"Product with ID {productId} not found");
+        if (!await tagRepository.ExistsAsync(tagId))
+            throw new NotFoundException($"Tag with ID {tagId} not found");
+        
         await productRepository.AddTag(productId, tagId);
     }
 
     public async Task DeleteProductTag(int productId, int tagId)
     {
+        if (!await productRepository.ExistsAsync(productId))
+            throw new NotFoundException($"Product with ID {productId} not found");
+        if (!await tagRepository.ExistsAsync(tagId))
+            throw new NotFoundException($"Tag with ID {tagId} not found");
         await productRepository.DeleteTag(productId, tagId);
     }
 

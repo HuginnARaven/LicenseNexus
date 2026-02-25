@@ -22,6 +22,11 @@ public class RedisCurrencyRepository: ICurrencyRepository
     {
         return await _context.Currencies.FirstOrDefaultAsync(c => c.Id == id);
     }
+    
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Currencies.AnyAsync(p => p.Id == id, cancellationToken);
+    }
 
     public async Task AddAsync(Currency currency)
     {

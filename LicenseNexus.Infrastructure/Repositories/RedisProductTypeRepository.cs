@@ -22,6 +22,11 @@ public class RedisProductTypeRepository: IProductTypeRepository
     {
         return await _context.ProductTypes.FirstOrDefaultAsync(pt => pt.Id == id);
     }
+    
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+    {
+        return await _context.ProductTypes.AnyAsync(pt => pt.Id == id, cancellationToken);
+    }
 
     public async Task AddAsync(ProductType productType)
     {

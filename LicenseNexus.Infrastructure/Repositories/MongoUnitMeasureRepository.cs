@@ -36,6 +36,12 @@ public class MongoUnitMeasureRepository: IUnitMeasureRepository
             Name = doc.Name
         };
     }
+    
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<UnitMeasureDocument>.Filter.Eq(d => d.Id, id);
+        return await _context.UnitMeasures.Find(filter).AnyAsync(cancellationToken);
+    }
 
     public async Task AddAsync(UnitMeasure unitMeasure)
     {

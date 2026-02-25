@@ -6,20 +6,20 @@ Content-Type: application/json
   "sku": "SKU332",
   "title": "Best Test",
   "shortDescription": "The Best Test",
-  "vendorId": 1,
-  "productTypeId": 1,
-  "unitMeasureId": 1,
-  "currencyId": 1,
-  "productGroupId": 1,
-  "quantityMin": 1000,
+  "vendorId": 111,
+  "productTypeId": 111,
+  "unitMeasureId": 111,
+  "currencyId": 111,
+  "productGroupId": 111,
+  "quantityMin": 11110,
   "quantityMax": 100,
-  "startDate": "2023-01-01T00:00:00Z",
+  "startDate": "2024-01-01T00:00:00Z",
   "endDate": "2023-12-31T23:59:59Z",
   "isPromo": false,
   "isTop": false,
   "isNew": false,
   "logo": "http://example.com/logo.png",
-  "author": "Tester"
+  "author": "Te1ter"
 }
 
 > {%

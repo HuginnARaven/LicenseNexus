@@ -16,6 +16,12 @@ public class RedisTagRepository(ExtendedSqlContext context): ITagRepository
     {
         return await context.Tags.FirstOrDefaultAsync(t => t.Id == id);
     }
+    
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+    {
+        return await context.Tags.AnyAsync(pt => pt.Id == id, cancellationToken);
+    }
+
 
     public async Task<Tag?> AddAsync(Tag tag)
     {

@@ -46,7 +46,13 @@ public class MongoVendorRepository: IVendorRepository
             Logo = doc.Logo ?? ""
         };
     }
-
+    
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<VendorDocument>.Filter.Eq(d => d.Id, id);
+        return await _context.Vendors.Find(filter).AnyAsync(cancellationToken);
+    }
+    
     public async Task AddAsync(Vendor vendor)
     {
         var id = await _context.GetNextSequenceValueAsync("vendor_id");

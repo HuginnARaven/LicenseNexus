@@ -29,6 +29,12 @@ public class MongoTagRepository(MongoContext context): ITagRepository
             Name = doc.Name
         };
     }
+    
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<TagDocument>.Filter.Eq(d => d.Id, id);
+        return await context.Tags.Find(filter).AnyAsync(cancellationToken);
+    }
 
     public async Task<Domain.Entities.Tag?> AddAsync(Domain.Entities.Tag tag)
     {

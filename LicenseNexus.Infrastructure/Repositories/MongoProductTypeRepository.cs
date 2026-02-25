@@ -36,6 +36,12 @@ public class MongoProductTypeRepository: IProductTypeRepository
             TypeName = doc.TypeName
         };
     }
+    
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<ProductTypeDocument>.Filter.Eq(d => d.Id, id);
+        return await _context.ProductTypes.Find(filter).AnyAsync(cancellationToken);
+    }
 
     public async Task AddAsync(ProductType productType)
     {

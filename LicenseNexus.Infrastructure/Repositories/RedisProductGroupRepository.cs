@@ -24,6 +24,11 @@ public class RedisProductGroupRepository: IProductGroupRepository
         return await _context.ProductGroups.FirstOrDefaultAsync(pg => pg.Id == id);
     }
 
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+    {
+        return await _context.ProductGroups.AnyAsync(pg => pg.Id == id, cancellationToken);
+    }
+    
     public async Task<ProductGroup?>  AddAsync(ProductGroup group)
     {
         _context.ProductGroups.Add(group);

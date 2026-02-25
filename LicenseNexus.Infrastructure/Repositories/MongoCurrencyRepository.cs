@@ -40,6 +40,12 @@ public class MongoCurrencyRepository: ICurrencyRepository
             CountryCode = doc.CountryCode
         };
     }
+    
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<CurrencyDocument>.Filter.Eq(v => v.Id, id);
+        return await _context.Currencies.Find(filter).AnyAsync(cancellationToken);
+    }
 
     public async Task AddAsync(Currency currency)
     {

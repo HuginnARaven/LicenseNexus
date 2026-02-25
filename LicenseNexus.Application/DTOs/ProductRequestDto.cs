@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.DTOs;
 
@@ -26,7 +27,12 @@ public class ProductRequestDto
 
 public class ProductRequestDtoValidator : AbstractValidator<ProductRequestDto>
 {
-    public ProductRequestDtoValidator()
+    public ProductRequestDtoValidator(
+        IVendorRepository vendorRepository, 
+        IProductGroupRepository productGroupRepository,
+        IProductTypeRepository productTypeRepository,
+        IUnitMeasureRepository unitMeasureRepository,
+        ICurrencyRepository currencyRepository)
     {
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Title cannot be empty.")
@@ -67,5 +73,25 @@ public class ProductRequestDtoValidator : AbstractValidator<ProductRequestDto>
         RuleFor(x => x.Author)
             .NotEmpty().WithMessage("Author cannot be empty.")
             .MaximumLength(100).WithMessage("Author cannot exceed 100 characters.");
+        
+        RuleFor(x => x.VendorId)
+            .MustAsync(async (id, cancellation) => await vendorRepository.ExistsAsync(id, cancellation))
+            .WithMessage("Vendor with the specified ID does not exist.");
+
+        RuleFor(x => x.ProductGroupId)
+            .MustAsync(async (id, cancellation) => await productGroupRepository.ExistsAsync(id, cancellation))
+            .WithMessage("Product Group with the specified ID does not exist.");
+        
+        RuleFor(x => x.ProductTypeId)
+            .MustAsync(async (id, cancellation) => await productTypeRepository.ExistsAsync(id, cancellation))
+            .WithMessage("Product Type with the specified ID does not exist.");
+
+        RuleFor(x => x.UnitMeasureId)
+            .MustAsync(async (id, cancellation) => await unitMeasureRepository.ExistsAsync(id, cancellation))
+            .WithMessage("Unit Measure with the specified ID does not exist.");
+
+        RuleFor(x => x.CurrencyId)
+            .MustAsync(async (id, cancellation) => await currencyRepository.ExistsAsync(id, cancellation))
+            .WithMessage("Currency with the specified ID does not exist.");
     }
 }

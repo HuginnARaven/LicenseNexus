@@ -89,6 +89,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<ProductPriceRequestDtoValid
 builder.Services.AddValidatorsFromAssemblyContaining<CustomerRequestDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<OrderRequestDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<OrderProductRequestDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<ProductPatchFieldsValidator>();
+
 
 builder.Services.AddControllers() .AddJsonOptions(options => 
 {
