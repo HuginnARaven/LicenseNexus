@@ -26,3 +26,7 @@ Content-Type: application/json
 {
   "typeName": "TestBestType"
 }
+
+### deleteProductType
+DELETE {{API_HostAddress}}/ProductType/{{new_product_type_id}}/
+Accept: application/json

@@ -34,8 +34,7 @@ namespace LicenseNexus.API.Controllers
             {
                 return BadRequest();
             }
-            await currencyService.AddCurrency(currency);
-            return Ok();
+            return Ok(await currencyService.AddCurrency(currency));
         }
         
         [HttpPut("{id:int}")]
@@ -47,6 +46,13 @@ namespace LicenseNexus.API.Controllers
             }
             await currencyService.UpdateCurrency(id, currency);
             return Ok();
+        }
+        
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await currencyService.DeleteCurrency(id);
+            return NoContent();
         }
     }
 }

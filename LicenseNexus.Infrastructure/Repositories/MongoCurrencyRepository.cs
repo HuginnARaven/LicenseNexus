@@ -1,4 +1,5 @@
 ﻿using LicenseNexus.Domain.Entities;
+using LicenseNexus.Domain.Exceptions;
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using LicenseNexus.Infrastructure.Data.MongoDocuments;
@@ -47,7 +48,7 @@ public class MongoCurrencyRepository: ICurrencyRepository
         return await _context.Currencies.Find(filter).AnyAsync(cancellationToken);
     }
 
-    public async Task AddAsync(Currency currency)
+    public async Task<Currency?> AddAsync(Currency currency)
     {
         var id = await _context.GetNextSequenceValueAsync("currency_id");
         currency.Id = id;
@@ -61,6 +62,7 @@ public class MongoCurrencyRepository: ICurrencyRepository
         };
 
         await _context.Currencies.InsertOneAsync(doc);
+        return currency;
     }
 
     public async Task UpdateAsync(Currency currency)
@@ -72,5 +74,17 @@ public class MongoCurrencyRepository: ICurrencyRepository
             .Set(c => c.CountryCode, currency.CountryCode);
 
         await _context.Currencies.UpdateOneAsync(filter, update);
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var filter = Builders<ProductDocument>.Filter.Eq(p => p.Currency.Id, id);
+        bool hasLinkedProducts = await _context.Products.Find(filter).AnyAsync();
+        
+        if (hasLinkedProducts)
+            throw new ConflictException("A database constraint violation occurred. Cannot delete this object because it is assigned to one or more products.");
+        
+        var deleteFilter = Builders<CurrencyDocument>.Filter.Eq(v => v.Id, id);
+        await _context.Currencies.DeleteOneAsync(deleteFilter);
     }
 }

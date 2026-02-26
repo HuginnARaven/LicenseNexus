@@ -1,5 +1,4 @@
-﻿using LicenseNexus.Domain.Entities;
-using LicenseNexus.Domain.Interfaces;
+﻿using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using LicenseNexus.Infrastructure.Data.MongoDocuments;
 using MongoDB.Driver;
@@ -62,6 +61,11 @@ public class MongoTagRepository(MongoContext context): ITagRepository
 
     public async Task DeleteAsync(int id)
     {
-        throw new NotImplementedException();
+        var productFilter = Builders<ProductDocument>.Filter.ElemMatch(p => p.Tags, t => t.Id == id);
+        var productUpdate = Builders<ProductDocument>.Update.PullFilter(p => p.Tags, t => t.Id == id);
+        await context.Products.UpdateManyAsync(productFilter, productUpdate);
+        
+        var filter = Builders<TagDocument>.Filter.Eq(t => t.Id, id);
+        await context.Tags.DeleteOneAsync(filter);
     }
 }

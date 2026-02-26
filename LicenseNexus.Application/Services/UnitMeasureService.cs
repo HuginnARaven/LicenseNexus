@@ -32,14 +32,19 @@ public class UnitMeasureService(IUnitMeasureRepository unitMeasureRepository, IE
         };
     }
 
-    public async Task AddUnitMeasure(UnitMeasureRequestDto unitMeasureDto)
+    public async Task<UnitMeasureResponseDto?> AddUnitMeasure(UnitMeasureRequestDto unitMeasureDto)
     {
         var unitMeasure = new UnitMeasure
         {
             Name = unitMeasureDto.Name,
         };
 
-        await unitMeasureRepository.AddAsync(unitMeasure);
+        var result = await unitMeasureRepository.AddAsync(unitMeasure);
+        return result == null ? null : new UnitMeasureResponseDto
+        {
+            Id = result.Id,
+            Name = result.Name
+        };
     }
     
     public async Task UpdateUnitMeasure(int id, UnitMeasureRequestDto unitMeasureDto)
@@ -52,5 +57,10 @@ public class UnitMeasureService(IUnitMeasureRepository unitMeasureRepository, IE
 
         await unitMeasureRepository.UpdateAsync(unitMeasure);
         await eventPublisher.PublishAsync(new UnitMeasureUpdatedEvent(unitMeasure));
+    }
+
+    public async Task DeleteUnitMeasure(int id)
+    {
+        await unitMeasureRepository.DeleteAsync(id);
     }
 }

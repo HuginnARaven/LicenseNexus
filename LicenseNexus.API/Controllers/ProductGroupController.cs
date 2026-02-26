@@ -34,8 +34,7 @@ namespace LicenseNexus.API.Controllers
             {
                 return BadRequest();
             }
-            await productGroupService.AddProductGroup(group);
-            return Ok();
+            return Ok(await productGroupService.AddProductGroup(group));
         }
         
         [HttpPut("{id:int}")]

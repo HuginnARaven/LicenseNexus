@@ -2,6 +2,7 @@
 using LicenseNexus.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
 
@@ -27,7 +28,6 @@ public class GlobalExceptionHandler : IExceptionHandler
         
         switch (exception)
         {
-            // FluentValidation
             case ValidationException validationException:
                 statusCode = StatusCodes.Status400BadRequest;
                 detail = "One or more validation errors occurred.";
@@ -63,7 +63,12 @@ public class GlobalExceptionHandler : IExceptionHandler
 
             case DbUpdateException dbEx:
                 statusCode = StatusCodes.Status409Conflict;
-                detail = "A database constraint violation occurred. This usually means a record with the same unique key already exists.";
+                detail = "A database constraint violation occurred.";
+                break;
+            
+            case InvalidOperationException:
+                statusCode = StatusCodes.Status400BadRequest;
+                detail = $"The operation could not be completed because of an invalid state or request. {exception.Message}";
                 break;
             
             default:

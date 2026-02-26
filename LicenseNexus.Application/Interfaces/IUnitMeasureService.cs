@@ -6,6 +6,7 @@ public interface IUnitMeasureService
 {
     Task<IEnumerable<UnitMeasureResponseDto>> GetAllUnitMeasures();
     Task<UnitMeasureResponseDto?> GetUnitMeasureById(int id);
-    Task AddUnitMeasure(UnitMeasureRequestDto unitMeasureDto);
+    Task<UnitMeasureResponseDto?> AddUnitMeasure(UnitMeasureRequestDto unitMeasureDto);
     Task UpdateUnitMeasure(int id, UnitMeasureRequestDto unitMeasureDto);
+    Task DeleteUnitMeasure(int id);
 }

@@ -42,7 +42,7 @@ public class ProductGroupService(IProductGroupRepository productGroupRepository,
         };
     }
 
-    public async Task AddProductGroup(ProductGroupRequestDto groupDto)
+    public async Task<ProductGroupResponseDto?> AddProductGroup(ProductGroupRequestDto groupDto)
     {
         var group = new ProductGroup
         {
@@ -53,8 +53,17 @@ public class ProductGroupService(IProductGroupRepository productGroupRepository,
             CategoryId = groupDto.CategoryId,
             CreatedDate = DateTime.UtcNow
         };
-
-        await productGroupRepository.AddAsync(group);
+        var result = await productGroupRepository.AddAsync(group);
+        return result == null ? null : new ProductGroupResponseDto
+        {
+            Id = result.Id,
+            Name = result.Name,
+            IsActive = result.IsActive,
+            Note = result.Note,
+            CreatedDate = result.CreatedDate,
+            Author = result.Author,
+            CategoryId = result.CategoryId
+        };
     }
 
     public async Task UpdateProductGroup(int id, ProductGroupEditRequestDto productGroup)

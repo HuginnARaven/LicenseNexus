@@ -28,15 +28,28 @@ public class RedisUnitMeasureRepository: IUnitMeasureRepository
         return await _context.UnitMeasures.AnyAsync(um => um.Id == id, cancellationToken);
     }
     
-    public async Task AddAsync(UnitMeasure unitMeasure)
+    public async Task<UnitMeasure?> AddAsync(UnitMeasure unitMeasure)
     {
         _context.UnitMeasures.Add(unitMeasure);
-        await _context.SaveChangesAsync();
+        var res = await _context.SaveChangesAsync();
+        if (res > 0)
+            return unitMeasure;
+        
+        return null;
     }
 
     public async Task UpdateAsync(UnitMeasure unitMeasure)
     {
         _context.UnitMeasures.Update(unitMeasure);
         await _context.SaveChangesAsync();
+    }
+    
+    public async Task DeleteAsync(int id)
+    {
+        var unitMeasure = await _context.UnitMeasures.FindAsync(id);
+        if (unitMeasure == null)
+            throw new InvalidOperationException("Object Not Found");
+        _context.Remove(unitMeasure);
+        await  _context.SaveChangesAsync();
     }
 }

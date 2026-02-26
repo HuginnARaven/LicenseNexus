@@ -47,5 +47,11 @@ namespace LicenseNexus.API.Controllers
             await tagService.UpdateTag(id, tag);
             return Ok();
         }
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await tagService.DeleteTag(id);
+            return NoContent();
+        }
     }
 }

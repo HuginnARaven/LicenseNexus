@@ -1,27 +1,166 @@
 @API_HostAddress = http://localhost:5000/api
 
+### createVendor
+POST {{API_HostAddress}}/Vendor/
+Content-Type: application/json
+
+{
+  "name": "UnitTestVendor2",
+  "originalName": "UnitTestVendor1",
+  "description": "UnitTestVendor1 description",
+  "countryCode": "TST",
+  "logo": "UnitTestTestVendor1.logo"
+}
+
+> {%
+    client.global.set("new_vendor_id", response.body.id);
+    client.log("Created Vendor ID: " + client.global.get("new_vendor_id"));
+%}
+
+### getAllVendors
+GET {{API_HostAddress}}/Vendor/
+Accept: application/json
+
+### getVendorByID
+GET {{API_HostAddress}}/Vendor/{{new_vendor_id}}/
+Accept: application/json
+
+### postCategory
+POST {{API_HostAddress}}/Category/
+Content-Type: application/json
+
+{
+  "categoryName": "UnitTestCategory",
+  "isActive": true,
+  "description": "UnitTestCategory Description",
+  "author": "UnitTestTest"
+}
+
+> {%
+    client.global.set("new_category_id", response.body.id);
+    client.log("Created Category ID: " + client.global.get("new_category_id"));
+%}
+
+### getCategories
+GET {{API_HostAddress}}/Category/
+Accept: application/json
+
+### getCategory by id
+GET {{API_HostAddress}}/Category/{{new_category_id}}/
+Accept: application/json
+
+### createProductGroup
+POST {{API_HostAddress}}/ProductGroup/
+Content-Type: application/json
+
+{
+  "name": "UnitTestProductGroup",
+  "isActive": true,
+  "note": "UnitTestProductGroup description",
+  "author": "UnitTestTest",
+  "categoryId": {{new_category_id}}
+}
+
+> {%
+    client.global.set("new_product_group_id", response.body.id);
+    client.log("Created Category ID: " + client.global.get("new_product_group_id"));
+%}
+
+### getAllProductGroups
+GET {{API_HostAddress}}/ProductGroup/
+Accept: application/json
+
+### getProductGroupByID
+GET {{API_HostAddress}}/ProductGroup/{{new_product_group_id}}/
+Accept: application/json
+
+### createCurrency
+POST {{API_HostAddress}}/Currency/
+Content-Type: application/json
+
+{
+  "literalCode": "UTC",
+  "name": "UnitTest",
+  "countryCode": "UUU"
+}
+
+> {%
+    client.global.set("new_currency_id", response.body.id);
+    client.log("Created Currency ID: " + client.global.get("new_currency_id"));
+%}
+
+### getAllCurrencies
+GET {{API_HostAddress}}/Currency/
+Accept: application/json
+
+### getCurrencyByID
+GET {{API_HostAddress}}/Currency/{{new_currency_id}}/
+Accept: application/json
+
+### createProductType
+POST {{API_HostAddress}}/ProductType/
+Content-Type: application/json
+
+{
+  "typeName": "UnitTestType"
+}
+
+> {%
+    client.global.set("new_product_type_id", response.body.id);
+    client.log("Created ProductType ID: " + client.global.get("new_product_type_id"));
+%}
+
+### getAllProductTypes
+GET {{API_HostAddress}}/ProductType/
+Accept: application/json
+
+### getProductTypeByID
+GET {{API_HostAddress}}/ProductType/{{new_product_type_id}}/
+Accept: application/json
+
+### createUnitMeasure
+POST {{API_HostAddress}}/UnitMeasure/
+Content-Type: application/json
+
+{
+  "name": "UnitTestUnitMeasure"
+}
+
+> {%
+    client.global.set("new_unit_measure_id", response.body.id);
+    client.log("Created UnitMeasure ID: " + client.global.get("new_unit_measure_id"));
+%}
+
+### getAllUnitMeasures
+GET {{API_HostAddress}}/UnitMeasure/
+Accept: application/json
+
+### getUnitMeasureByID
+GET {{API_HostAddress}}/UnitMeasure/{{new_unit_measure_id}}/
+Accept: application/json
+
 ### createProduct
 POST {{API_HostAddress}}/Product/
 Content-Type: application/json
 
 {
-  "sku": "SKU123",
-  "title": "Best Test",
-  "shortDescription": "The Best Test",
-  "vendorId": 8,
-  "productTypeId": 1,
-  "unitMeasureId": 1,
-  "currencyId": 1,
-  "productGroupId": 1,
+  "sku": "UUU332123",
+  "title": "UnitTest Test",
+  "shortDescription": "The Best Test UnitTest",
+  "vendorId": {{new_vendor_id}},
+  "productTypeId": {{new_product_type_id}},
+  "unitMeasureId": {{new_unit_measure_id}},
+  "currencyId": {{new_currency_id}},
+  "productGroupId": {{new_product_group_id}},
   "quantityMin": 1,
   "quantityMax": 100,
-  "startDate": "2023-01-01T00:00:00Z",
+  "startDate": "2022-01-01T00:00:00Z",
   "endDate": "2023-12-31T23:59:59Z",
   "isPromo": false,
   "isTop": false,
   "isNew": false,
   "logo": "http://example.com/logo.png",
-  "author": "Tester"
+  "author": "UnitTestTest"
 }
 
 > {%
@@ -29,94 +168,68 @@ Content-Type: application/json
     client.log("Created Product ID: " + client.global.get("new_product_id"));
 %}
 
+### getAllProducts
+GET {{API_HostAddress}}/Product/
+Accept: application/json
+
 ### getProductByID
 GET {{API_HostAddress}}/Product/{{new_product_id}}/
 Accept: application/json
 
-### editlVendor
-PUT {{API_HostAddress}}/Vendor/8/
+### updateProduct
+PUT {{API_HostAddress}}/Product/{{new_product_id}}/
 Content-Type: application/json
 
 {
-  "name": "QuestVendor1",
-  "originalName": "Vendor1",
-  "description": "Vendor1 description",
-  "countryCode": "TST",
-  "logo": "123123123"
+  "sku": "UUU332123-UPDATED",
+  "title": "UnitTest Product Updated",
+  "shortDescription": "A test onit product updated",
+  "vendorId": {{new_vendor_id}},
+  "productTypeId": {{new_product_type_id}},
+  "unitMeasureId": {{new_unit_measure_id}},
+  "currencyId": {{new_currency_id}},
+  "productGroupId": {{new_product_group_id}},
+  "quantityMin": 1,
+  "quantityMax": 100,
+  "startDate": "2022-01-01T00:00:00Z",
+  "endDate": "2023-12-31T23:59:59Z",
+  "isPromo": false,
+  "isTop": true,
+  "isNew": true,
+  "logo": "http://example.com/logo.png",
+  "author": "UnitTestTester"
 }
 
-### getProductByID
-GET {{API_HostAddress}}/Product/{{new_product_id}}/
-Accept: application/json
-
-### editlCategory
-PUT {{API_HostAddress}}/Category/1/
+### patchProduct
+PATCH {{API_HostAddress}}/Product/{{new_product_id}}/
 Content-Type: application/json
 
 {
-  "categoryName": "QuestCategory1",
-  "isActive": true,
-  "description": "Category1 Description",
-  "author": null
+  "sku": "UUU332123-PATCHED",
+  "title": "UnitTest Product PATCHED",
+  "shortDescription": "A unit product updated twice"
 }
-
-### getProductByID
-GET {{API_HostAddress}}/Product/{{new_product_id}}/
-Accept: application/json
-
-### editProductGroup
-PUT {{API_HostAddress}}/ProductGroup/1/
-Content-Type: application/json
-
-{
-  "name": "QuestGroup1",
-  "isActive": true,
-  "note": "ProductGroup1 description",
-  "author": "Test"
-}
-
-### getProductByID
-GET {{API_HostAddress}}/Product/{{new_product_id}}/
-Accept: application/json
-
-### editProductType
-PUT {{API_HostAddress}}/ProductType/1/
-Content-Type: application/json
-
-{
-  "typeName": "QuestType"
-}
-
-### getProductByID
-GET {{API_HostAddress}}/Product/{{new_product_id}}/
-Accept: application/json
-
-### editlUnitMeasure
-PUT {{API_HostAddress}}/UnitMeasure/1/
-Content-Type: application/json
-
-{
-  "name": "QuestUnitMeasure"
-}
-
-### getProductByID
-GET {{API_HostAddress}}/Product/{{new_product_id}}/
-Accept: application/json
-
-### editlCurrency
-PUT {{API_HostAddress}}/Currency/1/
-Content-Type: application/json
-
-{
-  "literalCode": "?",
-  "name": "QuestDollar",
-  "countryCode": "USA"
-}
-
-### getProductByID
-GET {{API_HostAddress}}/Product/{{new_product_id}}/
-Accept: application/json
 
 ### deleteProduct
 DELETE {{API_HostAddress}}/Product/{{new_product_id}}/
+Accept: application/json
+
+### deleteVendor
+DELETE {{API_HostAddress}}/Vendor/{{new_vendor_id}}/
+Accept: application/json
+
+### deleteUnitMeasure
+DELETE {{API_HostAddress}}/UnitMeasure/{{new_unit_measure_id}}/
+Accept: application/json
+
+### deleteProductType
+DELETE {{API_HostAddress}}/ProductType/{{new_product_type_id}}/
+Accept: application/json
+
+### deleteCategory
+DELETE {{API_HostAddress}}/Category/{{new_category_id}}/
+Accept: application/json
+
+### deleteCurrency
+DELETE {{API_HostAddress}}/Currency/{{new_currency_id}}/
 Accept: application/json

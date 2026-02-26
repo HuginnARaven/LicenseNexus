@@ -1,4 +1,5 @@
 ﻿using LicenseNexus.Domain.Entities;
+using LicenseNexus.Domain.Exceptions;
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using LicenseNexus.Infrastructure.Data.MongoDocuments;
@@ -43,7 +44,7 @@ public class MongoProductTypeRepository: IProductTypeRepository
         return await _context.ProductTypes.Find(filter).AnyAsync(cancellationToken);
     }
 
-    public async Task AddAsync(ProductType productType)
+    public async Task<ProductType?> AddAsync(ProductType productType)
     {
         var id = await _context.GetNextSequenceValueAsync("product_type_id");
         productType.Id = id;
@@ -55,6 +56,7 @@ public class MongoProductTypeRepository: IProductTypeRepository
         };
 
         await _context.ProductTypes.InsertOneAsync(doc);
+        return productType;
     }
 
     public async Task UpdateAsync(ProductType productType)
@@ -64,5 +66,17 @@ public class MongoProductTypeRepository: IProductTypeRepository
             .Set(pt => pt.TypeName, productType.TypeName);
 
         await _context.ProductTypes.UpdateOneAsync(filter, update);
+    }
+    
+    public async Task DeleteAsync(int id)
+    {
+        var filter = Builders<ProductDocument>.Filter.Eq(p => p.Classification.TypeId, id);
+        bool hasLinkedProducts = await _context.Products.Find(filter).AnyAsync();
+        
+        if (hasLinkedProducts)
+            throw new ConflictException("A database constraint violation occurred. Cannot delete this object because it is assigned to one or more products.");
+        
+        var deleteFilter = Builders<ProductTypeDocument>.Filter.Eq(v => v.Id, id);
+        await _context.ProductTypes.DeleteOneAsync(deleteFilter);
     }
 }

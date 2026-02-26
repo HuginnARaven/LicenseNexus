@@ -24,7 +24,7 @@ GET {{API_HostAddress}}/Vendor/{{new_vendor_id}}/
 Accept: application/json
 
 ### editlVendor
-PUT {{API_HostAddress}}/Vendor/1/
+PUT {{API_HostAddress}}/Vendor/{{new_vendor_id}}/
 Content-Type: application/json
 
 {
@@ -34,3 +34,7 @@ Content-Type: application/json
   "countryCode": "TST",
   "logo": "123123123"
 }
+
+### deleteVendor
+DELETE {{API_HostAddress}}/Vendor/{{new_vendor_id}}/
+Accept: application/json

@@ -1,4 +1,5 @@
 ﻿using LicenseNexus.Domain.Entities;
+using LicenseNexus.Domain.Exceptions;
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using LicenseNexus.Infrastructure.Data.MongoDocuments;
@@ -43,7 +44,7 @@ public class MongoUnitMeasureRepository: IUnitMeasureRepository
         return await _context.UnitMeasures.Find(filter).AnyAsync(cancellationToken);
     }
 
-    public async Task AddAsync(UnitMeasure unitMeasure)
+    public async Task<UnitMeasure?> AddAsync(UnitMeasure unitMeasure)
     {
         var id = await _context.GetNextSequenceValueAsync("unit_measure_id");
         unitMeasure.Id = id;
@@ -55,6 +56,7 @@ public class MongoUnitMeasureRepository: IUnitMeasureRepository
         };
 
         await _context.UnitMeasures.InsertOneAsync(doc);
+        return unitMeasure;
     }
 
     public async Task UpdateAsync(UnitMeasure unitMeasure)
@@ -68,4 +70,17 @@ public class MongoUnitMeasureRepository: IUnitMeasureRepository
         newDoc.InternalId = oldDoc.InternalId;
         await _context.UnitMeasures.ReplaceOneAsync(um => um.Id == unitMeasure.Id, newDoc);
     }
+    
+    public async Task DeleteAsync(int id)
+    {
+        var filter = Builders<ProductDocument>.Filter.Eq(p => p.Classification.UnitMeasureId, id);
+        bool hasLinkedProducts = await _context.Products.Find(filter).AnyAsync();
+        
+        if (hasLinkedProducts)
+            throw new ConflictException("A database constraint violation occurred. Cannot delete this object because it is assigned to one or more products.");
+        
+        var deleteFilter = Builders<UnitMeasureDocument>.Filter.Eq(v => v.Id, id);
+        await _context.UnitMeasures.DeleteOneAsync(deleteFilter);
+    }
+
 }

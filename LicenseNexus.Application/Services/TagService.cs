@@ -54,4 +54,9 @@ public class TagService(ITagRepository repository, IEventPublisher eventPublishe
         await repository.UpdateAsync(tag);
         await eventPublisher.PublishAsync(new TagUpdatedEvent(tag));
     }
+
+    public async Task DeleteTag(int id)
+    {
+        await repository.DeleteAsync(id);
+    }
 }

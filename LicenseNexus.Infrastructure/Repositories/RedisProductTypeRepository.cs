@@ -28,15 +28,27 @@ public class RedisProductTypeRepository: IProductTypeRepository
         return await _context.ProductTypes.AnyAsync(pt => pt.Id == id, cancellationToken);
     }
 
-    public async Task AddAsync(ProductType productType)
+    public async Task<ProductType?> AddAsync(ProductType productType)
     {
         _context.ProductTypes.Add(productType);
-        await _context.SaveChangesAsync();
+        var res = await _context.SaveChangesAsync();
+        if (res > 0)
+            return productType;
+        return null;
     }
 
     public async Task UpdateAsync(ProductType productType)
     {
         _context.ProductTypes.Update(productType);
         await _context.SaveChangesAsync();
+    }
+    
+    public async Task DeleteAsync(int id)
+    {
+        var productType = await _context.ProductTypes.FindAsync(id);
+        if (productType == null)
+            throw new InvalidOperationException("Object Not Found");
+        _context.Remove(productType);
+        await  _context.SaveChangesAsync();
     }
 }

@@ -41,7 +41,7 @@ public class CurrencyService(
         };
     }
 
-    public async Task AddCurrency(CurrencyRequestDto currencyDto)
+    public async Task<CurrencyResponseDto?> AddCurrency(CurrencyRequestDto currencyDto)
     {
         await validator.ValidateAndThrowAsync(currencyDto);
         
@@ -52,8 +52,14 @@ public class CurrencyService(
             CountryCode = currencyDto.CountryCode
         };
 
-        await currencyRepository.AddAsync(currency);
-        
+        var result = await currencyRepository.AddAsync(currency);
+        return result == null ? null : new CurrencyResponseDto
+        {
+            Id = result.Id,
+            LiteralCode = result.LiteralCode,
+            Name = result.Name,
+            CountryCode = result.CountryCode
+        };
     }
 
     public async Task UpdateCurrency(int id, CurrencyRequestDto currencyDto)
@@ -70,5 +76,10 @@ public class CurrencyService(
 
         await currencyRepository.UpdateAsync(currency);
         await eventPublisher.PublishAsync(new CurrencyUpdatedEvent(currency));
+    }
+
+    public async Task DeleteCurrency(int id)
+    {
+        await currencyRepository.DeleteAsync(id);
     }
 }

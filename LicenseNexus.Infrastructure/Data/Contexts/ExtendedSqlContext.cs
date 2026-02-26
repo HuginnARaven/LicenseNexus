@@ -54,6 +54,12 @@ public class ExtendedSqlContext : BaseSqlContext
             .HasOne(p => p.Vendor).WithMany().OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<Product>()
             .HasOne(p => p.Currency).WithMany().OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Product>()
+            .HasOne(p => p.ProductType).WithMany().OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Product>()
+            .HasOne(p => p.UnitMeasure).WithMany().OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Product>()
+            .HasOne(p => p.ProductGroup).WithMany().OnDelete(DeleteBehavior.Restrict);
             
         modelBuilder.Entity<ProductPrice>().Property(p => p.Price).HasPrecision(18, 2);
             

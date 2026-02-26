@@ -6,6 +6,7 @@ public interface IVendorService
 {
     Task<IEnumerable<VendorResponceDTO>> GetAllVendors();
     Task<VendorResponceDTO?> GetVendorById(int id);
-    Task AddVendor(VendorRequestDTO vendor);
+    Task<VendorResponceDTO?> AddVendor(VendorRequestDTO vendor);
     Task UpdateVendor(int id, VendorRequestDTO vendor);
+    Task DeleteVendor(int id);
 }

@@ -24,15 +24,28 @@ public class RedisCategoryRepository: ICategoryRepository
         return await _context.Categories.Include(c => c.ProductGroups).FirstOrDefaultAsync(c => c.Id == id);
     }
 
-    public async Task AddAsync(Category category)
+    public async Task<Category?> AddAsync(Category category)
     {
         _context.Categories.Add(category);
-        await _context.SaveChangesAsync();
+        var res = await _context.SaveChangesAsync();
+        if (res > 0)
+            return category;
+        
+        return null;
     }
 
     public async Task UpdateAsync(Category category)
     {
         _context.Categories.Update(category);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var category = new Category { Id = id };
+        _context.Categories.Attach(category);
+        _context.Categories.Remove(category);
+  
         await _context.SaveChangesAsync();
     }
 }

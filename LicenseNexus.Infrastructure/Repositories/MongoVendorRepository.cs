@@ -1,4 +1,5 @@
 ﻿using LicenseNexus.Domain.Entities;
+using LicenseNexus.Domain.Exceptions;
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using LicenseNexus.Infrastructure.Data.MongoDocuments;
@@ -53,7 +54,7 @@ public class MongoVendorRepository: IVendorRepository
         return await _context.Vendors.Find(filter).AnyAsync(cancellationToken);
     }
     
-    public async Task AddAsync(Vendor vendor)
+    public async Task<Vendor?> AddAsync(Vendor vendor)
     {
         var id = await _context.GetNextSequenceValueAsync("vendor_id");
         vendor.Id = id;
@@ -69,6 +70,7 @@ public class MongoVendorRepository: IVendorRepository
         };
 
         await _context.Vendors.InsertOneAsync(doc);
+        return vendor;
     }
 
     public async Task UpdateAsync(Vendor vendor)
@@ -85,5 +87,17 @@ public class MongoVendorRepository: IVendorRepository
         newDoc.InternalId = oldDoc.InternalId;
         await _collection.ReplaceOneAsync(x => x.Id == vendor.Id, newDoc);
         
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var filter = Builders<ProductDocument>.Filter.Eq(p => p.Classification.Vendor.Id, id);
+        bool hasLinkedProducts = await _context.Products.Find(filter).AnyAsync();
+        
+        if (hasLinkedProducts)
+            throw new ConflictException("A database constraint violation occurred. Cannot delete this object because it is assigned to one or more products.");
+        
+        var deleteFilter = Builders<VendorDocument>.Filter.Eq(v => v.Id, id);
+        await _context.Vendors.DeleteOneAsync(deleteFilter);
     }
 }

@@ -34,8 +34,7 @@ namespace LicenseNexus.API.Controllers
             {
                 return BadRequest();
             }
-            await productTypeService.AddProductType(productType);
-            return Ok();
+            return Ok(await productTypeService.AddProductType(productType));
         }
         
         [HttpPut("{id:int}")]
@@ -47,6 +46,13 @@ namespace LicenseNexus.API.Controllers
             }
             await productTypeService.UpdateProductType(id, productType);
             return Ok();
+        }
+        
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await productTypeService.DeleteProductType(id);
+            return NoContent();
         }
     }
 }

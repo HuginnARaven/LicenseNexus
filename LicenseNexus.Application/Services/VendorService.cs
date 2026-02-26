@@ -29,7 +29,7 @@ public class VendorService(
         return vendor == null ? null : MapModelToDto(vendor);
     }
 
-    public async Task AddVendor(VendorRequestDTO vendor)
+    public async Task<VendorResponceDTO?> AddVendor(VendorRequestDTO vendor)
     {
         await validator.ValidateAndThrowAsync(vendor);
         var newVendor = new Vendor
@@ -40,7 +40,8 @@ public class VendorService(
             CountryCode = vendor.CountryCode,
             Logo = vendor.Logo ?? ""
         };
-        await vendorRepository.AddAsync(newVendor);
+        var resVendor = await vendorRepository.AddAsync(newVendor);
+        return resVendor == null ? null : MapModelToDto(resVendor);
     }
 
     public async Task UpdateVendor(int id, VendorRequestDTO vendor)
@@ -57,6 +58,11 @@ public class VendorService(
         };
         await vendorRepository.UpdateAsync(newVendor);
         await eventPublisher.PublishAsync(new VendorUpdatedEvent(newVendor));
+    }
+
+    public async Task DeleteVendor(int id)
+    {
+        await vendorRepository.DeleteAsync(id);
     }
 
     private VendorResponceDTO MapModelToDto(Vendor vendor)

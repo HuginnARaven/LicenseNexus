@@ -9,4 +9,5 @@ public interface ITagService
     Task<TagResponseDto?> GetTagById(int id);
     Task<TagResponseDto?> AddTag(TagRequestDto tag);
     Task UpdateTag(int id, TagRequestDto tad);
+    Task DeleteTag(int id);
 }

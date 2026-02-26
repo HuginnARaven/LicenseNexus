@@ -34,8 +34,8 @@ namespace LicenseNexus.API.Controllers
             {
                 return BadRequest();
             }
-            await categoryService.AddCategory(category);
-            return Ok();
+            
+            return Ok(await categoryService.AddCategory(category));
         }
         
         [HttpPut("{id:int}")]
@@ -47,6 +47,12 @@ namespace LicenseNexus.API.Controllers
             }
             await categoryService.UpdateCategory(id, category);
             return Ok();
+        }
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await categoryService.DeleteCategory(id);
+            return NoContent();
         }
     }
 }

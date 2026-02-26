@@ -34,8 +34,7 @@ namespace LicenseNexus.API.Controllers
             {
                 return BadRequest();
             }
-            await vendorService.AddVendor(vendor);
-            return Ok();
+            return Ok(await vendorService.AddVendor(vendor));
         }
         
         [HttpPut("{id:int}")]
@@ -47,6 +46,13 @@ namespace LicenseNexus.API.Controllers
             }
             await vendorService.UpdateVendor(id, vendor);
             return Ok();
+        }
+        
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await vendorService.DeleteVendor(id);
+            return NoContent();
         }
     }
 }

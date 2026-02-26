@@ -6,6 +6,7 @@ public interface IProductTypeService
 {
     Task<IEnumerable<ProductTypeResponseDto>> GetAllProductTypes();
     Task<ProductTypeResponseDto?> GetProductTypeById(int id);
-    Task AddProductType(ProductTypeRequestDto productTypeDto);
+    Task<ProductTypeResponseDto?> AddProductType(ProductTypeRequestDto productTypeDto);
     Task UpdateProductType(int id, ProductTypeRequestDto productTypeDto);
+    Task DeleteProductType(int id);
 }

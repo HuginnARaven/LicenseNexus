@@ -28,10 +28,14 @@ public class RedisVendorRepository: IVendorRepository
         return await _context.Vendors.AnyAsync(v => v.Id == id, cancellationToken);
     }
 
-    public async Task AddAsync(Vendor vendor)
+    public async Task<Vendor?> AddAsync(Vendor vendor)
     {
         _context.Vendors.Add(vendor);
-        await _context.SaveChangesAsync();
+        var res = await _context.SaveChangesAsync();
+        if (res > 0)
+            return vendor;
+        
+        return null;
     }
 
     public async Task UpdateAsync(Vendor vendor)
@@ -45,5 +49,16 @@ public class RedisVendorRepository: IVendorRepository
             oldVendor.CountryCode = vendor.CountryCode;
             await  _context.SaveChangesAsync();
         }
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        // if (await _context.Vendors.Where(v => v.Id == id).ExecuteDeleteAsync() <=0)
+        //     throw new InvalidOperationException("Object Not Found");
+        var vendor = await _context.Vendors.FindAsync(id);
+        if (vendor == null)
+            throw new InvalidOperationException("Object Not Found");
+        _context.Remove(vendor);
+        await  _context.SaveChangesAsync();
     }
 }

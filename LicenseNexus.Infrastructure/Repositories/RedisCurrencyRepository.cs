@@ -28,15 +28,28 @@ public class RedisCurrencyRepository: ICurrencyRepository
         return await _context.Currencies.AnyAsync(p => p.Id == id, cancellationToken);
     }
 
-    public async Task AddAsync(Currency currency)
+    public async Task<Currency?> AddAsync(Currency currency)
     {
         _context.Currencies.Add(currency);
-        await _context.SaveChangesAsync();
+        var res = await _context.SaveChangesAsync();
+        if (res > 0)
+            return currency;
+        
+        return null;
     }
 
     public async Task UpdateAsync(Currency currency)
     {
         _context.Currencies.Update(currency);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var currency = await _context.Currencies.FindAsync(id);
+        if (currency == null)
+            throw new InvalidOperationException("Object Not Found");
+        _context.Remove(currency);
+        await  _context.SaveChangesAsync();
     }
 }

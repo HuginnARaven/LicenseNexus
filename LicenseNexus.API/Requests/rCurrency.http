@@ -30,3 +30,7 @@ Content-Type: application/json
   "name": "Dollar",
   "countryCode": "USA"
 }
+
+### deleteCurrency
+DELETE {{API_HostAddress}}/Currency/{{new_currency_id}}/
+Accept: application/json

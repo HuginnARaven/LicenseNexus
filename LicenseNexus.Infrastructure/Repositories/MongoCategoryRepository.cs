@@ -1,4 +1,5 @@
 ﻿using LicenseNexus.Domain.Entities;
+using LicenseNexus.Domain.Exceptions;
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using LicenseNexus.Infrastructure.Data.MongoDocuments;
@@ -57,7 +58,7 @@ public class MongoCategoryRepository: ICategoryRepository
         };
     }
 
-    public async Task AddAsync(Category category)
+    public async Task<Category?> AddAsync(Category category)
     {
         var id = await _context.GetNextSequenceValueAsync("category_id");
         category.Id = id;
@@ -71,6 +72,7 @@ public class MongoCategoryRepository: ICategoryRepository
         };
 
         await _context.Categories.InsertOneAsync(doc);
+        return category;
     }
 
     public async Task UpdateAsync(Category category)
@@ -82,5 +84,26 @@ public class MongoCategoryRepository: ICategoryRepository
             .Set(c => c.Description, category.Description);
             
         await _context.Categories.UpdateOneAsync(filter, update);
+    }
+    
+    public async Task DeleteAsync(int id)
+    {
+        var categoryProjection = await _context.Categories
+            .Find(c => c.Id == id)
+            .Project(c => new { GroupIds = c.Groups.Select(g => g.Id) })
+            .FirstOrDefaultAsync();
+        
+        if (categoryProjection != null && categoryProjection.GroupIds.Any())
+        {
+            var productFilter = Builders<ProductDocument>.Filter.In(p => p.Classification.Group.Id, categoryProjection.GroupIds);
+        
+            bool hasLinkedProducts = await _context.Products.Find(productFilter).AnyAsync();
+
+            if (hasLinkedProducts)
+                throw new ConflictException("A database constraint violation occurred. Cannot delete this category because one or more of its product groups are assigned to products.");
+        }
+
+        var deleteFilter = Builders<CategoryDocument>.Filter.Eq(c => c.Id, id);
+        await _context.Categories.DeleteOneAsync(deleteFilter);
     }
 }

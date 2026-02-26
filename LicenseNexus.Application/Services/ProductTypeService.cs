@@ -32,14 +32,19 @@ public class ProductTypeService(IProductTypeRepository productTypeRepository, IE
         };
     }
 
-    public async Task AddProductType(ProductTypeRequestDto productTypeDto)
+    public async Task<ProductTypeResponseDto?> AddProductType(ProductTypeRequestDto productTypeDto)
     {
         var productType = new ProductType
         {
             TypeName = productTypeDto.TypeName,
         };
 
-        await productTypeRepository.AddAsync(productType);
+        var result = await productTypeRepository.AddAsync(productType);
+        return result == null ? null : new ProductTypeResponseDto
+        {
+            Id = result.Id,
+            TypeName = result.TypeName
+        };
     }
 
     public async Task UpdateProductType(int id, ProductTypeRequestDto productTypeDto)
@@ -52,5 +57,10 @@ public class ProductTypeService(IProductTypeRepository productTypeRepository, IE
 
         await productTypeRepository.UpdateAsync(productType);
         await eventPublisher.PublishAsync(new ProductTypeUpdatedEvent(productType));
+    }
+    
+    public async Task DeleteProductType(int id)
+    {
+        await productTypeRepository.DeleteAsync(id);
     }
 }

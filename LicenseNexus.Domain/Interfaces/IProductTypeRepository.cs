@@ -7,7 +7,7 @@ public interface IProductTypeRepository
     Task<IEnumerable<ProductType>> GetAllAsync();
     Task<ProductType?> GetByIdAsync(int id);
     Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default);
-    Task AddAsync(ProductType productType);
+    Task<ProductType?> AddAsync(ProductType productType);
     Task UpdateAsync(ProductType productType);
-    //TODO: mb add Delete 
+    Task DeleteAsync(int id);
 }

@@ -60,7 +60,7 @@ public class CategoryService(ICategoryRepository categoryRepository, IEventPubli
         };
     }
 
-    public async Task AddCategory(CategoryRequestDto categoryDto)
+    public async Task<CategoryResponseDto?> AddCategory(CategoryRequestDto categoryDto)
     {
         var category = new Category
         {
@@ -71,7 +71,17 @@ public class CategoryService(ICategoryRepository categoryRepository, IEventPubli
             CreatedDate = DateTime.UtcNow
         };
 
-        await categoryRepository.AddAsync(category);
+        var result = await categoryRepository.AddAsync(category);
+        return result == null ? null : new CategoryResponseDto
+        {
+            Id = result.Id,
+            CategoryName = result.CategoryName,
+            IsActive = result.IsActive,
+            Description = result.Description,
+            CreatedDate = result.CreatedDate,
+            Author = result.Author,
+            CategoryGroups = new List<ProductGroupResponseDto>()
+        };
     }
 
     public async Task UpdateCategory(int id, CategoryRequestDto category)
@@ -88,5 +98,10 @@ public class CategoryService(ICategoryRepository categoryRepository, IEventPubli
 
         await categoryRepository.UpdateAsync(updatedCategory);
         await eventPublisher.PublishAsync(new CategoryUpdatedEvent(updatedCategory));
+    }
+
+    public async Task DeleteCategory(int id)
+    {
+        await categoryRepository.DeleteAsync(id);
     }
 }

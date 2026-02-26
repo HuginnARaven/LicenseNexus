@@ -20,9 +20,13 @@ GET {{API_HostAddress}}/UnitMeasure/{{new_unit_measure_id}}/
 Accept: application/json
 
 ### editlUnitMeasure
-PUT {{API_HostAddress}}/UnitMeasure/1/
+PUT {{API_HostAddress}}/UnitMeasure/{{new_unit_measure_id}}/
 Content-Type: application/json
 
 {
   "name": "TestUnitMeasure"
 }
+
+### deleteUnitMeasure
+DELETE {{API_HostAddress}}/UnitMeasure/{{new_unit_measure_id}}/
+Accept: application/json

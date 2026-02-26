@@ -34,8 +34,7 @@ namespace LicenseNexus.API.Controllers
             {
                 return BadRequest();
             }
-            await unitMeasureService.AddUnitMeasure(unitMeasure);
-            return Ok();
+            return Ok(await unitMeasureService.AddUnitMeasure(unitMeasure));
         }
         
         [HttpPut("{id:int}")]
@@ -47,6 +46,13 @@ namespace LicenseNexus.API.Controllers
             }
             await unitMeasureService.UpdateUnitMeasure(id, unitMeasure);
             return Ok();
+        }
+        
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await unitMeasureService.DeleteUnitMeasure(id);
+            return NoContent();
         }
     }
 }

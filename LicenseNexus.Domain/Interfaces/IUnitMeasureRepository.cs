@@ -7,7 +7,7 @@ public interface IUnitMeasureRepository
     Task<IEnumerable<UnitMeasure>> GetAllAsync();
     Task<UnitMeasure?> GetByIdAsync(int id);
     Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default);
-    Task AddAsync(UnitMeasure unitMeasure);
+    Task<UnitMeasure?> AddAsync(UnitMeasure unitMeasure);
     Task UpdateAsync(UnitMeasure unitMeasure);
-    //TODO: mb add Delete 
+    Task DeleteAsync(int id);
 }

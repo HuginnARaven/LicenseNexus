@@ -19,11 +19,11 @@ GET {{API_HostAddress}}/Category/
 Accept: application/json
 
 ### getCategoryByID
-GET {{API_HostAddress}}/Category/1/
+GET {{API_HostAddress}}/Category/{{new_category_id}}/
 Accept: application/json
 
 ### editlCategory
-PUT {{API_HostAddress}}/Category/1/
+PUT {{API_HostAddress}}/Category/{{new_category_id}}/
 Content-Type: application/json
 
 {
@@ -33,3 +33,7 @@ Content-Type: application/json
   "description": "Category1 Description",
   "author": null
 }
+
+### deleteCategory
+DELETE {{API_HostAddress}}/Category/{{new_category_id}}/
+Accept: application/json
