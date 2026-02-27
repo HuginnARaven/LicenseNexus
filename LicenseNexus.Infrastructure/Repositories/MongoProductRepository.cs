@@ -392,6 +392,7 @@ public class MongoProductRepository : IProductRepository
             
             Descriptions = model.Descriptions.Select(d => new DescriptionDoc
             {
+                Id = d.Id,
                 FullText = d.FullText,
                 LanguageCode = d.LanguageCode
             }).ToList(),
@@ -465,6 +466,7 @@ public class MongoProductRepository : IProductRepository
             },
             Descriptions = doc.Descriptions.Select(d => new DescriptionModel
             {
+                Id = d.Id,
                 FullText = d.FullText,
                 LanguageCode = d.LanguageCode
             }).ToList(),

@@ -135,6 +135,8 @@ public class AttributesDoc
 
 public class DescriptionDoc
 {
+    [BsonElement("id")]
+    public int Id { get; set; }
     [BsonElement("full_text")]
     public string FullText { get; set; } = string.Empty;
 

@@ -8,6 +8,7 @@
   </Folder>
   <Project Path="LicenseNexus.API/LicenseNexus.API.csproj" />
   <Project Path="LicenseNexus.Application/LicenseNexus.Application.csproj" />
+  <Project Path="LicenseNexus.DataSeeder/LicenseNexus.DataSeeder.csproj" />
   <Project Path="LicenseNexus.Domain/LicenseNexus.Domain.csproj" />
   <Project Path="LicenseNexus.Infrastructure/LicenseNexus.Infrastructure.csproj" />
 </Solution>

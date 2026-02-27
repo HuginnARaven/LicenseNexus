@@ -71,12 +71,12 @@ Content-Type: application/json
 }
 
 ### createPrice
-POST {{API_HostAddress}}/Product/{{new_product_id}}/price
+POST {{API_HostAddress}}/Product/15/price
 Content-Type: application/json
 
 {
   "Price": 100,
-  "TermDuration": 10,
+  "TermDuration": "123",
   "BillingPlan": "TestBillingPlan",
   "CountryCode": "TST",
   "Segment": "TestSegment",
