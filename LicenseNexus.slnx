@@ -11,4 +11,5 @@
   <Project Path="LicenseNexus.DataSeeder/LicenseNexus.DataSeeder.csproj" />
   <Project Path="LicenseNexus.Domain/LicenseNexus.Domain.csproj" />
   <Project Path="LicenseNexus.Infrastructure/LicenseNexus.Infrastructure.csproj" />
+  <Project Path="LicenseNexus.LoadTests/LicenseNexus.LoadTests.csproj" />
 </Solution>

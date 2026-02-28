@@ -203,7 +203,7 @@ public class DatabaseSeeder
         // 8. Generate and Save Products
         var allGroups = await _extendedSqlContext.ProductGroups.Include(g => g.Category).ToListAsync();
         
-        var products = GenerateProducts(10, vendors, productTypes, unitMeasures, currencies, allGroups);
+        var products = GenerateProducts(100, vendors, productTypes, unitMeasures, currencies, allGroups);
         
         await _extendedSqlContext.Products.AddRangeAsync(products);
         await _extendedSqlContext.SaveChangesAsync();

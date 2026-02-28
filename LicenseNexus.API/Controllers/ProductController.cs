@@ -32,7 +32,6 @@ namespace LicenseNexus.API.Controllers
         public async Task<IActionResult> GetPaginated([FromQuery] ProductFilterDto filter)
         {
             var products = await productService.GetPaginatedAsync(filter);
-            Console.WriteLine(filter);
             return Ok(products);
         }
 
@@ -55,12 +54,6 @@ namespace LicenseNexus.API.Controllers
                 return BadRequest();
             }
 
-            var existingProduct = await productService.GetByIdAsync(id);
-            if (existingProduct == null)
-            {
-                return NotFound();
-            }
-
             await productService.UpdateAsync(id, product);
             return NoContent();
         }
@@ -71,12 +64,6 @@ namespace LicenseNexus.API.Controllers
             if (updates == null)
             {
                 return BadRequest();
-            }
-
-            var existingProduct = await productService.GetByIdAsync(id);
-            if (existingProduct == null)
-            {
-                return NotFound();
             }
 
             await productService.PatchAsync(id, updates);

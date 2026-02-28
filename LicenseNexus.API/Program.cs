@@ -92,7 +92,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<OrderProductRequestDtoValid
 builder.Services.AddValidatorsFromAssemblyContaining<ProductPatchFieldsValidator>();
 
 
-builder.Services.AddControllers() .AddJsonOptions(options => 
+builder.Services.AddControllers().AddJsonOptions(options => 
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });

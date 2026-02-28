@@ -1,4 +1,6 @@
-﻿### createProduct
+﻿@new_product_id = 16228
+
+### createProduct
 POST {{API_HostAddress}}/Product/
 Content-Type: application/json
 
@@ -43,16 +45,16 @@ Content-Type: application/json
   "sku": "SKU123-UPDATED",
   "title": "Test Product Updated",
   "shortDescription": "A test product updated",
-  "vendorId": 8,
-  "productTypeId": 1,
-  "unitMeasureId": 1,
-  "currencyId": 1,
-  "productGroupId": 1,
+  "vendorId": 5026,
+  "productTypeId": 4012,
+  "unitMeasureId": 4012,
+  "currencyId": 2009,
+  "productGroupId": 3039,
   "quantityMin": 1,
   "quantityMax": 100,
   "startDate": "2023-01-01T00:00:00Z",
   "endDate": "2023-12-31T23:59:59Z",
-  "isPromo": false,
+  "isPromo": true,
   "isTop": true,
   "isNew": true,
   "logo": "http://example.com/logo.png",
@@ -67,7 +69,9 @@ Content-Type: application/json
   "sku": "SKU321-PATCHED",
   "title": "Quest Product Updated",
   "shortDescription": "A test product updated twice",
-  "productTypeId": 2
+  "isPromo": false,
+  "startDate": "2024-01-01T00:00:00Z",
+  "endDate": "2024-12-31T23:59:59Z"
 }
 
 ### createPrice

@@ -144,6 +144,17 @@ public class RedisProductRepository: IProductRepository
             take);
         
         var productKeys = productIds.Select(id => (RedisKey)$"product:{id}").ToArray();
+        if (productKeys.Length == 0)
+        {
+            if (isTempKey) await _redisDb.KeyDeleteAsync(searchKey);
+            return new PaginatedResult<ProductModel> 
+            { 
+                Items = new List<ProductModel>(), 
+                TotalCount = totalCount,
+                Page = page, 
+                PageSize = pageSize 
+            };
+        }
         var jsonResults = await _redisDb.JSON().MGetAsync(productKeys, "$");
         var products = new List<ProductModel>();
         foreach (var result in jsonResults)
@@ -197,6 +208,7 @@ public class RedisProductRepository: IProductRepository
 
     public async Task PatchAsync(int id,  ProductPatchFields updates)
     {
+        Console.WriteLine(updates);
         var product = await _sqlContext.Products.FindAsync(id);
         if (product == null)
         {
@@ -225,7 +237,7 @@ public class RedisProductRepository: IProductRepository
             }
 
             product.Title = updates.Title;
-            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Title", $"\"{updates.Title}\""));
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Title", JsonSerializer.Serialize(updates.Title)));
 
             if (isCached)
             {
@@ -256,31 +268,31 @@ public class RedisProductRepository: IProductRepository
         if (updates.StartDate.HasValue)
         {
             product.StartDate = updates.StartDate;
-            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.StartDate", $"\"{updates.StartDate}\""));
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.StartDate", $"\"{updates.StartDate.Value:O}\""));
         }
         
         if (updates.EndDate.HasValue)
         {
             product.EndDate = updates.EndDate;
-            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.EndDate", $"\"{updates.EndDate}\""));
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.EndDate", $"\"{updates.EndDate.Value:O}\""));
         }
         
         if (updates.IsPromo.HasValue)
         {
-            product.IsPromo = (bool)updates.IsPromo;
-            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.IsPromo", updates.IsPromo));
+            product.IsPromo = updates.IsPromo.Value;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.IsPromo", updates.IsPromo.Value ? "true" : "false"));
         }
         
         if (updates.IsTop.HasValue)
         {
-            product.IsTop = (bool)updates.IsTop;
-            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.IsTop", updates.IsTop));
+            product.IsTop = updates.IsTop.Value;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.IsTop", updates.IsTop.Value ? "true" : "false"));
         }
         
         if (updates.IsNew.HasValue)
         {
-            product.IsNew = (bool)updates.IsNew;
-            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.IsNew", updates.IsNew));
+            product.IsNew = updates.IsNew.Value;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.IsNew", updates.IsNew.Value ? "true" : "false"));
         }
         
         if (!string.IsNullOrWhiteSpace(updates.Logo))

@@ -55,10 +55,12 @@ public class ProductPatchFieldsValidator : AbstractValidator<ProductPatchFields>
 
         RuleFor(x => x.UnitMeasureId)
             .MustAsync(async (id, cancellation) => await unitMeasureRepository.ExistsAsync(id!.Value, cancellation))
+            .When(x => x.UnitMeasureId.HasValue)
             .WithMessage("Unit Measure with the specified ID does not exist.");
 
         RuleFor(x => x.CurrencyId)
             .MustAsync(async (id, cancellation) => await currencyRepository.ExistsAsync(id!.Value, cancellation))
+            .When(x => x.UnitMeasureId.HasValue)
             .WithMessage("Currency with the specified ID does not exist.");
     }
 }
