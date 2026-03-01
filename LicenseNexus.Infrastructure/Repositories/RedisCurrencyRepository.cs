@@ -40,7 +40,8 @@ public class RedisCurrencyRepository: ICurrencyRepository
     
     public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
     {
-        return await _context.Currencies.AnyAsync(p => p.Id == id, cancellationToken);
+        //return await _context.Currencies.AnyAsync(p => p.Id == id, cancellationToken);
+        return await _redisDb.KeyExistsAsync($"currency:{id}");
     }
 
     public async Task<Currency?> AddAsync(Currency currency)

@@ -39,7 +39,8 @@ public class RedisVendorRepository: IVendorRepository
     
     public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
     {
-        return await _context.Vendors.AnyAsync(v => v.Id == id, cancellationToken);
+        //return await _context.Vendors.AnyAsync(v => v.Id == id, cancellationToken);
+        return await _redisDb.KeyExistsAsync($"vendor:{id}");
     }
 
     public async Task<Vendor?> AddAsync(Vendor vendor)

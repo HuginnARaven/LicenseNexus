@@ -1,11 +1,10 @@
-﻿using NBomber.Contracts;
-using NBomber.CSharp;
+﻿using NBomber.CSharp;
 using NBomber.Http.CSharp;
-using NBomber.Http;
 using LicenseNexus.LoadTests;
 using System.Text.Json;
 using System.Text;
 using NBomber.Contracts.Stats;
+using System.Collections.Concurrent;
 
 using var httpClient = new HttpClient();
 
@@ -90,7 +89,7 @@ var writeScenario = Scenario.Create("write_heavy_scenario", async context =>
     var jsonPayload = JsonSerializer.Serialize(patchPayload);
     var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
-    var request = Http.CreateRequest("PUT", url)
+    var request = Http.CreateRequest("PATCH", url)
         .WithHeader("Accept", "application/json")
         .WithBody(content);
 
@@ -150,10 +149,74 @@ var mixedScenario = Scenario.Create("mixed_scenario", async context =>
     Simulation.KeepConstant(copies: concurrentUsers, during: loadDuration)
 );
 
+var expectedVendorNames = new ConcurrentDictionary<int, string>();
+var vendorUpdateScenario = Scenario.Create("vendor_mutator", async context =>
+{
+    var vendorId = PayloadGenerator.GetRandomVendorId(); 
+    var newVendorName = $"Vendor_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+    var payload = new { Name = newVendorName, originalName = "TestVendor", description = "Vendor description", countryCode = "TST", logo = "TestVendor1.logo" };
+    var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+
+    var request = Http.CreateRequest("PUT", $"{baseUrl}/api/vendor/{vendorId}")
+        .WithHeader("Accept", "application/json")
+        .WithBody(content);
+
+    var response = await Http.Send(httpClient, request);
+
+    if (response.StatusCode == "NoContent" || response.StatusCode == "OK")
+    {
+        expectedVendorNames[vendorId] = newVendorName;
+        return Response.Ok();
+    }
+    
+    return Response.Fail();
+})
+.WithoutWarmUp()
+.WithLoadSimulations(Simulation.Inject(rate: 5, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromMinutes(2)));
+
+var consistencyWatcherScenario = Scenario.Create("consistency_watcher", async context =>
+{
+    var productId = PayloadGenerator.GetRandomProductId();
+    
+    var request = Http.CreateRequest("GET", $"{baseUrl}/api/product/{productId}")
+        .WithHeader("Accept", "application/json");
+
+    var response = await Http.Send(httpClient, request);
+
+    if (response.StatusCode == "OK")
+    {
+        var httpMessage = response.Payload.Value;
+        var jsonString = await httpMessage.Content.ReadAsStringAsync();
+        
+        using var document = JsonDocument.Parse(jsonString);
+        var productVendorId = document.RootElement.GetProperty("classification").GetProperty("vendor").GetProperty("id").GetInt32();
+        var actualVendorName = document.RootElement.GetProperty("classification").GetProperty("vendor").GetProperty("name").GetString();
+        
+        if (expectedVendorNames.TryGetValue(productVendorId, out var expectedName))
+        {
+            if (actualVendorName == expectedName)
+            {
+                return Response.Ok(statusCode: "In_Sync");
+            }
+            else
+            {
+                return Response.Fail(statusCode: "Out_Of_Sync", message: "Stale Data");
+            }
+        }
+        else
+        {
+             return Response.Ok(statusCode: "Not_Mutated_Yet");
+        }
+    }
+    return Response.Fail(statusCode: response.StatusCode, message: "Request failed");
+})
+.WithoutWarmUp()
+.WithLoadSimulations(Simulation.KeepConstant(copies: 10, during: TimeSpan.FromMinutes(2)));
+
 // Run NBomber
 NBomberRunner
-    .RegisterScenarios(writeScenario)
-    .WithReportFileName("license_nexus_load_test")
+    .RegisterScenarios(vendorUpdateScenario, consistencyWatcherScenario)
+    .WithReportFileName("mongo_vendor_consistency_load_test")
     .WithReportFolder("./reports")
     .WithReportFormats(ReportFormat.Html, ReportFormat.Md)
     .Run();

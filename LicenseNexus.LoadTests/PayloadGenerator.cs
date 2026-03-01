@@ -66,8 +66,14 @@ namespace LicenseNexus.LoadTests
 
         public static int GetRandomProductId()
         {
-            if (ProductIds.Length == 0) throw new Exception("IDs not initialized!");
+            if (ProductIds.Length == 0) throw new Exception("ProductIds not initialized!");
             return ProductIds[Random.Next(ProductIds.Length)];
+        }
+        
+        public static int GetRandomVendorId()
+        {
+            if (VendorIds.Length == 0) throw new Exception("VendorIds not initialized!");
+            return VendorIds[Random.Next(VendorIds.Length)];
         }
 
         public static ProductPatchFields GetRandomPatch() => PatchFaker.Generate();

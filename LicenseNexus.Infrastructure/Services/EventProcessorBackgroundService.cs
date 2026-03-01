@@ -27,27 +27,32 @@ public class EventProcessorBackgroundService : BackgroundService
         
         await foreach (var domainEvent in _eventBus.Reader.ReadAllAsync(stoppingToken))
         {
-            try
+            _ = Task.Run(async () =>
             {
-                using var scope = _scopeFactory.CreateScope();
-                var productSyncService = scope.ServiceProvider.GetRequiredService<IProductSyncService>();
-                Task updateTask = domainEvent switch
+                try
                 {
-                    VendorUpdatedEvent v => productSyncService.UpdateVendorAsync(v.vendor, stoppingToken),
-                    CategoryUpdatedEvent c => productSyncService.UpdateCategoryAsync(c.category, stoppingToken),
-                    ProductTypeUpdatedEvent t => productSyncService.UpdateProductTypeAsync(t.productType, stoppingToken),
-                    UnitMeasureUpdatedEvent u => productSyncService.UpdateUnitMeasureAsync(u.unitMeasure, stoppingToken),
-                    CurrencyUpdatedEvent cr => productSyncService.UpdateCurrencyAsync(cr.currency, stoppingToken),
-                    GroupUpdatedEvent g => productSyncService.UpdateGroupAsync(g.group, stoppingToken),
-                    TagUpdatedEvent t => productSyncService.UpdateTagAsync(t.tag, stoppingToken),
-                    _ => Task.CompletedTask
-                };
-                await updateTask;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing event");
-            }
+                    using var scope = _scopeFactory.CreateScope();
+                    var productSyncService = scope.ServiceProvider.GetRequiredService<IProductSyncService>();
+                    Task updateTask = domainEvent switch
+                    {
+                        VendorUpdatedEvent v => productSyncService.UpdateVendorAsync(v.vendor, stoppingToken),
+                        CategoryUpdatedEvent c => productSyncService.UpdateCategoryAsync(c.category, stoppingToken),
+                        ProductTypeUpdatedEvent t => productSyncService.UpdateProductTypeAsync(t.productType,
+                            stoppingToken),
+                        UnitMeasureUpdatedEvent u => productSyncService.UpdateUnitMeasureAsync(u.unitMeasure,
+                            stoppingToken),
+                        CurrencyUpdatedEvent cr => productSyncService.UpdateCurrencyAsync(cr.currency, stoppingToken),
+                        GroupUpdatedEvent g => productSyncService.UpdateGroupAsync(g.group, stoppingToken),
+                        TagUpdatedEvent t => productSyncService.UpdateTagAsync(t.tag, stoppingToken),
+                        _ => Task.CompletedTask
+                    };
+                    await updateTask;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing event");
+                }
+            }, stoppingToken);
         }
     }
 }
