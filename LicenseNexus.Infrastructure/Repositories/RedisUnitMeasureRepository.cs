@@ -2,17 +2,22 @@
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
+using NRedisStack.RedisStackCommands;
+using StackExchange.Redis;
 
 namespace LicenseNexus.Infrastructure.Repositories;
 
 public class RedisUnitMeasureRepository: IUnitMeasureRepository
 {
     private ExtendedSqlContext _context;
+    private readonly IDatabase _redisDb;
     
-    public RedisUnitMeasureRepository(ExtendedSqlContext context)
+    public RedisUnitMeasureRepository(ExtendedSqlContext context, RedisContext redisContext)
     {
         _context = context;
+        _redisDb = redisContext.Database;
     }
+    
     public async Task<IEnumerable<UnitMeasure>> GetAllAsync()
     {
         return await _context.UnitMeasures.Where(_ => true).ToListAsync();
@@ -20,7 +25,17 @@ public class RedisUnitMeasureRepository: IUnitMeasureRepository
 
     public async Task<UnitMeasure?> GetByIdAsync(int id)
     {
-        return await _context.UnitMeasures.FirstOrDefaultAsync(um => um.Id == id);
+        var unitMeasure = await _redisDb.JSON().GetAsync<UnitMeasure>($"unit_measure:{id}");
+        if (unitMeasure == null)
+        {
+            var dbUnitMeasure = await _context.UnitMeasures.FirstOrDefaultAsync(um => um.Id == id);
+            if (dbUnitMeasure != null)
+            {
+                await _redisDb.JSON().SetAsync($"unit_measure:{id}", "$", dbUnitMeasure);
+                return dbUnitMeasure;
+            }
+        }
+        return unitMeasure;
     }
 
     public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
@@ -32,16 +47,19 @@ public class RedisUnitMeasureRepository: IUnitMeasureRepository
     {
         _context.UnitMeasures.Add(unitMeasure);
         var res = await _context.SaveChangesAsync();
-        if (res > 0)
-            return unitMeasure;
         
-        return null;
+        if (res <= 0)
+            return null;
+        
+        await _redisDb.JSON().SetAsync($"unit_measure:{unitMeasure.Id}", "$", unitMeasure);
+        return unitMeasure;
     }
 
     public async Task UpdateAsync(UnitMeasure unitMeasure)
     {
         _context.UnitMeasures.Update(unitMeasure);
         await _context.SaveChangesAsync();
+        await _redisDb.JSON().SetAsync($"unit_measure:{unitMeasure.Id}", "$", unitMeasure);
     }
     
     public async Task DeleteAsync(int id)
@@ -51,5 +69,6 @@ public class RedisUnitMeasureRepository: IUnitMeasureRepository
             throw new InvalidOperationException("Object Not Found");
         _context.Remove(unitMeasure);
         await  _context.SaveChangesAsync();
+        await _redisDb.KeyDeleteAsync($"unit_measure:{id}");
     }
 }

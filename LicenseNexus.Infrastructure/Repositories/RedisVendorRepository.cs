@@ -1,9 +1,7 @@
-﻿using System.Text.Json;
-using LicenseNexus.Domain.Entities;
+﻿using LicenseNexus.Domain.Entities;
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
-using NRedisStack;
 using StackExchange.Redis;
 using NRedisStack.RedisStackCommands;
 
