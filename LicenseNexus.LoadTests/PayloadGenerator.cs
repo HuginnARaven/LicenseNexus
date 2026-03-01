@@ -66,7 +66,7 @@ namespace LicenseNexus.LoadTests
 
         public static int GetRandomProductId()
         {
-            if (ProductIds.Length == 0) throw new Exception("IDs не ініціалізовані!");
+            if (ProductIds.Length == 0) throw new Exception("IDs not initialized!");
             return ProductIds[Random.Next(ProductIds.Length)];
         }
 

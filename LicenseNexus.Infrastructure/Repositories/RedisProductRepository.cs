@@ -208,7 +208,6 @@ public class RedisProductRepository: IProductRepository
 
     public async Task PatchAsync(int id,  ProductPatchFields updates)
     {
-        Console.WriteLine(updates);
         var product = await _sqlContext.Products.FindAsync(id);
         if (product == null)
         {
@@ -309,9 +308,8 @@ public class RedisProductRepository: IProductRepository
         
         if (updates.VendorId.HasValue)
         {
-            var newVendor = await _sqlContext.Vendors
-                .AsNoTracking()
-                .FirstOrDefaultAsync(e => e.Id == updates.VendorId);
+            var newVendor = await _redisDb.JSON().GetAsync<Vendor>($"vendor:{updates.VendorId}") ?? 
+                            await _sqlContext.Vendors.AsNoTracking().FirstOrDefaultAsync(e => e.Id == updates.VendorId);
             if (newVendor != null)
             {
                 if (isCached) cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:vendor:{product.VendorId}:products", id));
@@ -328,9 +326,8 @@ public class RedisProductRepository: IProductRepository
         
         if (updates.ProductTypeId.HasValue)
         {
-            var newType = await _sqlContext.ProductTypes
-                .AsNoTracking()
-                .FirstOrDefaultAsync(e => e.Id == updates.ProductTypeId);
+            var newType = await _redisDb.JSON().GetAsync<ProductType>($"product_type:{updates.ProductTypeId}") ?? 
+                          await _sqlContext.ProductTypes.AsNoTracking().FirstOrDefaultAsync(e => e.Id == updates.ProductTypeId);
             if (newType != null)
             {
                 if (isCached) cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:product_type:{product.ProductTypeId}:products", id));
@@ -343,9 +340,8 @@ public class RedisProductRepository: IProductRepository
         
         if (updates.UnitMeasureId.HasValue)
         {
-            var newUnitMeasure = await _sqlContext.UnitMeasures
-                .AsNoTracking()
-                .FirstOrDefaultAsync(e => e.Id == updates.UnitMeasureId);
+            var newUnitMeasure = await _redisDb.JSON().GetAsync<UnitMeasure>($"unit_measure:{updates.UnitMeasureId}") ?? 
+                                 await _sqlContext.UnitMeasures.AsNoTracking().FirstOrDefaultAsync(e => e.Id == updates.UnitMeasureId);
             if (newUnitMeasure != null)
             {
                 product.UnitMeasureId = newUnitMeasure.Id;
@@ -356,9 +352,8 @@ public class RedisProductRepository: IProductRepository
         
         if (updates.CurrencyId.HasValue)
         {
-            var newCurrency = await _sqlContext.Currencies
-                .AsNoTracking()
-                .FirstOrDefaultAsync(e => e.Id == updates.CurrencyId);
+            var newCurrency = await _redisDb.JSON().GetAsync<Currency>($"currency:{updates.CurrencyId}") ?? 
+                              await _sqlContext.Currencies.AsNoTracking().FirstOrDefaultAsync(e => e.Id == updates.CurrencyId);
             if (newCurrency != null)
             {
                 product.CurrencyId = newCurrency.Id;
@@ -373,18 +368,15 @@ public class RedisProductRepository: IProductRepository
         
         if (updates.ProductGroupId.HasValue)
         {
-            var newGroup = await _sqlContext.ProductGroups
-                .AsNoTracking()
-                .Include(e => e.Category)
-                .FirstOrDefaultAsync(e => e.Id == updates.ProductGroupId);
+            var newGroup = await _redisDb.JSON().GetAsync<ProductGroup>($"product_group:{updates.ProductGroupId}") ?? 
+                           await _sqlContext.ProductGroups.AsNoTracking().Include(e => e.Category).FirstOrDefaultAsync(e => e.Id == updates.ProductGroupId);
             
             if (newGroup != null && newGroup.Category != null)
             {
                 if (isCached)
                 {
-                    var oldGroup = await _sqlContext.ProductGroups
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(e => e.Id == product.ProductGroupId);
+                    var oldGroup = await _redisDb.JSON().GetAsync<ProductGroup>($"product_group:{product.ProductGroupId}") ?? 
+                                   await _sqlContext.ProductGroups.AsNoTracking().FirstOrDefaultAsync(e => e.Id == product.ProductGroupId);
                     cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:group:{product.ProductGroupId}:products", id));
                     cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:category:{oldGroup?.CategoryId}:products", id));
                 }

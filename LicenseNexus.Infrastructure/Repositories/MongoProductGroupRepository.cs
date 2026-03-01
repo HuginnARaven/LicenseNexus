@@ -33,7 +33,16 @@ public class MongoProductGroupRepository: IProductGroupRepository
                     Note = groupDoc.Note,
                     CreatedDate = groupDoc.CreatedDate,
                     Author = groupDoc.Author,
-                    CategoryId = category.Id
+                    CategoryId = category.Id,
+                    Category = new Category
+                    {
+                        Id = category.Id,
+                        CategoryName = category.Name,
+                        IsActive = category.IsActive,
+                        Description = category.Description,
+                        CreatedDate = category.CreatedDate,
+                        Author = groupDoc.Author
+                    }
                 });
             }
         }
@@ -65,7 +74,16 @@ public class MongoProductGroupRepository: IProductGroupRepository
             Note = groupDoc.Note,
             CreatedDate = groupDoc.CreatedDate,
             Author = groupDoc.Author,
-            CategoryId = category.Id
+            CategoryId = category.Id,
+            Category = new Category
+            {
+                Id = category.Id,
+                CategoryName = category.Name,
+                IsActive = category.IsActive,
+                Description = category.Description,
+                CreatedDate = category.CreatedDate,
+                Author = groupDoc.Author
+            }
         };
     }
     

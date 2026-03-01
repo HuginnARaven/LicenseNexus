@@ -90,7 +90,7 @@ var writeScenario = Scenario.Create("write_heavy_scenario", async context =>
     var jsonPayload = JsonSerializer.Serialize(patchPayload);
     var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
-    var request = Http.CreateRequest("PATCH", url)
+    var request = Http.CreateRequest("PUT", url)
         .WithHeader("Accept", "application/json")
         .WithBody(content);
 
@@ -152,7 +152,7 @@ var mixedScenario = Scenario.Create("mixed_scenario", async context =>
 
 // Run NBomber
 NBomberRunner
-    .RegisterScenarios(mixedScenario)
+    .RegisterScenarios(writeScenario)
     .WithReportFileName("license_nexus_load_test")
     .WithReportFolder("./reports")
     .WithReportFormats(ReportFormat.Html, ReportFormat.Md)

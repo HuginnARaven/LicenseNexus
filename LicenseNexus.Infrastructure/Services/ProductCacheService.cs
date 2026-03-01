@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using LicenseNexus.API.Helpers;
+using LicenseNexus.Domain.Entities;
 using LicenseNexus.Domain.Models;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
@@ -135,7 +136,69 @@ public class ProductCacheService : IProductCacheService
     public async Task CacheAllProductsAsync()
     {
         var allProducts = await GetBaseQuery().ToListAsync();
+        var allVendors = await _sqlContext.Vendors.ToListAsync();
+        var allProductTypes = await _sqlContext.ProductTypes.ToListAsync();
+        var allProductGroups = await _sqlContext.ProductGroups.Include(e => e.Category).ToListAsync();
+        // var allCategories = await _sqlContext.Categories.Include(c => c.ProductGroups).ToListAsync();
+        var allUnitMeasures = await _sqlContext.UnitMeasures.ToListAsync();
+        var allCurrencies = await _sqlContext.Currencies.ToListAsync();
 
+        var pipeline = new Pipeline(_redisDb);
+        List<Task> cacheTasks = new List<Task>();
+
+
+        foreach (var vendor in allVendors)
+        {
+            cacheTasks.Add(pipeline.Json.SetAsync($"vendor:{vendor.Id}", "$", vendor));
+        }
+        
+        foreach (var productType in allProductTypes)
+        {
+            cacheTasks.Add(pipeline.Json.SetAsync($"product_type:{productType.Id}", "$", productType));
+        }
+        
+        foreach (var productGroup in allProductGroups)
+        {
+            var writeProductGroup = new ProductGroup()
+            {
+                Id = productGroup.Id,
+                Name = productGroup.Name,
+                IsActive = productGroup.IsActive,
+                Note = productGroup.Note,
+                CreatedDate = productGroup.CreatedDate,
+                Author = productGroup.Author,
+                CategoryId = productGroup.CategoryId,
+                Category = new Category
+                {
+                    Id = productGroup.Category!.Id,
+                    CategoryName = productGroup.Category.CategoryName,
+                    IsActive = productGroup.Category.IsActive,
+                    Description = productGroup.Category.Description,
+                    CreatedDate = productGroup.Category.CreatedDate,
+                    Author = productGroup.Category.Author
+                }
+            };
+            cacheTasks.Add(pipeline.Json.SetAsync($"product_group:{productGroup.Id}", "$", writeProductGroup));
+        }
+
+        // foreach (var category in allCategories)
+        // {
+        //     cacheTasks.Add(pipeline.Json.SetAsync($"category:{category.Id}", "$", category));
+        // }
+        
+        foreach (var unitMeasure in allUnitMeasures)
+        {
+            cacheTasks.Add(pipeline.Json.SetAsync($"unit_measure:{unitMeasure.Id}", "$", unitMeasure));
+        }
+        
+        foreach (var currency in allCurrencies)
+        {
+            cacheTasks.Add(pipeline.Json.SetAsync($"currency:{currency.Id}", "$", currency));
+        }
+        
+        pipeline.Execute();
+        await Task.WhenAll(cacheTasks);
+        
         foreach (var product in allProducts)
         {
             var redisModel = MapToRedisModel(product);

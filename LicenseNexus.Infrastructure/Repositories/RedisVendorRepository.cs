@@ -1,17 +1,23 @@
-﻿using LicenseNexus.Domain.Entities;
+﻿using System.Text.Json;
+using LicenseNexus.Domain.Entities;
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
+using NRedisStack;
+using StackExchange.Redis;
+using NRedisStack.RedisStackCommands;
 
 namespace LicenseNexus.Infrastructure.Repositories;
 
 public class RedisVendorRepository: IVendorRepository
 {
     private ExtendedSqlContext _context;
+    private readonly IDatabase _redisDb;
     
-    public RedisVendorRepository(ExtendedSqlContext context)
+    public RedisVendorRepository(ExtendedSqlContext context, RedisContext redisContext)
     {
         _context = context;
+        _redisDb = redisContext.Database;
     }
     public async Task<IEnumerable<Vendor>> GetAllAsync()
     {
@@ -20,7 +26,17 @@ public class RedisVendorRepository: IVendorRepository
 
     public async Task<Vendor?> GetByIdAsync(int id)
     {
-        return await _context.Vendors.FirstOrDefaultAsync(v => v.Id == id);
+        var vendor = await _redisDb.JSON().GetAsync<Vendor>($"vendor:{id}");
+        if (vendor == null)
+        {            
+            var dbVendor = await _context.Vendors.FirstOrDefaultAsync(v => v.Id == id);
+            if (dbVendor != null)
+            {
+                await _redisDb.JSON().SetAsync($"vendor:{id}", "$", dbVendor);
+                return dbVendor;
+            }
+        }
+        return vendor;
     }
     
     public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
@@ -32,23 +48,32 @@ public class RedisVendorRepository: IVendorRepository
     {
         _context.Vendors.Add(vendor);
         var res = await _context.SaveChangesAsync();
-        if (res > 0)
-            return vendor;
-        
-        return null;
+        if (res <= 0) 
+            return null;
+        await _redisDb.JSON().SetAsync($"vendor:{vendor.Id}", "$", vendor);
+        return vendor;
     }
 
     public async Task UpdateAsync(Vendor vendor)
     {
-        var oldVendor = await _context.Vendors.FindAsync(vendor.Id);
-        if (oldVendor != null)
+        await _context.Vendors.Where(v => v.Id == vendor.Id).ExecuteUpdateAsync(setters => setters
+            .SetProperty(v => v.Name, vendor.Name)
+            .SetProperty(v => v.OriginalName, vendor.OriginalName)
+            .SetProperty(v => v.Description, vendor.Description)
+            .SetProperty(v => v.CountryCode, vendor.CountryCode)
+            .SetProperty(v => v.Logo, vendor.Logo)
+        );
+        
+        var updatePayload = new 
         {
-            oldVendor.Name = vendor.Name;
-            oldVendor.OriginalName = vendor.OriginalName;
-            oldVendor.Description = vendor.Description;
-            oldVendor.CountryCode = vendor.CountryCode;
-            await  _context.SaveChangesAsync();
-        }
+            Name = vendor.Name,
+            OriginalName = vendor.OriginalName,
+            Description = vendor.Description,
+            CountryCode = vendor.CountryCode,
+            Logo = vendor.Logo
+        };
+        
+        await _redisDb.JSON().MergeAsync($"vendor:{vendor.Id}", "$", updatePayload);
     }
 
     public async Task DeleteAsync(int id)
@@ -60,5 +85,6 @@ public class RedisVendorRepository: IVendorRepository
             throw new InvalidOperationException("Object Not Found");
         _context.Remove(vendor);
         await  _context.SaveChangesAsync();
+        await _redisDb.KeyDeleteAsync($"vendor:{id}");
     }
 }
