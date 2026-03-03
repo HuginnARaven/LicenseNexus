@@ -68,7 +68,6 @@ public class CategoryService(ICategoryRepository categoryRepository, IEventPubli
             IsActive = categoryDto.IsActive,
             Description = categoryDto.Description,
             Author = categoryDto.Author,
-            CreatedDate = DateTime.UtcNow
         };
 
         var result = await categoryRepository.AddAsync(category);
@@ -93,7 +92,6 @@ public class CategoryService(ICategoryRepository categoryRepository, IEventPubli
             IsActive = category.IsActive,
             Description = category.Description,
             Author = category.Author,
-            CreatedDate = DateTime.UtcNow
         };
 
         await categoryRepository.UpdateAsync(updatedCategory);

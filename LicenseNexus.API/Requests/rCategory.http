@@ -3,9 +3,9 @@ POST {{API_HostAddress}}/Category/
 Content-Type: application/json
 
 {
-  "categoryName": "TestCategory1",
+  "categoryName": "TestCategory4",
   "isActive": true,
-  "description": "Category1 description",
+  "description": "Category3 description",
   "Author": "Tester"
 }
 
@@ -27,11 +27,10 @@ PUT {{API_HostAddress}}/Category/{{new_category_id}}/
 Content-Type: application/json
 
 {
-  "id": 1,
   "categoryName": "TestBestCategory1",
-  "isActive": true,
-  "description": "Category1 Description",
-  "author": null
+  "isActive": false,
+  "description": "Category4 Description",
+  "author": "Toaster"
 }
 
 ### deleteCategory

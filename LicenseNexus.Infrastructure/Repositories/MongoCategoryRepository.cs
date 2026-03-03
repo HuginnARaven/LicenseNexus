@@ -26,6 +26,7 @@ public class MongoCategoryRepository: ICategoryRepository
             CategoryName = d.Name,
             Description = d.Description,
             CreatedDate = d.CreatedDate,
+            Author = d.Author,
             ProductGroups = d.Groups.Select(g => new ProductGroup
             {
                 Id = g.Id,
@@ -48,6 +49,7 @@ public class MongoCategoryRepository: ICategoryRepository
             CategoryName = doc.Name, 
             Description = doc.Description,
             CreatedDate = doc.CreatedDate,
+            Author = doc.Author,
             ProductGroups = doc.Groups.Select(g => new ProductGroup
             {
                 Id = g.Id,
@@ -69,6 +71,7 @@ public class MongoCategoryRepository: ICategoryRepository
             IsActive = category.IsActive,
             Name = category.CategoryName,
             Description = category.Description,
+            Author = category.Author,
         };
 
         await _context.Categories.InsertOneAsync(doc);
@@ -81,7 +84,8 @@ public class MongoCategoryRepository: ICategoryRepository
         var update = Builders<CategoryDocument>.Update
             .Set(c => c.Name, category.CategoryName)
             .Set(c => c.IsActive, category.IsActive)
-            .Set(c => c.Description, category.Description);
+            .Set(c => c.Description, category.Description)
+            .Set(c => c.Author, category.Author);
             
         await _context.Categories.UpdateOneAsync(filter, update);
     }

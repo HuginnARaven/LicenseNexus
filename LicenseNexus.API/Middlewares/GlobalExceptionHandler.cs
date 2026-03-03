@@ -58,9 +58,19 @@ public class GlobalExceptionHandler : IExceptionHandler
             
             case MongoWriteException mwe when mwe.WriteError.Category == ServerErrorCategory.DuplicateKey:
                 statusCode = StatusCodes.Status409Conflict;
-                detail = "A record with this unique identifier or name already exists in the database.";
+                detail = "A unique constraint violation occurred. A record with this unique identifier or name already exists in the database.";
                 break;
-
+            
+            case SqlException sqlEx when sqlEx.Number is 2601 or 2627:
+                statusCode = StatusCodes.Status409Conflict;
+                detail = "A unique constraint violation occurred. A record with this unique identifier or name already exists in the database.";
+                break;
+            
+            case DbUpdateException dbEx when dbEx.InnerException is SqlException innerSqlEx && innerSqlEx.Number is 2601 or 2627:
+                statusCode = StatusCodes.Status409Conflict;
+                detail = "A unique constraint violation occurred. A record with this unique identifier or name already exists in the database.";
+                break;
+            
             case DbUpdateException dbEx:
                 statusCode = StatusCodes.Status409Conflict;
                 detail = "A database constraint violation occurred.";

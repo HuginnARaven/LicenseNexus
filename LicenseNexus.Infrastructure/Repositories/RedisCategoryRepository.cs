@@ -36,8 +36,12 @@ public class RedisCategoryRepository: ICategoryRepository
 
     public async Task UpdateAsync(Category category)
     {
-        _context.Categories.Update(category);
-        await _context.SaveChangesAsync();
+        await _context.Categories.Where(c => c.Id == category.Id).ExecuteUpdateAsync(setters => setters
+            .SetProperty(c => c.CategoryName, category.CategoryName)
+            .SetProperty(c => c.IsActive, category.IsActive)
+            .SetProperty(c => c.Description, category.Description)
+            .SetProperty(c => c.Author, category.Author)
+        );
     }
 
     public async Task DeleteAsync(int id)

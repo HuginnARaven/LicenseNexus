@@ -24,6 +24,9 @@ public class CategoryDocument
     [BsonElement("created_date")]
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     
+    [BsonElement("autor")]
+    public string Author { get; set; } = string.Empty;
+    
     [BsonElement("groups")]
     public List<ProductGroupDoc> Groups { get; set; } = new();
 }
