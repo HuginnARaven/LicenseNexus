@@ -138,8 +138,7 @@ public class ProductCacheService : IProductCacheService
         var allProducts = await GetBaseQuery().ToListAsync();
         var allVendors = await _sqlContext.Vendors.ToListAsync();
         var allProductTypes = await _sqlContext.ProductTypes.ToListAsync();
-        var allProductGroups = await _sqlContext.ProductGroups.Include(e => e.Category).ToListAsync();
-        // var allCategories = await _sqlContext.Categories.Include(c => c.ProductGroups).ToListAsync();
+        var allCategories = await _sqlContext.Categories.Include(c => c.ProductGroups).ToListAsync();
         var allUnitMeasures = await _sqlContext.UnitMeasures.ToListAsync();
         var allCurrencies = await _sqlContext.Currencies.ToListAsync();
 
@@ -156,35 +155,40 @@ public class ProductCacheService : IProductCacheService
         {
             cacheTasks.Add(pipeline.Json.SetAsync($"product_type:{productType.Id}", "$", productType));
         }
-        
-        foreach (var productGroup in allProductGroups)
-        {
-            var writeProductGroup = new ProductGroup()
-            {
-                Id = productGroup.Id,
-                Name = productGroup.Name,
-                IsActive = productGroup.IsActive,
-                Note = productGroup.Note,
-                CreatedDate = productGroup.CreatedDate,
-                Author = productGroup.Author,
-                CategoryId = productGroup.CategoryId,
-                Category = new Category
-                {
-                    Id = productGroup.Category!.Id,
-                    CategoryName = productGroup.Category.CategoryName,
-                    IsActive = productGroup.Category.IsActive,
-                    Description = productGroup.Category.Description,
-                    CreatedDate = productGroup.Category.CreatedDate,
-                    Author = productGroup.Category.Author
-                }
-            };
-            cacheTasks.Add(pipeline.Json.SetAsync($"product_group:{productGroup.Id}", "$", writeProductGroup));
-        }
 
-        // foreach (var category in allCategories)
-        // {
-        //     cacheTasks.Add(pipeline.Json.SetAsync($"category:{category.Id}", "$", category));
-        // }
+        foreach (var category in allCategories)
+        {
+            var writeCategory = new Category()
+            {
+                Id = category.Id,
+                CategoryName = category.CategoryName,
+                IsActive = category.IsActive,
+                Description = category.Description,
+                CreatedDate = category.CreatedDate,
+                Author = category.Author,
+                ProductGroups = category.ProductGroups.Select(pg => new ProductGroup
+                {
+                    Id = pg.Id,
+                    Name = pg.Name,
+                    IsActive = pg.IsActive,
+                    Note = pg.Note,
+                    CreatedDate = pg.CreatedDate,
+                    Author = pg.Author,
+                    CategoryId = pg.CategoryId
+                }).ToList()
+            };
+            
+            var hashEntries = category.ProductGroups
+                .Select(g => new HashEntry(g.Id.ToString(), category.Id.ToString()))
+                .ToArray();
+            
+            cacheTasks.Add(pipeline.Json.SetAsync($"category:{category.Id}", "$", writeCategory));
+            
+            if (hashEntries.Any())
+            {
+                cacheTasks.Add(pipeline.Db.HashSetAsync("pg_to_category_map", hashEntries));
+            }
+        }
         
         foreach (var unitMeasure in allUnitMeasures)
         {

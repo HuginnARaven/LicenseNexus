@@ -8,6 +8,7 @@ using LicenseNexus.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using NRedisStack;
 using NRedisStack.RedisStackCommands;
+using NRedisStack.Search;
 using StackExchange.Redis;
 
 namespace LicenseNexus.Infrastructure.Repositories;
@@ -68,7 +69,8 @@ public class RedisProductRepository: IProductRepository
 
     public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
     {
-        return await _sqlContext.Products.AnyAsync(p => p.Id == id, cancellationToken);
+        //return await _sqlContext.Products.AnyAsync(p => p.Id == id, cancellationToken);
+        return await _redisDb.KeyExistsAsync($"product:{id}");
     }
 
     public async Task<bool> ExistsPriceAsync(long priceId, long productId, CancellationToken cancellationToken = default)
@@ -368,33 +370,54 @@ public class RedisProductRepository: IProductRepository
         
         if (updates.ProductGroupId.HasValue)
         {
-            var newGroup = await _redisDb.JSON().GetAsync<ProductGroup>($"product_group:{updates.ProductGroupId}") ?? 
-                           await _sqlContext.ProductGroups.AsNoTracking().Include(e => e.Category).FirstOrDefaultAsync(e => e.Id == updates.ProductGroupId);
-            
-            if (newGroup != null && newGroup.Category != null)
-            {
-                if (isCached)
-                {
-                    var oldGroup = await _redisDb.JSON().GetAsync<ProductGroup>($"product_group:{product.ProductGroupId}") ?? 
-                                   await _sqlContext.ProductGroups.AsNoTracking().FirstOrDefaultAsync(e => e.Id == product.ProductGroupId);
-                    cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:group:{product.ProductGroupId}:products", id));
-                    cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:category:{oldGroup?.CategoryId}:products", id));
-                }
+            ProductGroup? newGroup = null;
+            Category? newCategory = null;
 
+            var categoryIdVal = await _redisDb.HashGetAsync("pg_to_category_map", updates.ProductGroupId.Value);
+            if (categoryIdVal.HasValue)
+            {
+                newCategory = await _redisDb.JSON().GetAsync<Category>($"category:{categoryIdVal}");
+                newGroup = newCategory?.ProductGroups?.FirstOrDefault(g => g.Id == updates.ProductGroupId);
+            }
+            
+            if (newGroup == null || newCategory == null)
+            {
+                newGroup = await _sqlContext.ProductGroups
+                    .AsNoTracking()
+                    .Include(e => e.Category)
+                    .FirstOrDefaultAsync(e => e.Id == updates.ProductGroupId);
+                newCategory = newGroup?.Category;
+            }
+            
+            if (newGroup != null && newCategory != null)
+            {
+                var oldGroupId = product.ProductGroupId;
                 product.ProductGroupId = newGroup.Id;
                 
-                if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.Group",  new GroupModel()
-                {
-                    Id = newGroup.Id,
-                    Name = newGroup.Name,
-                    CategoryId = newGroup.CategoryId,
-                    CategoryName = newGroup.Category.CategoryName
-                }));
-
                 if (isCached)
                 {
+                    var oldCategoryIdVal = await _redisDb.HashGetAsync("pg_to_category_map", oldGroupId);
+                    var oldCategoryId = oldCategoryIdVal.HasValue 
+                        ? (int)oldCategoryIdVal 
+                        : await _sqlContext.ProductGroups
+                            .AsNoTracking()
+                            .Where(e => e.Id == oldGroupId)
+                            .Select(e => e.CategoryId)
+                            .FirstOrDefaultAsync(); ;
+                    
+                    cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:group:{product.ProductGroupId}:products", id));
+                    cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:category:{oldCategoryId}:products", id));
+                    
+                    cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.Group",  new GroupModel()
+                    {
+                        Id = newGroup.Id,
+                        Name = newGroup.Name,
+                        CategoryId = newCategory.Id, 
+                        CategoryName = newCategory.CategoryName 
+                    }));
+                    
                     cacheTasks.Add(pipeline!.Db.SetAddAsync($"idx:group:{newGroup.Id}:products", id));
-                    cacheTasks.Add(pipeline!.Db.SetAddAsync($"idx:category:{newGroup.CategoryId}:products", id));
+                    cacheTasks.Add(pipeline!.Db.SetAddAsync($"idx:category:{newCategory.Id}:products", id));
                 }
             }
         }

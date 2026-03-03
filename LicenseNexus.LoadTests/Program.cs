@@ -215,8 +215,8 @@ var consistencyWatcherScenario = Scenario.Create("consistency_watcher", async co
 
 // Run NBomber
 NBomberRunner
-    .RegisterScenarios(vendorUpdateScenario, consistencyWatcherScenario)
-    .WithReportFileName("mongo_vendor_consistency_load_test")
+    .RegisterScenarios(writeScenario)
+    .WithReportFileName("mongo_vendor_write_heavy_load_test")
     .WithReportFolder("./reports")
     .WithReportFormats(ReportFormat.Html, ReportFormat.Md)
     .Run();

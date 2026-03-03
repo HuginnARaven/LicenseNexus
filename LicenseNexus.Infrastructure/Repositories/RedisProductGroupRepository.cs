@@ -27,17 +27,29 @@ public class RedisProductGroupRepository: IProductGroupRepository
 
     public async Task<ProductGroup?> GetByIdAsync(int id)
     {
-        var productGroup = await _redisDb.JSON().GetAsync<ProductGroup>($"product_group:{id}");
+        var categoryIdVal = await _redisDb.HashGetAsync("pg_to_category_map", id);
+        Category? groupCategory = null;
+        
+        if (!categoryIdVal.IsNull)
+            groupCategory = await _redisDb.JSON().GetAsync<Category>($"category:{categoryIdVal}");
+        
+        var productGroup = groupCategory?.ProductGroups?.FirstOrDefault(g => g.Id == id);
+
         if (productGroup == null)
         {
             var dbProductGroup = await _context.ProductGroups
-                .Include(pg => pg.Category)
                 .FirstOrDefaultAsync(p => p.Id == id);
     
             if (dbProductGroup != null)
             {
-                productGroup = MapToRedisReadyProductGroup(dbProductGroup, dbProductGroup.Category!);
-                await _redisDb.JSON().SetAsync($"product_group:{productGroup.Id}", "$", productGroup);
+                productGroup = MapToRedisReadyProductGroup(dbProductGroup);
+                
+                var categoryKey = $"category:{dbProductGroup.CategoryId}";
+                if (await _redisDb.KeyExistsAsync(categoryKey))
+                {
+                    await _redisDb.HashSetAsync("pg_to_category_map", dbProductGroup.Id.ToString(), dbProductGroup.CategoryId.ToString());
+                    await _redisDb.JSON().ArrAppendAsync(categoryKey, "$.ProductGroups", productGroup);
+                }
             }
         }
         return productGroup;
@@ -46,7 +58,8 @@ public class RedisProductGroupRepository: IProductGroupRepository
     public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
     {
         //return await _context.ProductGroups.AnyAsync(pg => pg.Id == id, cancellationToken);
-        return await _redisDb.KeyExistsAsync($"product_group:{id}");
+        //return await _redisDb.KeyExistsAsync($"product_group:{id}");
+        return await _redisDb.HashExistsAsync("pg_to_category_map", id);
     }
     
     public async Task<ProductGroup?> AddAsync(ProductGroup group)
@@ -54,11 +67,17 @@ public class RedisProductGroupRepository: IProductGroupRepository
         _context.ProductGroups.Add(group);
         var res = await _context.SaveChangesAsync();
         if (res <= 0) return null;
-        var productGroupCategory = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Id == group.CategoryId);
-        group = MapToRedisReadyProductGroup(group, productGroupCategory!);
-        await _redisDb.JSON().SetAsync($"product_group:{group.Id}", "$", group);
+       
+        group = MapToRedisReadyProductGroup(group);
+        
+        var categoryKey = $"category:{group.CategoryId}";
+        if (await _redisDb.KeyExistsAsync(categoryKey))
+        {
+            await _redisDb.HashSetAsync("pg_to_category_map", group.Id.ToString(), group.CategoryId.ToString());
+            await _redisDb.JSON().ArrAppendAsync(categoryKey, "$.ProductGroups", group);
+        }
+        
         return group;
-
     }
 
     public async Task UpdateAsync(ProductGroup group)
@@ -78,10 +97,12 @@ public class RedisProductGroupRepository: IProductGroupRepository
             Author = group.Author
         };
         
-        await _redisDb.JSON().MergeAsync($"product_group:{group.Id}", "$", updatePayload);
+        var categoryIdVal = await _redisDb.HashGetAsync("pg_to_category_map", group.Id);
+        if (!categoryIdVal.IsNull)
+            await _redisDb.JSON().MergeAsync($"category:{categoryIdVal}", $"$.ProductGroups[?(@.Id=={group.Id})]", updatePayload);
     }
 
-    private ProductGroup MapToRedisReadyProductGroup(ProductGroup productGroup, Category category)
+    private ProductGroup MapToRedisReadyProductGroup(ProductGroup productGroup)
     {
         return new ProductGroup()
         {
@@ -91,16 +112,7 @@ public class RedisProductGroupRepository: IProductGroupRepository
             Note = productGroup.Note,
             CreatedDate = productGroup.CreatedDate,
             Author = productGroup.Author,
-            CategoryId = productGroup.CategoryId,
-            Category = new Category
-            {
-                Id = category.Id,
-                CategoryName = category.CategoryName,
-                IsActive = category.IsActive,
-                Description = category.Description,
-                CreatedDate = category.CreatedDate,
-                Author = category.Author
-            }
+            CategoryId = productGroup.CategoryId
         };
     }
 }

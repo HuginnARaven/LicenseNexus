@@ -3,11 +3,11 @@ POST {{API_HostAddress}}/ProductGroup/
 Content-Type: application/json
 
 {
-  "name": "TestProductGroup5",
+  "name": "TestProductGroup6",
   "isActive": true,
   "note": "ProductGroup1 description",
   "author": "Test",
-  "categoryId": 5016
+  "categoryId": 13013
 }
 
 > {%
@@ -24,7 +24,7 @@ GET {{API_HostAddress}}/ProductGroup/6032/
 Accept: application/json
 
 ### editlProductGroup
-PUT {{API_HostAddress}}/ProductGroup/6032/
+PUT {{API_HostAddress}}/ProductGroup/11032/
 Content-Type: application/json
 
 {

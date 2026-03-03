@@ -89,6 +89,7 @@ public class DatabaseSeeder
                 Name = cat.CategoryName,
                 Description = cat.Description,
                 CreatedDate = cat.CreatedDate,
+                Author = cat.Author,
                 Groups = groupDocs
             });
             maxProdutGroupId = Math.Max(maxProdutGroupId, groups.Any() ? groups.Max(pg => pg.Id) : 0);
