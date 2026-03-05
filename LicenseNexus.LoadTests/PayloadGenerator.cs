@@ -3,6 +3,7 @@ using LicenseNexus.Application.DTOs;
 using LicenseNexus.Domain.Models;
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace LicenseNexus.LoadTests
 {
@@ -10,17 +11,24 @@ namespace LicenseNexus.LoadTests
     {
         private static Faker<ProductFilterDto> FilterFaker;
         private static Faker<ProductPatchFields> PatchFaker;
+        private static Faker<OrderRequestDto> OrderFaker;
+        private static Faker<OrderProductRequestDto> OrderProductFaker;
+        
         private static int[] ProductIds = Array.Empty<int>();
         private static int[] VendorIds = Array.Empty<int>();
         private static int[] GroupIds = Array.Empty<int>();
         private static int[] TypeIds = Array.Empty<int>();
         private static int[] UnitMeasureIds = Array.Empty<int>();
         private static int[] CurrencyIds = Array.Empty<int>();
+        private static int[] CustomerIds = Array.Empty<int>();
+        private static int[] OrderStatusIds = Array.Empty<int>();
+        
         private static readonly Random Random = new();
         
         public static void Initialize(
             int[] productIds, int[] vendorIds, int[] groupIds, 
-            int[] typeIds, int[] unitMeasureIds, int[] currencyIds)
+            int[] typeIds, int[] unitMeasureIds, int[] currencyIds,
+            int[] customerIds, int[] orderStatusIds)
         {
             ProductIds = productIds;
             VendorIds = vendorIds;
@@ -28,8 +36,9 @@ namespace LicenseNexus.LoadTests
             TypeIds = typeIds;
             UnitMeasureIds = unitMeasureIds;
             CurrencyIds = currencyIds;
+            CustomerIds = customerIds;
+            OrderStatusIds = orderStatusIds;
 
-            // Ініціалізуємо Bogus ТІЛЬКИ ПІСЛЯ того, як завантажили реальні ID
             InitializeFakers();
         }
 
@@ -62,6 +71,19 @@ namespace LicenseNexus.LoadTests
                 .RuleFor(p => p.ProductTypeId, f => TypeIds.Length > 0 ? f.PickRandom(TypeIds) : null)
                 .RuleFor(p => p.UnitMeasureId, f => UnitMeasureIds.Length > 0 ? f.PickRandom(UnitMeasureIds) : null)
                 .RuleFor(p => p.CurrencyId, f => CurrencyIds.Length > 0 ? f.PickRandom(CurrencyIds) : null);
+
+            OrderFaker = new Faker<OrderRequestDto>()
+                .RuleFor(o => o.CustomerId, f => CustomerIds.Length > 0 ? f.PickRandom(CustomerIds) : 1)
+                .RuleFor(o => o.OrderStatusId, f => OrderStatusIds.Length > 0 ? f.PickRandom(OrderStatusIds) : 1)
+                .RuleFor(o => o.PostingDate, f => f.Date.Recent())
+                .RuleFor(o => o.InvoiceRequested, f => f.Random.Bool());
+
+            OrderProductFaker = new Faker<OrderProductRequestDto>()
+                .RuleFor(op => op.ProductId, f => GetRandomProductId())
+                .RuleFor(op => op.PriceId, f => f.Random.Int(1, 5)) // TODO: implement GetProduct prices
+                .RuleFor(op => op.Quantity, f => f.Random.Int(1, 10))
+                .RuleFor(op => op.CustomerPrice, f => f.Finance.Amount(10, 500))
+                .RuleFor(op => op.Status, f => f.PickRandom("Pending", "Shipped", "Delivered"));
         }
 
         public static int GetRandomProductId()
@@ -79,5 +101,12 @@ namespace LicenseNexus.LoadTests
         public static ProductPatchFields GetRandomPatch() => PatchFaker.Generate();
         public static ProductFilterDto GetRandomFilter() => FilterFaker.Generate();
         public static double GetRandomDouble() => Random.NextDouble();
+        
+        public static OrderRequestDto GetRandomOrder() => OrderFaker.Generate();
+        
+        public static List<OrderProductRequestDto> GetRandomOrderProducts(int count)
+        {
+             return OrderProductFaker.Generate(count);
+        }
     }
 }

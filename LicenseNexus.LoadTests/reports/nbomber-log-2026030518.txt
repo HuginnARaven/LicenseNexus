@@ -1,0 +1,16 @@
+2026-03-05 18:11:32.676 +02:00 [INF] [ThreadId:7] NBomber 6.2.0 started a new session: 2026-03-05_16-11-32_48421469
+2026-03-05 18:11:32.715 +02:00 [INF] [ThreadId:7] NBomber started as single node
+2026-03-05 18:11:32.717 +02:00 [INF] [ThreadId:7] License validation....
+2026-03-05 18:11:32.718 +02:00 [WRN] [ThreadId:7] THIS VERSION IS FREE ONLY FOR PERSONAL USE. You can't use it for an organization.
+2026-03-05 18:11:32.729 +02:00 [INF] [ThreadId:7] Reports folder: D:\projects\NureProjects\LicenseNexus\LicenseNexus.LoadTests\bin\Release\net10.0\./reports
+2026-03-05 18:11:32.729 +02:00 [INF] [ThreadId:7] Plugins: no plugins were loaded
+2026-03-05 18:11:32.730 +02:00 [INF] [ThreadId:7] Reporting sinks: no reporting sinks were loaded
+2026-03-05 18:11:32.731 +02:00 [INF] [ThreadId:7] Starting init...
+2026-03-05 18:11:32.737 +02:00 [INF] [ThreadId:7] Target scenarios: checkout_scenario
+2026-03-05 18:11:32.739 +02:00 [INF] [ThreadId:7] Init finished
+2026-03-05 18:11:32.759 +02:00 [INF] [ThreadId:7] Starting bombing...
+2026-03-05 18:11:46.813 +02:00 [INF] [ThreadId:13] Waiting on scenarios completion...
+2026-03-05 18:11:47.821 +02:00 [WRN] [ThreadId:9] Stopping test early: Stopping test because of too many fails. Scenario 'checkout_scenario' contains '5386' fails.
+2026-03-05 18:11:49.833 +02:00 [INF] [ThreadId:13] Calculating final statistics...
+2026-03-05 18:11:50.326 +02:00 [INF] [ThreadId:13] Reports saved in folder: D:\projects\NureProjects\LicenseNexus\LicenseNexus.LoadTests\reports
+2026-03-05 18:11:50.329 +02:00 [WRN] [ThreadId:13] THIS VERSION IS FREE ONLY FOR PERSONAL USE. You can't use it for an organization.

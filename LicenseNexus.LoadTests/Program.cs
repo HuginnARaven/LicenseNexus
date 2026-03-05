@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text;
 using NBomber.Contracts.Stats;
 using System.Collections.Concurrent;
+using LicenseNexus.Application.DTOs;
 
 using var httpClient = new HttpClient();
 
@@ -20,8 +21,10 @@ var groupIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/productgroup");
 var typeIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/producttype");
 var unitMeasureIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/unitmeasure");
 var currencyIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/currency");
+var customerIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/customer");
+var orderStatusIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/orderstatus");
 
-PayloadGenerator.Initialize(productIds, vendorIds, groupIds, typeIds, unitMeasureIds, currencyIds);
+PayloadGenerator.Initialize(productIds, vendorIds, groupIds, typeIds, unitMeasureIds, currencyIds, customerIds, orderStatusIds);
 
 async Task<int[]> FetchIdsAsync(HttpClient client, string url)
 {
@@ -213,10 +216,70 @@ var consistencyWatcherScenario = Scenario.Create("consistency_watcher", async co
 .WithoutWarmUp()
 .WithLoadSimulations(Simulation.KeepConstant(copies: 10, during: TimeSpan.FromMinutes(2)));
 
+// 4. Checkout Scenario (Transaction Boundary)
+var checkoutScenario = Scenario.Create("checkout_scenario", async context =>
+{
+    // 1. Create Order
+    var orderPayload = PayloadGenerator.GetRandomOrder();
+    var orderJson = JsonSerializer.Serialize(orderPayload);
+    var orderContent = new StringContent(orderJson, Encoding.UTF8, "application/json");
+
+    var createOrderRequest = Http.CreateRequest("POST", $"{baseUrl}/api/order")
+        .WithHeader("Accept", "application/json")
+        .WithBody(orderContent);
+
+    var orderResponse = await Http.Send(httpClient, createOrderRequest);
+
+    if (orderResponse.StatusCode != "OK" && orderResponse.StatusCode != "Created")
+    {
+        return Response.Fail(statusCode: orderResponse.StatusCode, message: "Failed to create order");
+    }
+
+    // Extract Order ID
+    var orderJsonString = await orderResponse.Payload.Value.Content.ReadAsStringAsync();
+    using var orderDoc = JsonDocument.Parse(orderJsonString);
+    
+    if (!orderDoc.RootElement.TryGetProperty("id", out var idElement))
+    {
+         return Response.Fail(statusCode: "Error", message: "Order ID not found in response");
+    }
+    var orderId = idElement.GetInt32();
+
+    // 2. Add Items to Order
+    var itemsCount = Random.Shared.Next(1, 6); // 1 to 5 items
+    var orderProducts = PayloadGenerator.GetRandomOrderProducts(itemsCount);
+
+    foreach (var item in orderProducts)
+    {
+        item.OrderId = orderId; // Link to the created order
+        
+        var itemJson = JsonSerializer.Serialize(item);
+        var itemContent = new StringContent(itemJson, Encoding.UTF8, "application/json");
+
+        var addItemRequest = Http.CreateRequest("POST", $"{baseUrl}/api/order/OrderProduct")
+            .WithHeader("Accept", "application/json")
+            .WithBody(itemContent);
+
+        var itemResponse = await Http.Send(httpClient, addItemRequest);
+        
+        if (itemResponse.StatusCode != "OK" && itemResponse.StatusCode != "Created")
+        {
+             return Response.Fail(statusCode: itemResponse.StatusCode, message: "Failed to add order item");
+        }
+    }
+
+    return Response.Ok(statusCode: "Order_Placed");
+})
+.WithoutWarmUp()
+.WithLoadSimulations(
+    Simulation.RampingConstant(copies: 50, during: TimeSpan.FromSeconds(30)),
+    Simulation.KeepConstant(copies: 50, during: TimeSpan.FromMinutes(2))
+);
+
 // Run NBomber
 NBomberRunner
-    .RegisterScenarios(writeScenario)
-    .WithReportFileName("mongo_vendor_write_heavy_load_test")
+    .RegisterScenarios(checkoutScenario)
+    .WithReportFileName("redis_checkoutScenario_load_test")
     .WithReportFolder("./reports")
     .WithReportFormats(ReportFormat.Html, ReportFormat.Md)
     .Run();
