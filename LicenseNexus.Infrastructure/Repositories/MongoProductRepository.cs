@@ -241,7 +241,7 @@ public class MongoProductRepository : IProductRepository
         await _collection.DeleteOneAsync(x => x.ProductId == id);
     }
 
-    public async Task<ProductPrice?> GetPriceAsync(int productId, int priceId)
+    public async Task<ProductPriceModel?> GetPriceAsync(int productId, int priceId)
     {
         var filter = Builders<ProductDocument>.Filter.And(
             Builders<ProductDocument>.Filter.Eq(p => p.ProductId, productId),
@@ -260,7 +260,7 @@ public class MongoProductRepository : IProductRepository
         var matchedPrice = document?.Prices?.FirstOrDefault();
         if (matchedPrice == null) return null;
 
-        return new ProductPrice 
+        return new ProductPriceModel 
         { 
             Id = matchedPrice.Id, 
             Price = matchedPrice.Price, 

@@ -18,7 +18,7 @@ public interface IProductRepository
     Task PatchAsync(int id, ProductPatchFields updates);
     Task DeleteAsync(int id);
     
-    Task<ProductPrice?> GetPriceAsync(int productId, int priceId);
+    Task<ProductPriceModel?> GetPriceAsync(int productId, int priceId);
     Task<bool> ExistsPriceAsync(long priceId, long productId, CancellationToken cancellationToken = default);
     Task<ProductPrice?> AddPrice(ProductPrice price);
     Task UpdatePrice(ProductPrice price);

@@ -447,9 +447,25 @@ public class RedisProductRepository: IProductRepository
         }
     }
 
-    public async Task<ProductPrice?> GetPriceAsync(int productId, int priceId)
+    public async Task<ProductPriceModel?> GetPriceAsync(int productId, int priceId)
     {
-        return await _sqlContext.ProductPrices.FirstOrDefaultAsync(p => p.Id == priceId && p.ProductId == productId);
+        var price = await _redisDb.JSON().GetAsync<ProductPriceModel>($"product:{productId}", $"$.Prices[?(@.Id=={priceId})]");
+        if (price == null)
+        {
+            var dbPrice = await _sqlContext.ProductPrices.FirstOrDefaultAsync(p => p.Id == priceId && p.ProductId == productId);
+            if (dbPrice == null) return null;
+            price = new ProductPriceModel {
+                Id = dbPrice.Id,
+                Price = dbPrice.Price,
+                TermDuration = dbPrice.TermDuration,
+                BillingPlan = dbPrice.BillingPlan,
+                CountryCode = dbPrice.CountryCode,
+                Segment = dbPrice.Segment,
+                StartDate = dbPrice.StartDate
+            };
+            await _redisDb.JSON().ArrAppendAsync($"product:{productId}", "$.Prices", price);
+        }
+        return price;
     }
 
     public async Task<ProductPrice?> AddPrice(ProductPrice price)

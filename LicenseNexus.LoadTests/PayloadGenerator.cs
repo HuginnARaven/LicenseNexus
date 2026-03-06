@@ -80,8 +80,8 @@ namespace LicenseNexus.LoadTests
 
             OrderProductFaker = new Faker<OrderProductRequestDto>()
                 .RuleFor(op => op.ProductId, f => GetRandomProductId())
-                .RuleFor(op => op.PriceId, f => f.Random.Int(1, 5)) // TODO: implement GetProduct prices
-                .RuleFor(op => op.Quantity, f => f.Random.Int(1, 10))
+                .RuleFor(op => op.PriceId, f => f.Random.Int(1, 5)) // TODO: get prices ids from product 
+                .RuleFor(op => op.Quantity, f => f.Random.Int(1, 10)) // TODO: get QuantityMin and QuantityMax from product 
                 .RuleFor(op => op.CustomerPrice, f => f.Finance.Amount(10, 500))
                 .RuleFor(op => op.Status, f => f.PickRandom("Pending", "Shipped", "Delivered"));
         }
