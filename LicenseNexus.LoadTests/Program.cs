@@ -6,6 +6,7 @@ using System.Text;
 using NBomber.Contracts.Stats;
 using System.Collections.Concurrent;
 using LicenseNexus.Application.DTOs;
+using LicenseNexus.Domain.Models;
 
 using var httpClient = new HttpClient();
 
@@ -15,7 +16,7 @@ var warmUpDuration = TimeSpan.FromSeconds(30);
 var loadDuration = TimeSpan.FromMinutes(2);
 var concurrentUsers = 100;
 
-var productIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/product");
+var products = await FetchProductsAsync(httpClient, $"{baseUrl}/api/product");
 var vendorIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/vendor");
 var groupIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/productgroup");
 var typeIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/producttype");
@@ -24,7 +25,7 @@ var currencyIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/currency");
 var customerIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/customer");
 var orderStatusIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/orderstatus");
 
-PayloadGenerator.Initialize(productIds, vendorIds, groupIds, typeIds, unitMeasureIds, currencyIds, customerIds, orderStatusIds);
+PayloadGenerator.Initialize(products, vendorIds, groupIds, typeIds, unitMeasureIds, currencyIds, customerIds, orderStatusIds);
 
 async Task<int[]> FetchIdsAsync(HttpClient client, string url)
 {
@@ -49,6 +50,31 @@ async Task<int[]> FetchIdsAsync(HttpClient client, string url)
     {
         Console.WriteLine($"Parsing error {url}: {ex.Message}");
         return Array.Empty<int>();
+    }
+}
+
+async Task<List<ProductModel>> FetchProductsAsync(HttpClient client, string url)
+{
+    try
+    {
+        var response = await client.GetAsync(url);
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"Error loading from {url}: {response.StatusCode}");
+            return new List<ProductModel>();
+        }
+
+        var jsonString = await response.Content.ReadAsStringAsync();
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        return JsonSerializer.Deserialize<List<ProductModel>>(jsonString, options) ?? new List<ProductModel>();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Parsing error {url}: {ex.Message}");
+        return new List<ProductModel>();
     }
 }
 

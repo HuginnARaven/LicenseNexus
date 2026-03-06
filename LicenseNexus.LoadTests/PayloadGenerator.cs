@@ -14,6 +14,7 @@ namespace LicenseNexus.LoadTests
         private static Faker<OrderRequestDto> OrderFaker;
         private static Faker<OrderProductRequestDto> OrderProductFaker;
         
+        private static Dictionary<int, ProductModel> ProductsMap = new();
         private static int[] ProductIds = Array.Empty<int>();
         private static int[] VendorIds = Array.Empty<int>();
         private static int[] GroupIds = Array.Empty<int>();
@@ -26,11 +27,12 @@ namespace LicenseNexus.LoadTests
         private static readonly Random Random = new();
         
         public static void Initialize(
-            int[] productIds, int[] vendorIds, int[] groupIds, 
+            List<ProductModel> products, int[] vendorIds, int[] groupIds, 
             int[] typeIds, int[] unitMeasureIds, int[] currencyIds,
             int[] customerIds, int[] orderStatusIds)
         {
-            ProductIds = productIds;
+            ProductsMap = products.ToDictionary(p => p.Id);
+            ProductIds = products.Select(p => p.Id).ToArray();
             VendorIds = vendorIds;
             GroupIds = groupIds;
             TypeIds = typeIds;
@@ -80,8 +82,18 @@ namespace LicenseNexus.LoadTests
 
             OrderProductFaker = new Faker<OrderProductRequestDto>()
                 .RuleFor(op => op.ProductId, f => GetRandomProductId())
-                .RuleFor(op => op.PriceId, f => f.Random.Int(1, 5)) // TODO: get prices ids from product 
-                .RuleFor(op => op.Quantity, f => f.Random.Int(1, 10)) // TODO: get QuantityMin and QuantityMax from product 
+                .RuleFor(op => op.PriceId, (f, op) => 
+                {
+                    var product = ProductsMap[op.ProductId];
+                    return f.PickRandom(product.Prices).Id;
+                })
+                .RuleFor(op => op.Quantity, (f, op) => 
+                {
+                    var product = ProductsMap[op.ProductId];
+                    var min = Math.Max(1, product.Attributes.QuantityMin);
+                    var max = Math.Max(min, product.Attributes.QuantityMax);
+                    return f.Random.Int(min, max);
+                })
                 .RuleFor(op => op.CustomerPrice, f => f.Finance.Amount(10, 500))
                 .RuleFor(op => op.Status, f => f.PickRandom("Pending", "Shipped", "Delivered"));
         }
