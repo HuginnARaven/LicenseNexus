@@ -31,6 +31,27 @@ public class SqlOrderRepository(BaseSqlContext context) : BaseSqlRepository<Orde
 
     public async Task DeleteOrderProduct(int id)
     {
-        await _context.OrderProducts.Where(op => op.Id == id).ExecuteDeleteAsync();
+        var orderProduct = await _context.OrderProducts.FirstOrDefaultAsync(op => op.Id == id);
+        if (orderProduct == null)
+            return; 
+        
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            await _context.OrderProducts
+                .Where(op => op.Id == id)
+                .ExecuteDeleteAsync();
+            await _context.Orders
+                .Where(o => o.Id == orderProduct.OrderId)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(o => o.OrderTotalSum, o => o.OrderTotalSum - orderProduct.SumTotal)
+                );
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw; 
+        }
     }
 }

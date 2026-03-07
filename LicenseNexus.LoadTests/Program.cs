@@ -242,10 +242,9 @@ var consistencyWatcherScenario = Scenario.Create("consistency_watcher", async co
 .WithoutWarmUp()
 .WithLoadSimulations(Simulation.KeepConstant(copies: 10, during: TimeSpan.FromMinutes(2)));
 
-// 4. Checkout Scenario (Transaction Boundary)
 var checkoutScenario = Scenario.Create("checkout_scenario", async context =>
 {
-    // 1. Create Order
+    // Create Order
     var orderPayload = PayloadGenerator.GetRandomOrder();
     var orderJson = JsonSerializer.Serialize(orderPayload);
     var orderContent = new StringContent(orderJson, Encoding.UTF8, "application/json");
@@ -271,8 +270,8 @@ var checkoutScenario = Scenario.Create("checkout_scenario", async context =>
     }
     var orderId = idElement.GetInt32();
 
-    // 2. Add Items to Order
-    var itemsCount = Random.Shared.Next(1, 6); // 1 to 5 items
+    // Add Items to Order
+    var itemsCount = Random.Shared.Next(1, 6); // Randomly select from 1 to 5 items
     var orderProducts = PayloadGenerator.GetRandomOrderProducts(itemsCount);
 
     foreach (var item in orderProducts)
