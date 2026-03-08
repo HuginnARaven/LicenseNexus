@@ -24,8 +24,15 @@ var unitMeasureIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/unitmeasure
 var currencyIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/currency");
 var customerIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/customer");
 var orderStatusIds = await FetchIdsAsync(httpClient, $"{baseUrl}/api/orderstatus");
+var terms = products
+    .Select(p => p.Title)
+    .Where(x => !string.IsNullOrEmpty(x))
+    .SelectMany(x => x!.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+    .Where(x => x.Length > 3) // taking 3+ letter word TODO: mb change later
+    .Distinct()
+    .ToArray();
 
-PayloadGenerator.Initialize(products, vendorIds, groupIds, typeIds, unitMeasureIds, currencyIds, customerIds, orderStatusIds);
+PayloadGenerator.Initialize(products, vendorIds, groupIds, typeIds, unitMeasureIds, currencyIds, customerIds, orderStatusIds, terms);
 
 async Task<int[]> FetchIdsAsync(HttpClient client, string url)
 {
@@ -75,6 +82,37 @@ async Task<List<ProductModel>> FetchProductsAsync(HttpClient client, string url)
     {
         Console.WriteLine($"Parsing error {url}: {ex.Message}");
         return new List<ProductModel>();
+    }
+}
+
+async Task<string[]> FetchSearchTermsAsync(HttpClient client, string url)
+{
+    try
+    {
+        var response = await client.GetAsync(url);
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"Error loading from {url}: {response.StatusCode}");
+            return Array.Empty<string>();
+        }
+
+        var jsonString = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(jsonString);
+
+        var terms = document.RootElement.EnumerateArray()
+            .Select(x => x.GetProperty("title").GetString())
+            .Where(x => !string.IsNullOrEmpty(x))
+            .SelectMany(x => x!.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            .Where(x => x.Length > 3) // taking 3+ letter word TODO: mb change later
+            .Distinct()
+            .ToArray();
+
+        return terms;
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Parsing error {url}: {ex.Message}");
+        return Array.Empty<string>();
     }
 }
 
@@ -242,7 +280,7 @@ var consistencyWatcherScenario = Scenario.Create("consistency_watcher", async co
 .WithoutWarmUp()
 .WithLoadSimulations(Simulation.KeepConstant(copies: 10, during: TimeSpan.FromMinutes(2)));
 
-var checkoutScenario = Scenario.Create("checkout_scenario", async context =>
+var checkoutScenario = Scenario.Create("checkout_scenario", async context => 
 {
     // Create Order
     var orderPayload = PayloadGenerator.GetRandomOrder();
@@ -301,10 +339,36 @@ var checkoutScenario = Scenario.Create("checkout_scenario", async context =>
     Simulation.KeepConstant(copies: 50, during: TimeSpan.FromMinutes(2))
 );
 
+var textSearchScenario = Scenario.Create("text_search_scenario", async context => 
+{
+    var searchTerm = PayloadGenerator.GetRandomSearchTerm();
+    
+    var request = Http.CreateRequest("GET", $"{baseUrl}/api/product/catalog?Search={Uri.EscapeDataString(searchTerm)}&Page=1&PageSize=50")
+        .WithHeader("Accept", "application/json");
+
+    var response = await Http.Send(httpClient, request);
+
+    if (response.StatusCode == "OK")
+    {
+        var jsonString = await response.Payload.Value.Content.ReadAsStringAsync();
+        if (jsonString.Contains("\"id\":"))
+        {
+            return Response.Ok();
+        }
+        return Response.Ok(statusCode: "OK_Empty"); // Якщо слово існує, але продуктів 0
+    } 
+    return Response.Fail(statusCode: response.StatusCode, message: "Search Failed"); 
+})
+.WithoutWarmUp()
+.WithLoadSimulations(
+    Simulation.RampingConstant(copies: 100, during: TimeSpan.FromSeconds(30)),
+    Simulation.KeepConstant(copies: 100, during: TimeSpan.FromMinutes(2))
+);
+
 // Run NBomber
 NBomberRunner
-    .RegisterScenarios(checkoutScenario)
-    .WithReportFileName("redis_checkoutScenario_load_test")
+    .RegisterScenarios(textSearchScenario)
+    .WithReportFileName("load_test_report")
     .WithReportFolder("./reports")
     .WithReportFormats(ReportFormat.Html, ReportFormat.Md)
     .Run();

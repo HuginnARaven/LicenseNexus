@@ -52,6 +52,9 @@ public class MongoContext
             new CreateIndexModel<ProductDocument>(
                 Builders<ProductDocument>.IndexKeys.Ascending(p => p.Sku),
                 new CreateIndexOptions { Unique = true }
+            ),
+            new CreateIndexModel<ProductDocument>(
+                Builders<ProductDocument>.IndexKeys.Text(x => x.Title)
             )
         };
         await Products.Indexes.CreateManyAsync(productIndexes);

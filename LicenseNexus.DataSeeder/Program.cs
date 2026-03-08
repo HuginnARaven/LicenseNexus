@@ -28,12 +28,10 @@ services.Configure<MongoDbSettings>(configuration.GetSection("MongoDbSettings"))
 services.AddScoped<MongoContext>();
 services.AddSingleton<RedisContext>();
 
-// Реєструємо наш клас-генератор
 services.AddTransient<DatabaseSeeder>();
 
 var serviceProvider = services.BuildServiceProvider();
 
-// 3. Запускаємо генерацію
 var seeder = serviceProvider.GetRequiredService<DatabaseSeeder>();
 await seeder.RunAsync();
 

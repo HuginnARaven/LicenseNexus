@@ -18,7 +18,7 @@ public class SqlOrderRepository(BaseSqlContext context) : BaseSqlRepository<Orde
         );
     }
 
-    public async Task<OrderProduct?> AddOrderProduct(OrderProduct orderProduct)
+    public async Task<OrderProduct?> AddOrderProduct(OrderProduct orderProduct) // TODO: add Transaction and test
     {
         _context.OrderProducts.Add(orderProduct);
         await _context.Orders
@@ -29,7 +29,7 @@ public class SqlOrderRepository(BaseSqlContext context) : BaseSqlRepository<Orde
         return await _context.SaveChangesAsync().ContinueWith(t => t.Result > 0 ? orderProduct : null);
     }
 
-    public async Task DeleteOrderProduct(int id)
+    public async Task DeleteOrderProduct(int id) // TODO: test
     {
         var orderProduct = await _context.OrderProducts.FirstOrDefaultAsync(op => op.Id == id);
         if (orderProduct == null)

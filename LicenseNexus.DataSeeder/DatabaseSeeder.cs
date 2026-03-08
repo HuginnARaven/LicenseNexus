@@ -5,21 +5,25 @@ using LicenseNexus.Infrastructure.Data.MongoDocuments;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
 using System.Text.Json;
+using Bogus.Extensions.UnitedStates;
 
 namespace LicenseNexus.DataSeeder;
 
 public class DatabaseSeeder
 {
     private readonly ExtendedSqlContext _extendedSqlContext;
+    private readonly BaseSqlContext _baseSqlContext;
     private readonly MongoContext _mongoContext;
     private readonly RedisContext _redisContext;
 
     public DatabaseSeeder(
         ExtendedSqlContext extendedSqlContext,
+        BaseSqlContext baseSqlContext,
         MongoContext mongoContext,
         RedisContext redisContext)
     {
         _extendedSqlContext = extendedSqlContext;
+        _baseSqlContext = baseSqlContext;
         _mongoContext = mongoContext;
         _redisContext = redisContext;
     }
@@ -275,6 +279,64 @@ public class DatabaseSeeder
 
             Console.WriteLine($"Saved {productDocs.Count} products to Mongo.");
         }
+        
+        // 9. Generate and Save Partners, Addresses, and Customers TODO: Sync Ids with MinimalDb
+        var partners = GeneratePartners(5);
+        await _extendedSqlContext.Partners.AddRangeAsync(partners);
+        await _extendedSqlContext.SaveChangesAsync();
+
+        var basePartners = partners.Select(p => new Partner() {
+            Status = p.Status,
+            CountryCode = p.CountryCode,
+            FullCompanyName = p.FullCompanyName,
+            RegistrationNumber = p.RegistrationNumber,
+            TaxNumber = p.TaxNumber,
+            BankAccountNumber = p.BankAccountNumber,
+            BankName = p.BankName,
+            Phone = p.Phone,
+            CreatedDate = p.CreatedDate,
+            Author = p.Author
+        }).ToList();
+        await _baseSqlContext.Partners.AddRangeAsync(basePartners);
+        await _baseSqlContext.SaveChangesAsync();
+        
+        Console.WriteLine($"Saved {partners.Count} partners to SQL.");
+
+        foreach (var partner in partners)
+        {
+            var addresses = GeneratePartnerAddresses(partner.Id);
+            await _extendedSqlContext.PartnerAddresses.AddRangeAsync(addresses);
+
+            var baseAddresses = addresses.Select(a => new PartnerAddress() {
+                PartnerId = partner.Id,
+                AddressType = a.AddressType,
+                City = a.City,
+                AddressFull = a.AddressFull,
+                Region = a.Region,
+                ZipCode = a.ZipCode
+            }).ToList();
+            await _baseSqlContext.PartnerAddresses.AddRangeAsync(baseAddresses);
+            
+            var customers = GeneratePartnerCustomers(partner.Id, new Random().Next(2, 5));
+            await _extendedSqlContext.Customers.AddRangeAsync(customers);
+            
+            var baseCustomers = customers.Select(c => new Customer() {
+                PartnerId = partner.Id,
+                AccountName = c.AccountName,
+                Email = c.Email,
+                LegalName = c.LegalName,
+                City = c.City,
+                Region = c.Region,
+                ZipCode = c.ZipCode,
+                CountryCode = c.CountryCode,
+                Status = c.Status,
+                CreatedDate = c.CreatedDate
+            }).ToList();
+            await _baseSqlContext.Customers.AddRangeAsync(baseCustomers);
+        }
+        await _extendedSqlContext.SaveChangesAsync();
+        await _baseSqlContext.SaveChangesAsync();
+        Console.WriteLine("Saved partner addresses and customers to SQL.");
     }
 
     private ProductDocument MapToProductDocument(
@@ -510,6 +572,53 @@ public class DatabaseSeeder
             TagId = t.Id
         }).ToList();
     }
+
+    private List<Partner> GeneratePartners(int count)
+    {
+        var faker = new Faker<Partner>("en")
+            .RuleFor(p => p.Status, f => f.PickRandom("Active", "Inactive", "Pending"))
+            .RuleFor(p => p.FullCompanyName, f => f.Company.CompanyName())
+            .RuleFor(p => p.RegistrationNumber, f => f.Company.Ein())
+            .RuleFor(p => p.TaxNumber, f => f.Finance.Iban())
+            .RuleFor(p => p.BankAccountNumber, f => f.Finance.Account())
+            .RuleFor(p => p.BankName, f => f.Company.CompanyName() + " Bank")
+            .RuleFor(p => p.Phone, f => f.Phone.PhoneNumber())
+            .RuleFor(p => p.CreatedDate, f => f.Date.Past())
+            .RuleFor(p => p.Author, f => f.Name.FullName())
+            .RuleFor(v => v.CountryCode, f => f.Address.CountryCode(Bogus.DataSets.Iso3166Format.Alpha3));
+        
+        return  faker.Generate(count);
+    }
+
+    private List<PartnerAddress> GeneratePartnerAddresses(int partnerId)
+    {
+        var faker = new Faker<PartnerAddress>("en")
+            .RuleFor(a => a.PartnerId, partnerId)
+            .RuleFor(a => a.AddressType, f => f.PickRandom("Billing", "Shipping", "Office"))
+            .RuleFor(a => a.City, f => f.Address.City())
+            .RuleFor(a => a.AddressFull, f => f.Address.FullAddress())
+            .RuleFor(a => a.Region, f => f.Address.State())
+            .RuleFor(a => a.ZipCode, f => f.Address.ZipCode());
+
+        return faker.Generate(new Random().Next(1, 3));
+    }
+
+    private List<Customer> GeneratePartnerCustomers(int partnerId, int count)
+    {
+        var faker = new Faker<Customer>("en")
+            .RuleFor(c => c.PartnerId, partnerId)
+            .RuleFor(c => c.AccountName, f => f.Internet.UserName() + f.Random.Number(100, 999))
+            .RuleFor(c => c.Email, (f, c) => f.Internet.Email(c.AccountName))
+            .RuleFor(c => c.LegalName, f => f.Company.CompanyName())
+            .RuleFor(c => c.City, f => f.Address.City())
+            .RuleFor(c => c.Region, f => f.Address.State())
+            .RuleFor(c => c.ZipCode, f => f.Address.ZipCode())
+            .RuleFor(c => c.CountryCode, f => f.Address.CountryCode(Bogus.DataSets.Iso3166Format.Alpha3))
+            .RuleFor(c => c.Status, f => f.PickRandom("Active", "Inactive", "Suspended"))
+            .RuleFor(c => c.CreatedDate, f => f.Date.Past());
+
+        return faker.Generate(count);
+    }
     
     private async Task ClearDataAsync()
     {
@@ -529,8 +638,21 @@ public class DatabaseSeeder
         await _extendedSqlContext.UnitMeasures.ExecuteDeleteAsync();
         await _extendedSqlContext.ProductTypes.ExecuteDeleteAsync();
         await _extendedSqlContext.Currencies.ExecuteDeleteAsync();
+        
+        await _extendedSqlContext.Customers.ExecuteDeleteAsync();
+        await _extendedSqlContext.PartnerAddresses.ExecuteDeleteAsync();
+        await _extendedSqlContext.Partners.ExecuteDeleteAsync();
 
-        Console.WriteLine("MSSQL cleared.");
+        Console.WriteLine("MSSQL Full_Db cleared.");
+        
+        await _baseSqlContext.OrderProducts.ExecuteDeleteAsync();
+        await _baseSqlContext.Orders.ExecuteDeleteAsync();
+        
+        await _baseSqlContext.Customers.ExecuteDeleteAsync();
+        await _baseSqlContext.PartnerAddresses.ExecuteDeleteAsync();
+        await _baseSqlContext.Partners.ExecuteDeleteAsync();
+        
+        Console.WriteLine("MSSQL Minimal_Db cleared.");
         
         var mongoEmptyFilter = Builders<VendorDocument>.Filter.Empty;
 
@@ -548,7 +670,7 @@ public class DatabaseSeeder
         
         // var endpoints = _redisMultiplexer.GetEndPoints();
         // var server = _redisMultiplexer.GetServer(endpoints.First());
-        // await server.FlushDatabaseAsync(); // Повністю очищає поточну базу Redis
+        // await server.FlushDatabaseAsync();
         // Console.WriteLine("Redis cleared.");
     }
 }

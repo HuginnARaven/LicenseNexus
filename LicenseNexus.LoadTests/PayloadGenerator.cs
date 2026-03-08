@@ -23,13 +23,14 @@ namespace LicenseNexus.LoadTests
         private static int[] CurrencyIds = Array.Empty<int>();
         private static int[] CustomerIds = Array.Empty<int>();
         private static int[] OrderStatusIds = Array.Empty<int>();
+        private static string[] SearchTerms = Array.Empty<string>();
         
         private static readonly Random Random = new();
         
         public static void Initialize(
             List<ProductModel> products, int[] vendorIds, int[] groupIds, 
             int[] typeIds, int[] unitMeasureIds, int[] currencyIds,
-            int[] customerIds, int[] orderStatusIds)
+            int[] customerIds, int[] orderStatusIds, string[] terms)
         {
             ProductsMap = products.ToDictionary(p => p.Id);
             ProductIds = products.Select(p => p.Id).ToArray();
@@ -40,6 +41,7 @@ namespace LicenseNexus.LoadTests
             CurrencyIds = currencyIds;
             CustomerIds = customerIds;
             OrderStatusIds = orderStatusIds;
+            SearchTerms = terms;
 
             InitializeFakers();
         }
@@ -49,7 +51,7 @@ namespace LicenseNexus.LoadTests
             FilterFaker = new Faker<ProductFilterDto>()
                 .RuleFor(p => p.GroupId, f => GroupIds.Length > 0 ? f.PickRandom(GroupIds) : null)
                 .RuleFor(f => f.VendorId, f => f.Random.Bool() && VendorIds.Length > 0 ? f.PickRandom(VendorIds) : null)
-                .RuleFor(f => f.Search, f => f.Random.Bool() ? f.Commerce.ProductName() : null)
+                //.RuleFor(f => f.Search, f => f.Random.Bool() ? f.Commerce.ProductName() : null)
                 .RuleFor(f => f.PriceFrom, f => f.Random.Bool() ? f.Random.Double(10, 100) : null)
                 .RuleFor(f => f.PriceTo, (f, o) => o.PriceFrom.HasValue ? f.Random.Double(o.PriceFrom.Value, 1000) : null)
                 .RuleFor(f => f.Page, f => f.Random.Int(1, 5))
@@ -119,6 +121,12 @@ namespace LicenseNexus.LoadTests
         public static List<OrderProductRequestDto> GetRandomOrderProducts(int count)
         {
              return OrderProductFaker.Generate(count);
+        }
+        
+        public static string GetRandomSearchTerm()
+        {
+            if (SearchTerms.Length == 0) return "Laptop"; // Fallback
+            return SearchTerms[Random.Next(SearchTerms.Length)];
         }
     }
 }
