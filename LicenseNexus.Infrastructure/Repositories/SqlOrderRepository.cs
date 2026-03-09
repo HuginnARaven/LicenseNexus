@@ -1,4 +1,5 @@
 ﻿using LicenseNexus.Domain.Entities;
+using LicenseNexus.Domain.Exceptions;
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
@@ -18,15 +19,27 @@ public class SqlOrderRepository(BaseSqlContext context) : BaseSqlRepository<Orde
         );
     }
 
-    public async Task<OrderProduct?> AddOrderProduct(OrderProduct orderProduct) // TODO: add Transaction and test
+    public async Task<OrderProduct?> AddOrderProduct(OrderProduct orderProduct) // TODO: test
     {
-        _context.OrderProducts.Add(orderProduct);
-        await _context.Orders
-            .Where(o => o.Id == orderProduct.OrderId)
-            .ExecuteUpdateAsync(setters => setters
-                .SetProperty(o => o.OrderTotalSum, o => o.OrderTotalSum + orderProduct.SumTotal)
-            );
-        return await _context.SaveChangesAsync().ContinueWith(t => t.Result > 0 ? orderProduct : null);
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            _context.OrderProducts.Add(orderProduct);
+            await _context.Orders
+                .Where(o => o.Id == orderProduct.OrderId)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(o => o.OrderTotalSum, o => o.OrderTotalSum + orderProduct.SumTotal)
+                );
+            
+            var res = await _context.SaveChangesAsync().ContinueWith(t => t.Result > 0 ? orderProduct : null);
+            await transaction.CommitAsync();
+            return res;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw new ConflictException("Could not add order product");  
+        }
     }
 
     public async Task DeleteOrderProduct(int id) // TODO: test
@@ -51,7 +64,7 @@ public class SqlOrderRepository(BaseSqlContext context) : BaseSqlRepository<Orde
         catch
         {
             await transaction.RollbackAsync();
-            throw; 
+            throw new ConflictException("Could not delete order product"); 
         }
     }
 }
