@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace LicenseNexus.LoadTests
+namespace LicenseNexus.LoadTests.Helpers
 {
     public static class PayloadGenerator
     {
@@ -51,7 +51,7 @@ namespace LicenseNexus.LoadTests
             FilterFaker = new Faker<ProductFilterDto>()
                 .RuleFor(p => p.GroupId, f => GroupIds.Length > 0 ? f.PickRandom(GroupIds) : null)
                 .RuleFor(f => f.VendorId, f => f.Random.Bool() && VendorIds.Length > 0 ? f.PickRandom(VendorIds) : null)
-                //.RuleFor(f => f.Search, f => f.Random.Bool() ? f.Commerce.ProductName() : null)
+                .RuleFor(f => f.Search, f => f.Random.Bool() && SearchTerms.Length > 0 ? f.PickRandom(SearchTerms) : null)
                 .RuleFor(f => f.PriceFrom, f => f.Random.Bool() ? f.Random.Double(10, 100) : null)
                 .RuleFor(f => f.PriceTo, (f, o) => o.PriceFrom.HasValue ? f.Random.Double(o.PriceFrom.Value, 1000) : null)
                 .RuleFor(f => f.Page, f => f.Random.Int(1, 5))
