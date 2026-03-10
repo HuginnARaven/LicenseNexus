@@ -69,8 +69,9 @@ public class MongoProductRepository : IProductRepository
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            filter &= builder.Regex(x => x.Title, new MongoDB.Bson.BsonRegularExpression(search, "i")) |
-                      builder.Regex(x => x.Sku, new MongoDB.Bson.BsonRegularExpression(search, "i"));
+            // filter &= builder.Regex(x => x.Title, new MongoDB.Bson.BsonRegularExpression(search, "i")) |
+            //           builder.Regex(x => x.Sku, new MongoDB.Bson.BsonRegularExpression(search, "i"));
+            filter &= builder.Text(search);
         }
 
         if (priceFrom.HasValue || priceTo.HasValue)

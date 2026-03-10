@@ -45,7 +45,7 @@
   redis:
     image: redis/redis-stack-server:latest
     container_name: licensenexus_redis
-    command: redis-stack-server --appendonly yes
+    command: redis-stack-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     ports:
       - "6379:6379"
     volumes:
@@ -92,6 +92,45 @@
       - GF_SECURITY_ADMIN_PASSWORD=admin
     depends_on:
       - prometheus
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: redis_exporter
+    restart: unless-stopped
+    environment:
+      - REDIS_ADDR=redis://licensenexus_redis:6379
+    ports:
+      - "9121:9121"
+    depends_on:
+      - redis
+
+  mongo-exporter:
+    image: percona/mongodb_exporter:0.49.0
+    container_name: mongo_exporter
+    restart: unless-stopped
+    command:
+      - '--mongodb.uri=mongodb://licensenexus_mongo:27017'
+      - '--compatible-mode'
+      - '--collect-all'
+    ports:
+      - "9216:9216"
+    depends_on:
+      - mongo
+
+  mssql-exporter:
+    image: awaragi/prometheus-mssql-exporter:latest
+    container_name: mssql_exporter
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - SERVER=licensenexus_mssql
+      - PORT=1433
+      - USERNAME=sa
+      - PASSWORD=TST12345!
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mssql
 
 volumes:
   mssql_data:
