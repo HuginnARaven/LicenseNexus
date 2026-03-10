@@ -6,7 +6,7 @@ test suite: `nbomber_default_test_suite_name`
 
 test name: `nbomber_default_test_name`
 
-session id: `2026-03-08_16-49-21_8815dc0b`
+session id: `2026-03-10_00-03-41_18a1a5b2`
 
 > scenario stats
 
@@ -14,7 +14,7 @@ session id: `2026-03-08_16-49-21_8815dc0b`
 
 scenario: `text_search_scenario`
 
-  - ok count: `829898`
+  - ok count: `798928`
 
   - fail count: `0`
 
@@ -31,9 +31,9 @@ load simulations:
 |step|ok stats|
 |---|---|
 |name|`global information`|
-|request count|all = `829898`, ok = `829898`, RPS = `5532.65`|
-|latency (ms)|min = `3.06`, mean = `16.16`, max = `74.01`, StdDev = `4.46`|
-|latency percentile (ms)|p50 = `15.66`, p75 = `18.53`, p95 = `23.3`, p99 = `28.69`|
+|request count|all = `798928`, ok = `798928`, RPS = `5326.19`|
+|latency (ms)|min = `3.19`, mean = `16.79`, max = `101.47`, StdDev = `5.73`|
+|latency percentile (ms)|p50 = `16.02`, p75 = `19.1`, p95 = `24.88`, p99 = `33.89`|
 
 
 

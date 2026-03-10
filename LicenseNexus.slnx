@@ -5,6 +5,7 @@
     <File Path=".gitignore" />
     <File Path="compose.yaml" />
     <File Path="diagrams.drawio" />
+    <File Path="prometheus.yml" />
   </Folder>
   <Project Path="LicenseNexus.API/LicenseNexus.API.csproj" />
   <Project Path="LicenseNexus.Application/LicenseNexus.Application.csproj" />
