@@ -1,9 +1,6 @@
 ﻿using Bogus;
 using LicenseNexus.Application.DTOs;
 using LicenseNexus.Domain.Models;
-using System;
-using System.Linq;
-using System.Collections.Generic;
 
 namespace LicenseNexus.LoadTests.Helpers
 {
@@ -11,6 +8,7 @@ namespace LicenseNexus.LoadTests.Helpers
     {
         private static Faker<ProductFilterDto> FilterFaker;
         private static Faker<ProductPatchFields> PatchFaker;
+        private static Faker<ProductRequestDto> PostFaker;
         private static Faker<OrderRequestDto> OrderFaker;
         private static Faker<OrderProductRequestDto> OrderProductFaker;
         
@@ -75,6 +73,25 @@ namespace LicenseNexus.LoadTests.Helpers
                 .RuleFor(p => p.ProductTypeId, f => TypeIds.Length > 0 ? f.PickRandom(TypeIds) : null)
                 .RuleFor(p => p.UnitMeasureId, f => UnitMeasureIds.Length > 0 ? f.PickRandom(UnitMeasureIds) : null)
                 .RuleFor(p => p.CurrencyId, f => CurrencyIds.Length > 0 ? f.PickRandom(CurrencyIds) : null);
+            
+            PostFaker = new Faker<ProductRequestDto>()
+                .RuleFor(p => p.Sku, f => f.Commerce.Ean13())
+                .RuleFor(p => p.Title, f => f.Commerce.ProductName())
+                .RuleFor(p => p.ShortDescription, f => f.Lorem.Sentence())
+                .RuleFor(p => p.QuantityMin, f => f.Random.Int(1, 10))
+                .RuleFor(p => p.QuantityMax, f => f.Random.Int(10, 100))
+                .RuleFor(p => p.StartDate, f => f.Date.Past())
+                .RuleFor(p => p.EndDate, f => f.Date.Future())
+                .RuleFor(p => p.IsPromo, f => f.Random.Bool())
+                .RuleFor(p => p.IsTop, f => f.Random.Bool())
+                .RuleFor(p => p.IsNew, f => f.Random.Bool())
+                .RuleFor(p => p.Logo, f => f.Image.PicsumUrl())
+                .RuleFor(p => p.Author, f => f.Name.FullName())
+                .RuleFor(p => p.VendorId, f => f.PickRandom(VendorIds))
+                .RuleFor(p => p.ProductGroupId, f => f.PickRandom(GroupIds))
+                .RuleFor(p => p.ProductTypeId, f => f.PickRandom(TypeIds))
+                .RuleFor(p => p.UnitMeasureId, f => f.PickRandom(UnitMeasureIds))
+                .RuleFor(p => p.CurrencyId, f => f.PickRandom(CurrencyIds));
 
             OrderFaker = new Faker<OrderRequestDto>()
                 .RuleFor(o => o.CustomerId, f => CustomerIds.Length > 0 ? f.PickRandom(CustomerIds) : 1)
@@ -113,6 +130,7 @@ namespace LicenseNexus.LoadTests.Helpers
         }
 
         public static ProductPatchFields GetRandomPatch() => PatchFaker.Generate();
+        public static ProductRequestDto GetRandomNewProduct() => PostFaker.Generate();
         public static ProductFilterDto GetRandomFilter() => FilterFaker.Generate();
         public static double GetRandomDouble() => Random.NextDouble();
         

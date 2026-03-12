@@ -6,78 +6,73 @@ test suite: `nbomber_default_test_suite_name`
 
 test name: `nbomber_default_test_name`
 
-session id: `2026-03-10_23-25-57_32f95af0`
+session id: `2026-03-11_22-49-51_d6c67fa5`
 
 > scenario stats
 
 
 
-scenario: `vendor_mutator`
+scenario: `write_heavy_patch`
 
-  - ok count: `600`
+  - ok count: `123368`
 
   - fail count: `0`
 
-  - all data: `0` MB
+  - all data: `87.183` MB
 
-  - duration: `00:02:00`
+  - duration: `00:02:30`
 
 load simulations:
 
-  - `inject`, rate: `5`, interval: `00:00:01`, during: `00:02:00`
+  - `ramping_constant`, copies: `80`, during: `00:00:30`
+
+  - `keep_constant`, copies: `80`, during: `00:02:00`
 
 |step|ok stats|
 |---|---|
 |name|`global information`|
-|request count|all = `600`, ok = `600`, RPS = `5`|
-|latency (ms)|min = `2.22`, mean = `5.05`, max = `50.07`, StdDev = `5.54`|
-|latency percentile (ms)|p50 = `3.54`, p75 = `4.41`, p95 = `12.49`, p99 = `34.59`|
+|request count|all = `123368`, ok = `123368`, RPS = `822.45`|
+|latency (ms)|min = `15.71`, mean = `86.99`, max = `336.34`, StdDev = `28.97`|
+|latency percentile (ms)|p50 = `81.54`, p75 = `100.99`, p95 = `142.46`, p99 = `179.71`|
+|data transfer (KB)|min = `0.680`, mean = `0.724`, max = `0.788`, all = `87.183` MB|
 
 
-
-
-> scenario stats
-
-
-
-scenario: `consistency_watcher`
-
-  - ok count: `430526`
-
-  - fail count: `2824`
-
-  - all data: `0` MB
-
-  - duration: `00:02:00`
-
-load simulations:
-
-  - `keep_constant`, copies: `10`, during: `00:02:00`
-
-|step|ok stats|
-|---|---|
-|name|`global information`|
-|request count|all = `433350`, ok = `430526`, RPS = `3587.72`|
-|latency (ms)|min = `1.15`, mean = `2.76`, max = `73.82`, StdDev = `2.99`|
-|latency percentile (ms)|p50 = `2.31`, p75 = `2.64`, p95 = `4.31`, p99 = `8.03`|
-
-
-|step|failures stats|
-|---|---|
-|name|`global information`|
-|request count|all = `433350`, fail = `2824`, RPS = `23.53`|
-|latency (ms)|min = `1.25`, mean = `2.9`, max = `54.31`, StdDev = `3.88`|
-|latency percentile (ms)|p50 = `2.31`, p75 = `2.67`, p95 = `4.27`, p99 = `9.57`|
-
-
-> status codes for scenario: `consistency_watcher`
+> status codes for scenario: `write_heavy_patch`
 
 
 
 |status code|count|message|
 |---|---|---|
-|In_Sync|424223||
-|Not_Mutated_Yet|6303||
-|Out_Of_Sync|2824|Stale Data|
+|NoContent|123368||
+
+
+> scenario stats
+
+
+
+scenario: `write_heavy_post`
+
+  - ok count: `38606`
+
+  - fail count: `0`
+
+  - all data: `0` MB
+
+  - duration: `00:02:30`
+
+load simulations:
+
+  - `ramping_constant`, copies: `20`, during: `00:00:30`
+
+  - `keep_constant`, copies: `20`, during: `00:02:00`
+
+|step|ok stats|
+|---|---|
+|name|`global information`|
+|request count|all = `38606`, ok = `38606`, RPS = `257.37`|
+|latency (ms)|min = `13.36`, mean = `69.48`, max = `238.83`, StdDev = `22.21`|
+|latency percentile (ms)|p50 = `65.79`, p75 = `80`, p95 = `111.68`, p99 = `140.29`|
+
+
 
 

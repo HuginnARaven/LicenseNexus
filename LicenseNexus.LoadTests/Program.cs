@@ -89,7 +89,7 @@ async Task<List<ProductModel>> FetchProductsAsync(HttpClient client, string url)
 // Read-Heavy Scenario (Product Search & Pagination)
 var readScenario = ReadHeavyScenarioBuilder.Build(httpClient, baseUrl, concurrentUsers, warmUpDuration, loadDuration);
 
-// Write-Heavy Scenario (Product Partial Updates)
+// Write-Heavy Scenario (80% PATCH, 20% POST)
 var writeScenario = WriteHeavyScenarioBuilder.Build(httpClient, baseUrl, concurrentUsers, warmUpDuration, loadDuration);
 
 // Mixed Scenario (80% Read, 20% Write)
@@ -104,7 +104,7 @@ var textSearchScenario = TextSearchScenarioBuilder.Build(httpClient, baseUrl, co
 HardwareMonitor.Start("./reports/load_test_metrics.csv");
 
 NBomberRunner
-    .RegisterScenarios(consistencyScenario)
+    .RegisterScenarios(writeScenario)
     .WithReportFileName("load_test_report")
     .WithReportFolder("./reports")
     .WithReportFormats(ReportFormat.Html, ReportFormat.Md)
