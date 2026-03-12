@@ -24,23 +24,41 @@ public class RedisVendorRepository: IVendorRepository
 
     public async Task<Vendor?> GetByIdAsync(int id)
     {
+        var negativeCacheKey = $"vendor:{id}:notfound";
+        if (await _redisDb.KeyExistsAsync(negativeCacheKey))
+            return null;
+        
         var vendor = await _redisDb.JSON().GetAsync<Vendor>($"vendor:{id}");
-        if (vendor == null)
-        {            
-            var dbVendor = await _context.Vendors.FirstOrDefaultAsync(v => v.Id == id);
-            if (dbVendor != null)
-            {
-                await _redisDb.JSON().SetAsync($"vendor:{id}", "$", dbVendor);
-                return dbVendor;
-            }
+        if (vendor != null) 
+            return vendor;
+        
+        var dbVendor = await _context.Vendors.FirstOrDefaultAsync(v => v.Id == id);
+        if (dbVendor == null)
+        {
+            await _redisDb.StringSetAsync(negativeCacheKey, "1", TimeSpan.FromMinutes(5));
+            return null;
         }
-        return vendor;
+        await _redisDb.JSON().SetAsync($"vendor:{id}", "$", dbVendor);
+        return dbVendor;
     }
     
     public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
     {
-        //return await _context.Vendors.AnyAsync(v => v.Id == id, cancellationToken);
-        return await _redisDb.KeyExistsAsync($"vendor:{id}");
+        var redisKey = $"vendor:{id}";
+        var negativeCacheKey = $"vendor:{id}:notfound";
+        
+        if (await _redisDb.KeyExistsAsync(redisKey))
+            return true;
+        
+        if (await _redisDb.KeyExistsAsync(negativeCacheKey))
+            return false;
+        
+        var existsInDb = await _context.Vendors.AnyAsync(v => v.Id == id, cancellationToken);
+        
+        if (!existsInDb)
+            await _redisDb.StringSetAsync(negativeCacheKey, "1", TimeSpan.FromMinutes(5));
+        
+        return existsInDb;
     }
 
     public async Task<Vendor?> AddAsync(Vendor vendor)

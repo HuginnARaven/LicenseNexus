@@ -25,23 +25,41 @@ public class RedisUnitMeasureRepository: IUnitMeasureRepository
 
     public async Task<UnitMeasure?> GetByIdAsync(int id)
     {
+        var negativeCacheKey = $"unit_measure:{id}:notfound";
+        if (await _redisDb.KeyExistsAsync(negativeCacheKey))
+            return null;
+        
         var unitMeasure = await _redisDb.JSON().GetAsync<UnitMeasure>($"unit_measure:{id}");
-        if (unitMeasure == null)
+        if (unitMeasure != null)
+            return unitMeasure;
+        
+        var dbUnitMeasure = await _context.UnitMeasures.FirstOrDefaultAsync(um => um.Id == id);
+        if (dbUnitMeasure == null)
         {
-            var dbUnitMeasure = await _context.UnitMeasures.FirstOrDefaultAsync(um => um.Id == id);
-            if (dbUnitMeasure != null)
-            {
-                await _redisDb.JSON().SetAsync($"unit_measure:{id}", "$", dbUnitMeasure);
-                return dbUnitMeasure;
-            }
+            await _redisDb.StringSetAsync(negativeCacheKey, "1", TimeSpan.FromMinutes(5));
+            return null;
         }
-        return unitMeasure;
+        await _redisDb.JSON().SetAsync($"unit_measure:{id}", "$", dbUnitMeasure);
+        return dbUnitMeasure;
     }
 
     public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
     {
-        //return await _context.UnitMeasures.AnyAsync(um => um.Id == id, cancellationToken);
-        return await _redisDb.KeyExistsAsync($"unit_measure:{id}");
+        var redisKey = $"unit_measure:{id}";
+        var negativeCacheKey = $"unit_measure:{id}:notfound";
+        
+        if (await _redisDb.KeyExistsAsync(redisKey))
+            return true;
+        
+        if (await _redisDb.KeyExistsAsync(negativeCacheKey))
+            return false;
+        
+        var existsInDb = await _context.UnitMeasures.AnyAsync(um => um.Id == id, cancellationToken);
+
+        if (!existsInDb)
+            await _redisDb.StringSetAsync(negativeCacheKey, "1", TimeSpan.FromMinutes(5));
+        
+        return existsInDb;
     }
     
     public async Task<UnitMeasure?> AddAsync(UnitMeasure unitMeasure)

@@ -25,23 +25,41 @@ public class RedisProductTypeRepository: IProductTypeRepository
 
     public async Task<ProductType?> GetByIdAsync(int id)
     {
+        var negativeCacheKey = $"product_type:{id}:notfound";
+        if (await _redisDb.KeyExistsAsync(negativeCacheKey))
+            return null;
+
         var productType = await _redisDb.JSON().GetAsync<ProductType>($"product_type:{id}");
-        if (productType == null)
+        if (productType != null) 
+            return productType;
+        
+        var dbProductType = await _context.ProductTypes.FirstOrDefaultAsync(pt => pt.Id == id);
+        if (dbProductType == null)
         {
-            var dbProductType = await _context.ProductTypes.FirstOrDefaultAsync(pt => pt.Id == id);
-            if (dbProductType != null)
-            {
-                await _redisDb.JSON().SetAsync($"product_type:{id}", "$", dbProductType);
-                return dbProductType;
-            }
+            await _redisDb.StringSetAsync(negativeCacheKey, "1", TimeSpan.FromMinutes(5));
+            return null;
         }
-        return productType;
+        await _redisDb.JSON().SetAsync($"product_type:{id}", "$", dbProductType);
+        return dbProductType;
     }
     
     public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
     {
-        //return await _context.ProductTypes.AnyAsync(pt => pt.Id == id, cancellationToken);
-        return await _redisDb.KeyExistsAsync($"product_type:{id}");
+        var redisKey = $"product_type:{id}";
+        var negativeCacheKey = $"product_type:{id}:notfound";
+        
+        if (await _redisDb.KeyExistsAsync(redisKey))
+            return true;
+        
+        if (await _redisDb.KeyExistsAsync(negativeCacheKey))
+            return false;
+        
+        var existsInDb = await _context.ProductTypes.AnyAsync(pt => pt.Id == id, cancellationToken);
+
+        if (!existsInDb)
+            await _redisDb.StringSetAsync(negativeCacheKey, "1", TimeSpan.FromMinutes(5));
+        
+        return existsInDb;
     }
 
     public async Task<ProductType?> AddAsync(ProductType productType)

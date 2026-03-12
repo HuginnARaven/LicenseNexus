@@ -8,7 +8,7 @@ using LicenseNexus.DataSeeder;
 Console.WriteLine("Starting Data Seeder...");
 
 var configuration = new ConfigurationBuilder()
-    .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "./LicenseNexus.API"))
+    .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../LicenseNexus.API"))
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile("appsettings.Development.json", optional: true)
     .AddEnvironmentVariables()

@@ -301,14 +301,16 @@ public class DatabaseSeeder
         await _baseSqlContext.SaveChangesAsync();
         
         Console.WriteLine($"Saved {partners.Count} partners to SQL.");
-
-        foreach (var partner in partners)
+        
+        for (int i = 0; i < partners.Count; i++)
         {
+            var partner = partners[i];
+            var basePartner = basePartners[i];
             var addresses = GeneratePartnerAddresses(partner.Id);
             await _extendedSqlContext.PartnerAddresses.AddRangeAsync(addresses);
 
             var baseAddresses = addresses.Select(a => new PartnerAddress() {
-                PartnerId = partner.Id,
+                PartnerId = basePartner.Id,
                 AddressType = a.AddressType,
                 City = a.City,
                 AddressFull = a.AddressFull,
@@ -321,7 +323,7 @@ public class DatabaseSeeder
             await _extendedSqlContext.Customers.AddRangeAsync(customers);
             
             var baseCustomers = customers.Select(c => new Customer() {
-                PartnerId = partner.Id,
+                PartnerId = basePartner.Id,
                 AccountName = c.AccountName,
                 Email = c.Email,
                 LegalName = c.LegalName,

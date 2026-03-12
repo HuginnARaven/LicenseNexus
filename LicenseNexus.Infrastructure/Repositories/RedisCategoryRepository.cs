@@ -26,18 +26,32 @@ public class RedisCategoryRepository: ICategoryRepository
 
     public async Task<Category?> GetByIdAsync(int id)
     {
+        var negativeCacheKey = $"category:{id}:notfound";
+        if (await _redisDb.KeyExistsAsync(negativeCacheKey))
+            return null;
+        
         var category = await _redisDb.JSON().GetAsync<Category>($"category:{id}");
-        if (category == null)
+        if (category != null)
+            return category;
+        
+
+        var dbCategory = await _context.Categories.Include(c => c.ProductGroups).FirstOrDefaultAsync(c => c.Id == id);
+        if (dbCategory == null)
         {
-            var dbCategory = await _context.Categories.Include(c => c.ProductGroups).FirstOrDefaultAsync(c => c.Id == id);
-            if (dbCategory != null)
-            {
-                var redisCategory = MapToRedisReadyCategory(dbCategory);
-                await _redisDb.JSON().SetAsync($"category:{id}", "$", redisCategory);
-                return dbCategory;
-            }
+            await _redisDb.StringSetAsync(negativeCacheKey, "1", TimeSpan.FromMinutes(5));
+            return null;
         }
-        return category;
+
+        var redisCategory = MapToRedisReadyCategory(dbCategory);
+        await _redisDb.JSON().SetAsync($"category:{id}", "$", redisCategory);
+        
+        var hashEntries = dbCategory.ProductGroups
+            .Select(g => new HashEntry(g.Id.ToString(), dbCategory.Id.ToString()))
+            .ToArray();
+        if (hashEntries.Length != 0)
+            await _redisDb.HashSetAsync("pg_to_category_map", hashEntries);
+        
+        return redisCategory;
     }
 
     public async Task<Category?> AddAsync(Category category)
@@ -82,6 +96,25 @@ public class RedisCategoryRepository: ICategoryRepository
   
         await _context.SaveChangesAsync();
         await _redisDb.KeyDeleteAsync($"category:{id}");
+    }
+
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+    {
+        var hashKey = "pg_to_category_map";
+        var negativeCacheKey = $"category:{id}:notfound";
+        
+        if (await _redisDb.HashExistsAsync(hashKey, id.ToString()))
+            return true;
+        
+        if (await _redisDb.KeyExistsAsync(negativeCacheKey))
+            return false;
+        
+        var existsInDb = await _context.Categories.AnyAsync(c => c.Id == id, cancellationToken);
+
+        if (!existsInDb)
+            await _redisDb.StringSetAsync(negativeCacheKey, "1", TimeSpan.FromMinutes(5));
+
+        return existsInDb;
     }
 
     private Category MapToRedisReadyCategory(Category category)

@@ -1,6 +1,7 @@
 ﻿using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
 using LicenseNexus.Domain.Entities;
+using LicenseNexus.Domain.Exceptions;
 using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
@@ -49,6 +50,9 @@ public class UnitMeasureService(IUnitMeasureRepository unitMeasureRepository, IE
     
     public async Task UpdateUnitMeasure(int id, UnitMeasureRequestDto unitMeasureDto)
     {
+        if (!await unitMeasureRepository.ExistsAsync(id))
+            throw new NotFoundException($"Unit measure with ID {id} not found");
+        
         var unitMeasure = new UnitMeasure
         {
             Id = id,

@@ -2,6 +2,7 @@
 using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
 using LicenseNexus.Domain.Entities;
+using LicenseNexus.Domain.Exceptions;
 using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
@@ -47,6 +48,9 @@ public class VendorService(
     public async Task UpdateVendor(int id, VendorRequestDTO vendor)
     {
         await validator.ValidateAndThrowAsync(vendor);
+        if (!await vendorRepository.ExistsAsync(id))
+            throw new NotFoundException($"Vendor with ID {id} not found");
+        
         var newVendor = new Vendor
         {
             Id = id,

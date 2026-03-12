@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LicenseNexus.Infrastructure.Repositories;
 
-public class RedisTagRepository(ExtendedSqlContext context): ITagRepository
+public class RedisTagRepository(ExtendedSqlContext context): ITagRepository //TODO: implement caching
 {
     public async Task<IEnumerable<Tag>> GetAllAsync()
     {

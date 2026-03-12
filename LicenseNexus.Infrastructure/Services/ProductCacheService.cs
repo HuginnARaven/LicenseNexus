@@ -21,16 +21,17 @@ public class ProductCacheService : IProductCacheService
         _redisDb = redisContext.Database;
     }
 
-    public async Task CacheProductByIdAsync(int productId)
+    public async Task<ProductModel?> CacheProductByIdAsync(int productId)
     {
         var productEntity = await GetBaseQuery()
             .FirstOrDefaultAsync(p => p.Id == productId);
 
-        if (productEntity == null) return;
+        if (productEntity == null) return null;
             
         var redisModel = MapToRedisModel(productEntity);
         
         await CacheProductModelAsync(redisModel);
+        return redisModel;
     }
 
     public async Task CacheProductModelAsync(ProductModel productModel)

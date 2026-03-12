@@ -1,6 +1,7 @@
 ﻿using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
 using LicenseNexus.Domain.Entities;
+using LicenseNexus.Domain.Exceptions;
 using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
@@ -85,6 +86,9 @@ public class CategoryService(ICategoryRepository categoryRepository, IEventPubli
 
     public async Task UpdateCategory(int id, CategoryRequestDto category)
     {
+        if(!await categoryRepository.ExistsAsync(id))
+            throw new NotFoundException($"Category with ID {id} not found");
+        
         var updatedCategory = new Category
         {
             Id = id,

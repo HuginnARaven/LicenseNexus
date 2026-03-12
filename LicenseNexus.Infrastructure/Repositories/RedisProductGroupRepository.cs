@@ -27,39 +27,86 @@ public class RedisProductGroupRepository: IProductGroupRepository
 
     public async Task<ProductGroup?> GetByIdAsync(int id)
     {
+        var negativeCacheKey = $"product_group:{id}:notfound";
+        if (await _redisDb.KeyExistsAsync(negativeCacheKey))
+            return null;
+        
         var categoryIdVal = await _redisDb.HashGetAsync("pg_to_category_map", id);
-        Category? groupCategory = null;
-        
         if (!categoryIdVal.IsNull)
-            groupCategory = await _redisDb.JSON().GetAsync<Category>($"category:{categoryIdVal}");
-        
-        var productGroup = groupCategory?.ProductGroups?.FirstOrDefault(g => g.Id == id);
-
-        if (productGroup == null)
         {
-            var dbProductGroup = await _context.ProductGroups
-                .FirstOrDefaultAsync(p => p.Id == id);
-    
-            if (dbProductGroup != null)
+            var groupCategory = await _redisDb.JSON().GetAsync<Category>($"category:{categoryIdVal}");
+            var cachedProductGroup = groupCategory?.ProductGroups?.FirstOrDefault(g => g.Id == id);
+            if (cachedProductGroup != null)
+                return cachedProductGroup;
+        }
+        
+        var dbProductGroup = await _context.ProductGroups.FirstOrDefaultAsync(p => p.Id == id);
+        if (dbProductGroup == null)
+        {
+            await _redisDb.StringSetAsync(negativeCacheKey, "1", TimeSpan.FromMinutes(5));
+            return null;
+        }
+        
+        var productGroup = MapToRedisReadyProductGroup(dbProductGroup);
+        var categoryKey = $"category:{dbProductGroup.CategoryId}";
+        if (await _redisDb.KeyExistsAsync(categoryKey))
+        {
+            await _redisDb.HashSetAsync("pg_to_category_map", dbProductGroup.Id.ToString(), dbProductGroup.CategoryId.ToString());
+            await _redisDb.JSON().ArrAppendAsync(categoryKey, "$.ProductGroups", productGroup);
+        }
+        else //TODO: make separate method CacheCategoryByIdAsync in cache service
+        {
+            var dbCategory = await _context.Categories
+                .Include(c => c.ProductGroups)
+                .FirstOrDefaultAsync(c => c.Id == dbProductGroup.CategoryId);
+            if (dbCategory != null)
             {
-                productGroup = MapToRedisReadyProductGroup(dbProductGroup);
-                
-                var categoryKey = $"category:{dbProductGroup.CategoryId}";
-                if (await _redisDb.KeyExistsAsync(categoryKey))
-                {
-                    await _redisDb.HashSetAsync("pg_to_category_map", dbProductGroup.Id.ToString(), dbProductGroup.CategoryId.ToString());
-                    await _redisDb.JSON().ArrAppendAsync(categoryKey, "$.ProductGroups", productGroup);
-                }
+                var redisCategory = new Category() {
+                    Id = dbCategory.Id,
+                    CategoryName = dbCategory.CategoryName,
+                    IsActive = dbCategory.IsActive,
+                    Description = dbCategory.Description,
+                    CreatedDate = dbCategory.CreatedDate,
+                    Author = dbCategory.Author,
+                    ProductGroups = dbCategory.ProductGroups.Select(pg => new ProductGroup
+                    {
+                        Id = pg.Id,
+                        Name = pg.Name,
+                        IsActive = pg.IsActive,
+                        Note = pg.Note,
+                        CreatedDate = pg.CreatedDate,
+                        Author = pg.Author,
+                        CategoryId = pg.CategoryId
+                    }).ToList()
+                };
+                await _redisDb.JSON().SetAsync(categoryKey, "$", redisCategory);
+                var hashEntries = dbCategory.ProductGroups
+                    .Select(g => new HashEntry(g.Id.ToString(), dbCategory.Id.ToString()))
+                    .ToArray();
+                if (hashEntries.Any())
+                    await _redisDb.HashSetAsync("pg_to_category_map", hashEntries);
             }
         }
         return productGroup;
     }
-
+    
     public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
     {
-        //return await _context.ProductGroups.AnyAsync(pg => pg.Id == id, cancellationToken);
-        //return await _redisDb.KeyExistsAsync($"product_group:{id}");
-        return await _redisDb.HashExistsAsync("pg_to_category_map", id);
+        var hashKey = "pg_to_category_map";
+        var negativeCacheKey = $"product_group:{id}:notfound";
+        
+        if (await _redisDb.HashExistsAsync(hashKey, id.ToString()))
+            return true;
+        
+        if (await _redisDb.KeyExistsAsync(negativeCacheKey))
+            return false;
+        
+        var existsInDb = await _context.ProductGroups.AnyAsync(pg => pg.Id == id, cancellationToken);
+
+        if (!existsInDb)
+            await _redisDb.StringSetAsync(negativeCacheKey, "1", TimeSpan.FromMinutes(5));
+        
+        return existsInDb;
     }
     
     public async Task<ProductGroup?> AddAsync(ProductGroup group)

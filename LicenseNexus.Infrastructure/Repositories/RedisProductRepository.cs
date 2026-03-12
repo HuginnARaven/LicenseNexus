@@ -28,19 +28,25 @@ public class RedisProductRepository: IProductRepository
     
     public async Task<ProductModel?> GetByIdAsync(int id)
     {
-        var product = await _redisDb.JSON().GetAsync<ProductModel>($"product:{id}");
-        if (product == null)
+        var redisKey = $"product:{id}";
+        var negativeCacheKey = $"product:{id}:notfound";
+        
+        var product = await _redisDb.JSON().GetAsync<ProductModel>(redisKey);
+        if (product != null)
+            return product;
+        
+        if (await _redisDb.KeyExistsAsync(negativeCacheKey))
+            return null;
+        
+        var existsInDb = await _sqlContext.Products.AnyAsync(p => p.Id == id);
+        if (!existsInDb)
         {
-            var dbProduct = await _sqlContext.Products.FirstOrDefaultAsync(p => p.Id == id);
-    
-            if (dbProduct != null)
-            {
-                await _cache.CacheProductByIdAsync(id);
-                product = await _redisDb.JSON().GetAsync<ProductModel>($"product:{id}");
-            }
+            await _redisDb.StringSetAsync(negativeCacheKey, "1", TimeSpan.FromMinutes(5));
+            return null;
         }
-    
-        return product;
+        
+        await _cache.CacheProductByIdAsync(id);
+        return await _cache.CacheProductByIdAsync(id);
     }
 
     public async Task<IEnumerable<ProductModel>> GetAllAsync()
@@ -69,8 +75,21 @@ public class RedisProductRepository: IProductRepository
 
     public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
     {
-        //return await _sqlContext.Products.AnyAsync(p => p.Id == id, cancellationToken);
-        return await _redisDb.KeyExistsAsync($"product:{id}");
+        var redisKey = $"product:{id}";
+        var negativeCacheKey = $"product:{id}:notfound";
+        
+        if (await _redisDb.KeyExistsAsync(redisKey))
+            return true;
+        
+        if (await _redisDb.KeyExistsAsync(negativeCacheKey))
+            return false;
+        
+        var existsInDb = await _sqlContext.Products.AnyAsync(p => p.Id == id, cancellationToken);
+
+        if (!existsInDb)
+            await _redisDb.StringSetAsync(negativeCacheKey, "1", TimeSpan.FromMinutes(5));
+        
+        return existsInDb;
     }
 
     public async Task<bool> ExistsPriceAsync(long priceId, long productId, CancellationToken cancellationToken = default)

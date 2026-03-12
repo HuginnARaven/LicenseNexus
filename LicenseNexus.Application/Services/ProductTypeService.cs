@@ -1,6 +1,7 @@
 ﻿using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
 using LicenseNexus.Domain.Entities;
+using LicenseNexus.Domain.Exceptions;
 using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
@@ -49,6 +50,9 @@ public class ProductTypeService(IProductTypeRepository productTypeRepository, IE
 
     public async Task UpdateProductType(int id, ProductTypeRequestDto productTypeDto)
     {
+        if(!await productTypeRepository.ExistsAsync(id))
+            throw new NotFoundException($"Product type with ID {id} not found");
+        
         var productType = new ProductType
         {
             Id = id,

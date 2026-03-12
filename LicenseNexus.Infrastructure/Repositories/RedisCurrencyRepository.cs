@@ -40,8 +40,21 @@ public class RedisCurrencyRepository: ICurrencyRepository
     
     public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
     {
-        //return await _context.Currencies.AnyAsync(p => p.Id == id, cancellationToken);
-        return await _redisDb.KeyExistsAsync($"currency:{id}");
+        var redisKey = $"currency:{id}";
+        var negativeCacheKey = $"currency:{id}:notfound";
+        
+        if (await _redisDb.KeyExistsAsync(redisKey))
+            return true;
+        
+        if (await _redisDb.KeyExistsAsync(negativeCacheKey))
+            return false;
+        
+        var existsInDb = await _context.Currencies.AnyAsync(c => c.Id == id, cancellationToken);
+
+        if (!existsInDb)
+            await _redisDb.StringSetAsync(negativeCacheKey, "1", TimeSpan.FromMinutes(5));
+        
+        return existsInDb;
     }
 
     public async Task<Currency?> AddAsync(Currency currency)

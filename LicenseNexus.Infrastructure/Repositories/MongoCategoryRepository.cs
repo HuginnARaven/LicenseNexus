@@ -110,4 +110,9 @@ public class MongoCategoryRepository: ICategoryRepository
         var deleteFilter = Builders<CategoryDocument>.Filter.Eq(c => c.Id, id);
         await _context.Categories.DeleteOneAsync(deleteFilter);
     }
+
+    public Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+    {
+        return _context.Categories.Find(c => c.Id == id).AnyAsync(cancellationToken);
+    }
 }
