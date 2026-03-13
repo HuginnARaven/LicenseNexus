@@ -20,7 +20,7 @@ GET {{API_HostAddress}}/ProductType/{{new_product_type_id}}/
 Accept: application/json
 
 ### editlProductType
-PUT {{API_HostAddress}}/ProductType/{{new_product_type_id}}/
+PUT {{API_HostAddress}}/ProductType/11020/
 Content-Type: application/json
 
 {

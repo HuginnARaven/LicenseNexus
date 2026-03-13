@@ -27,9 +27,9 @@ PUT {{API_HostAddress}}/Category/{{new_category_id}}/
 Content-Type: application/json
 
 {
-  "categoryName": "TestBestCategory1",
+  "categoryName": "TestBestCategory",
   "isActive": false,
-  "description": "Category4 Description",
+  "description": "Category Description",
   "author": "Toaster"
 }
 

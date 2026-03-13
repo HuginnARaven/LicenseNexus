@@ -28,8 +28,8 @@ PUT {{API_HostAddress}}/ProductGroup/{{new_product_group_id}}/
 Content-Type: application/json
 
 {
-  "name": "QuestProductGroup5",
+  "name": "QuestProductGroup",
   "isActive": false,
-  "note": "ProductGroup1 description",
+  "note": "ProductGroup description",
   "author": "Test"
 }

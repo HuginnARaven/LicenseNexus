@@ -1,9 +1,12 @@
-﻿using LicenseNexus.Domain.Entities;
+﻿using System.Text.Json;
+using LicenseNexus.Domain.Entities;
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Domain.Models;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
 using NRedisStack;
+using NRedisStack.RedisStackCommands;
+using NRedisStack.Search;
 using StackExchange.Redis;
 
 namespace LicenseNexus.Infrastructure.Services;
@@ -21,12 +24,10 @@ public class RedisProductSyncService : IProductSyncService
     
     public async Task UpdateVendorAsync(Vendor vendor, CancellationToken ct)
     {
-        var indexKey = $"idx:vendor:{vendor.Id}:products";
-        var productIds = await _redisDb.SetMembersAsync(indexKey);
-        if (productIds.Length == 0) return;
-        
-        var pipeline = new Pipeline(_redisDb);
-        var updateTasks = new List<Task>();
+        int batchSize = 10000;
+        int skip = 0;
+        long totalResults = 0;
+
         var newVendor = new VendorModel
         {
             Id = vendor.Id,
@@ -34,75 +35,124 @@ public class RedisProductSyncService : IProductSyncService
             CountryCode = vendor.CountryCode,
         };
 
-        foreach (var productId in productIds)
+        do
         {
-            var productKey = $"product:{productId}";
+            var query = new Query($"@VendorId:[{vendor.Id} {vendor.Id}]").Limit(skip, batchSize).ReturnFields("Id");
+            var searchResult = await _redisDb.FT().SearchAsync("idx:products", query);
+            totalResults = searchResult.TotalResults;
+            if (searchResult.Documents.Count == 0) break;
+            
+            var pipeline = new Pipeline(_redisDb);
+            var updateTasks = new List<Task>();
 
-            updateTasks.Add(pipeline.Json.SetAsync(productKey, "$.Classification.Vendor", newVendor));
-        }
-        
-        pipeline.Execute();
-        await Task.WhenAll(updateTasks);
+            foreach (var doc in searchResult.Documents)
+            {
+                var productKey = doc.Id; 
+                updateTasks.Add(pipeline.Json.SetAsync(productKey, "$.Classification.Vendor", newVendor));
+            }
+
+            pipeline.Execute();
+            await Task.WhenAll(updateTasks);
+
+            skip += batchSize;
+
+        } while (skip < totalResults);
     }
-
+    
     public async Task UpdateCategoryAsync(Category category, CancellationToken ct)
     {
-        var indexKey = $"idx:category:{category.Id}:products";
-        var productIds = await _redisDb.SetMembersAsync(indexKey);
-        if (productIds.Length == 0) return;
-        
-        
-        var pipeline = new Pipeline(_redisDb);
-        var updateTasks = new List<Task>();
-        
-        foreach (var productId in productIds)
+        int batchSize = 10000;
+        int skip = 0;
+        long totalResults = 0;
+
+        var categoryName = JsonSerializer.Serialize(category.CategoryName);
+
+        do
         {
-            var productKey = $"product:{productId}";
-            updateTasks.Add(pipeline.Json.SetAsync(productKey, "$.Classification.Group.CategoryName", $"\"{category.CategoryName}\""));
-        }
+            var query = new Query($"@CategoryId:[{category.Id} {category.Id}]").Limit(skip, batchSize).ReturnFields("Id");
+            var searchResult = await _redisDb.FT().SearchAsync("idx:products", query);
+            totalResults = searchResult.TotalResults;
+            if (searchResult.Documents.Count == 0) break;
+            
+            var pipeline = new Pipeline(_redisDb);
+            var updateTasks = new List<Task>();
 
-        pipeline.Execute();
-        await Task.WhenAll(updateTasks);
+            foreach (var doc in searchResult.Documents)
+            {
+                var productKey = doc.Id; 
+                updateTasks.Add(pipeline.Json.SetAsync(productKey, "$.Classification.Group.CategoryName", categoryName));
+            }
+
+            pipeline.Execute();
+            await Task.WhenAll(updateTasks);
+
+            skip += batchSize;
+
+        } while (skip < totalResults);
     }
-
+    
     public async Task UpdateGroupAsync(ProductGroup group, CancellationToken ct)
     {
-        var indexKey = $"idx:group:{group.Id}:products";
-        var productIds = await _redisDb.SetMembersAsync(indexKey);
-    
-        if (productIds.Length == 0) return;
-    
-        var pipeline = new Pipeline(_redisDb);
-        var updateTasks = new List<Task>();
-    
-        foreach (var productId in productIds)
-        {
-            Console.WriteLine("productId" + productId);
-            var productKey = $"product:{productId}";
-            updateTasks.Add(pipeline.Json.SetAsync(productKey, "$.Classification.Group.Name", $"\"{group.Name}\""));
-        }
-    
-        pipeline.Execute();
-        await Task.WhenAll(updateTasks);
-    }
+        int batchSize = 10000;
+        int skip = 0;
+        long totalResults = 0;
 
+        var groupName = JsonSerializer.Serialize(group.Name);
+
+        do
+        {
+            var query = new Query($"@GroupId:[{group.Id} {group.Id}]").Limit(skip, batchSize).ReturnFields("Id");
+            var searchResult = await _redisDb.FT().SearchAsync("idx:products", query);
+            totalResults = searchResult.TotalResults;
+            if (searchResult.Documents.Count == 0) break;
+            
+            var pipeline = new Pipeline(_redisDb);
+            var updateTasks = new List<Task>();
+
+            foreach (var doc in searchResult.Documents)
+            {
+                var productKey = doc.Id; 
+                updateTasks.Add(pipeline.Json.SetAsync(productKey, "$.Classification.Group.Name", $"\"{group.Name}\""));
+            }
+
+            pipeline.Execute();
+            await Task.WhenAll(updateTasks);
+
+            skip += batchSize;
+
+        } while (skip < totalResults);
+    }
+    
     public async Task UpdateProductTypeAsync(ProductType productType, CancellationToken ct)
     {
-        var indexKey = $"idx:product_type:{productType.Id}:products";
-        var productIds = await _redisDb.SetMembersAsync(indexKey);
-        if (productIds.Length == 0) return;
-        
-        var pipeline = new Pipeline(_redisDb);
-        var updateTasks = new List<Task>();
-        
-        foreach (var productId in productIds)
+        int batchSize = 10000;
+        int skip = 0;
+        long totalResults = 0;
+
+        var productTypeName = JsonSerializer.Serialize(productType.TypeName);
+
+        do
         {
-            var productKey = $"product:{productId}";
-            updateTasks.Add(pipeline.Json.SetAsync(productKey, "$.Classification.TypeName", $"\"{productType.TypeName}\""));
-        }
-        
-        pipeline.Execute();
-        await Task.WhenAll(updateTasks);
+            var query = new Query($"@TypeId:[{productType.Id} {productType.Id}]").Limit(skip, batchSize).ReturnFields("Id");
+            var searchResult = await _redisDb.FT().SearchAsync("idx:products", query);
+            totalResults = searchResult.TotalResults;
+            if (searchResult.Documents.Count == 0) break;
+            
+            var pipeline = new Pipeline(_redisDb);
+            var updateTasks = new List<Task>();
+
+            foreach (var doc in searchResult.Documents)
+            {
+                var productKey = doc.Id; 
+                updateTasks.Add(pipeline.Json.SetAsync(productKey, "$.Classification.TypeName", productTypeName));
+            }
+
+            pipeline.Execute();
+            await Task.WhenAll(updateTasks);
+
+            skip += batchSize;
+
+        } while (skip < totalResults);
     }
 
     public async Task UpdateUnitMeasureAsync(UnitMeasure unitMeasure, CancellationToken ct)

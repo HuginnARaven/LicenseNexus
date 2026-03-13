@@ -104,7 +104,7 @@ var textSearchScenario = TextSearchScenarioBuilder.Build(httpClient, baseUrl, co
 HardwareMonitor.Start("./reports/load_test_metrics.csv");
 
 NBomberRunner
-    .RegisterScenarios(writeScenario)
+    .RegisterScenarios(readScenario)
     .WithReportFileName("load_test_report")
     .WithReportFolder("./reports")
     .WithReportFormats(ReportFormat.Html, ReportFormat.Md)

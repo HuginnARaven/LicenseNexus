@@ -33,6 +33,10 @@ Content-Type: application/json
 GET {{API_HostAddress}}/Product/
 Accept: application/json
 
+### getPaginatedProducts
+GET {{API_HostAddress}}/Product/catalog?CategoryId=16036&GroupId=14132
+Accept: application/json
+
 ### getProductByID
 GET {{API_HostAddress}}/Product/{{new_product_id}}/
 Accept: application/json

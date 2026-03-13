@@ -36,7 +36,7 @@ public class DatabaseSeeder
         await ClearDataAsync();
 
         // 2. Generate and Save Vendors
-        var vendors = GenerateVendors(10);
+        var vendors = GenerateVendors(30);
         await _extendedSqlContext.Vendors.AddRangeAsync(vendors);
         await _extendedSqlContext.SaveChangesAsync();
         Console.WriteLine($"Saved {vendors.Count} vendors to SQL.");
@@ -61,7 +61,7 @@ public class DatabaseSeeder
         }
 
         // 3. Generate and Save Categories & ProductGroups
-        var categories = GenerateCategories(5);
+        var categories = GenerateCategories(15);
         await _extendedSqlContext.Categories.AddRangeAsync(categories);
         await _extendedSqlContext.SaveChangesAsync();
         Console.WriteLine($"Saved {categories.Count} categories to SQL.");
@@ -70,7 +70,7 @@ public class DatabaseSeeder
         var maxProdutGroupId = 0;
         foreach (var cat in categories)
         {
-            var groups = GenerateProductGroups(3, cat.Id);
+            var groups = GenerateProductGroups(5, cat.Id);
             await _extendedSqlContext.ProductGroups.AddRangeAsync(groups);
             await _extendedSqlContext.SaveChangesAsync(); // Save groups to get IDs
             
@@ -184,7 +184,7 @@ public class DatabaseSeeder
         }
 
         // 7. Generate and Save Tags
-        var tags = GenerateTags(20);
+        var tags = GenerateTags(50);
         await _extendedSqlContext.Tags.AddRangeAsync(tags);
         await _extendedSqlContext.SaveChangesAsync();
         Console.WriteLine($"Saved {tags.Count} tags to SQL.");
@@ -208,7 +208,7 @@ public class DatabaseSeeder
         // 8. Generate and Save Products
         var allGroups = await _extendedSqlContext.ProductGroups.Include(g => g.Category).ToListAsync();
         
-        var products = GenerateProducts(100, vendors, productTypes, unitMeasures, currencies, allGroups);
+        var products = GenerateProducts(5000, vendors, productTypes, unitMeasures, currencies, allGroups);
         
         await _extendedSqlContext.Products.AddRangeAsync(products);
         await _extendedSqlContext.SaveChangesAsync();

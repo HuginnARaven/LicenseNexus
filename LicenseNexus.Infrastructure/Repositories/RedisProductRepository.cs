@@ -98,109 +98,78 @@ public class RedisProductRepository: IProductRepository
     }
 
     public async Task<PaginatedResult<ProductModel>> GetPaginatedAsync(
-        int page, int pageSize, 
-        int? categoryId, int? groupId, 
-        int? vendorId, string? search,
-        double? priceFrom, double? priceTo)
+    int page, int pageSize, 
+    int? categoryId, int? groupId, 
+    int? vendorId, string? search,
+    double? priceFrom, double? priceTo)
     {
+        // var rawKeyName = $"{page}|{pageSize}|{categoryId}|{groupId}|{vendorId}|{search}|{priceFrom}|{priceTo}";
+        //
+        // using var sha256 = System.Security.Cryptography.SHA256.Create();
+        // var hashBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(rawKeyName));
+        // var hashString = Convert.ToBase64String(hashBytes).Replace("/", "_").Replace("+", "-").Substring(0, 20);
+        //
+        // var cacheKey = $"search:req:{hashString}";
+        //
+        // var cachedResult = await _redisDb.StringGetAsync(cacheKey);
+        // if (cachedResult.HasValue)
+        // {
+        //     return JsonSerializer.Deserialize<PaginatedResult<ProductModel>>((string)cachedResult!)!;
+        // }
+        
         var skip = (page - 1) * pageSize;
         var take = pageSize;
         
-        var keysToIntersect = new List<RedisKey>();
-        
-        keysToIntersect.Add("idx:price:products");
+        var queryParts = new List<string>();
+        if (categoryId.HasValue) queryParts.Add($"@CategoryId:[{categoryId.Value} {categoryId.Value}]");
+        if (groupId.HasValue) queryParts.Add($"@GroupId:[{groupId.Value} {groupId.Value}]");
+        if (vendorId.HasValue) queryParts.Add($"@VendorId:[{vendorId.Value} {vendorId.Value}]");
 
-        if (categoryId.HasValue)
-            keysToIntersect.Add($"idx:category:{categoryId.Value}:products");
+        if (priceFrom.HasValue || priceTo.HasValue)
+        {
+            string minPrice = priceFrom.HasValue ? priceFrom.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "-inf";
+            string maxPrice = priceTo.HasValue ? priceTo.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "+inf";
+            queryParts.Add($"@Price:[{minPrice} {maxPrice}]");
+        }
 
-        if (groupId.HasValue)
-            keysToIntersect.Add($"idx:group:{groupId.Value}:products");
-
-        if (vendorId.HasValue)
-            keysToIntersect.Add($"idx:vendor:{vendorId.Value}:products");
-        
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var tokens = SearchTokenizer.Tokenize(search);
-            foreach (var token in tokens)
-            {
-                keysToIntersect.Add($"idx:word:{token}:products");
-            }
+            var cleanSearch = search.Trim().Replace("-", "\\-"); 
+            queryParts.Add($"@Title:({cleanSearch})");
         }
-        
-        string searchKey;
-        bool isTempKey = false;
 
-        if (keysToIntersect.Count == 1)
-        {
-            searchKey = "idx:price:products";
-        }
-        else
-        {
-            searchKey = $"temp:search:{Guid.NewGuid()}";
-            isTempKey = true;
+        string queryString = queryParts.Count > 0 ? string.Join(" ", queryParts) : "*";
 
-            await _redisDb.SortedSetCombineAndStoreAsync(SetOperation.Intersect, searchKey, keysToIntersect.ToArray());
-            await _redisDb.KeyExpireAsync(searchKey, TimeSpan.FromMinutes(1));
-        }
-        
-        double minPrice = priceFrom.HasValue ? (double)priceFrom.Value : double.NegativeInfinity;
-        double maxPrice = priceTo.HasValue ? (double)priceTo.Value : double.PositiveInfinity;
-        
-        var totalCount = await _redisDb.SortedSetLengthAsync(searchKey, minPrice, maxPrice);
+        var query = new Query(queryString)
+            .Limit(skip, take)
+            .Dialect(2);
 
-        if (totalCount == 0)
-        {
-            if (isTempKey) await _redisDb.KeyDeleteAsync(searchKey);
-            return new PaginatedResult<ProductModel> { Items = new(), TotalCount = 0, Page = page, PageSize = pageSize };
-        }
-        
-        var productIds = await _redisDb.SortedSetRangeByScoreAsync(
-            searchKey, 
-            minPrice, 
-            maxPrice, 
-            Exclude.None, 
-            StackExchange.Redis.Order.Ascending,
-            skip, 
-            take);
-        
-        var productKeys = productIds.Select(id => (RedisKey)$"product:{id}").ToArray();
-        if (productKeys.Length == 0)
-        {
-            if (isTempKey) await _redisDb.KeyDeleteAsync(searchKey);
-            return new PaginatedResult<ProductModel> 
-            { 
-                Items = new List<ProductModel>(), 
-                TotalCount = totalCount,
-                Page = page, 
-                PageSize = pageSize 
-            };
-        }
-        var jsonResults = await _redisDb.JSON().MGetAsync(productKeys, "$");
+        var searchResult = await _redisDb.FT().SearchAsync("idx:products", query);
         var products = new List<ProductModel>();
-        foreach (var result in jsonResults)
+        foreach (var doc in searchResult.Documents)
         {
-            if (!result.IsNull)
+            var json = doc["json"];
+            if (!string.IsNullOrEmpty(json))
             {
-                var deserializedArray = JsonSerializer.Deserialize<ProductModel[]>((string)result!);
-                if (deserializedArray != null && deserializedArray.Length > 0)
-                {
-                    products.Add(deserializedArray[0]);
-                }
+                var product = JsonSerializer.Deserialize<ProductModel>((string)json!);
+                if (product != null) products.Add(product);
             }
         }
-        
-        if (isTempKey) await _redisDb.KeyDeleteAsync(searchKey);
 
-        return new PaginatedResult<ProductModel>
+        var result = new PaginatedResult<ProductModel>
         {
-            Items = products!,
-            TotalCount = totalCount,
+            Items = products,
+            TotalCount = searchResult.TotalResults,
             Page = page,
             PageSize = pageSize
         };
-    }
 
+        // var serializedResult = JsonSerializer.Serialize(result);
+        // await _redisDb.StringSetAsync(cacheKey, serializedResult, TimeSpan.FromSeconds(60));
+
+        return result;
+    }
+    
     public async Task<ProductModel?> AddAsync(ProductModel productModel)
     {
         var product = MapToDomain(productModel);
@@ -249,22 +218,8 @@ public class RedisProductRepository: IProductRepository
 
         if (!string.IsNullOrWhiteSpace(updates.Title))
         {
-            if (isCached)
-            {
-                var oldTokens = SearchTokenizer.Tokenize(product.Title);
-                foreach (var t in oldTokens)
-                    cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:word:{t}:products", id));
-            }
-
             product.Title = updates.Title;
             if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Title", JsonSerializer.Serialize(updates.Title)));
-
-            if (isCached)
-            {
-                var newTokens = SearchTokenizer.Tokenize(product.Title);
-                foreach (var t in newTokens)
-                    cacheTasks.Add(pipeline!.Db.SetAddAsync($"idx:word:{t}:products", id));
-            }
         }
         
         if (!string.IsNullOrWhiteSpace(updates.ShortDescription))
@@ -333,7 +288,6 @@ public class RedisProductRepository: IProductRepository
                             await _sqlContext.Vendors.AsNoTracking().FirstOrDefaultAsync(e => e.Id == updates.VendorId);
             if (newVendor != null)
             {
-                if (isCached) cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:vendor:{product.VendorId}:products", id));
                 product.VendorId = newVendor.Id;
                 if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.Vendor",  new VendorModel
                 {
@@ -341,7 +295,6 @@ public class RedisProductRepository: IProductRepository
                     Name = newVendor.Name,
                     CountryCode = newVendor.CountryCode
                 }));
-                if (isCached) cacheTasks.Add(pipeline!.Db.SetAddAsync($"idx:vendor:{newVendor.Id}:products", id));
             }
         }
         
@@ -351,11 +304,9 @@ public class RedisProductRepository: IProductRepository
                           await _sqlContext.ProductTypes.AsNoTracking().FirstOrDefaultAsync(e => e.Id == updates.ProductTypeId);
             if (newType != null)
             {
-                if (isCached) cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:product_type:{product.ProductTypeId}:products", id));
                 product.ProductTypeId = newType.Id;
                 if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.TypeId", newType.Id));
                 if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.TypeName", $"\"{newType.TypeName}\""));
-                if (isCached) cacheTasks.Add(pipeline!.Db.SetAddAsync($"idx:product_type:{newType.Id}:products", id));
             }
         }
         
@@ -424,9 +375,6 @@ public class RedisProductRepository: IProductRepository
                             .Select(e => e.CategoryId)
                             .FirstOrDefaultAsync(); ;
                     
-                    cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:group:{product.ProductGroupId}:products", id));
-                    cacheTasks.Add(pipeline!.Db.SetRemoveAsync($"idx:category:{oldCategoryId}:products", id));
-                    
                     cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.Group",  new GroupModel()
                     {
                         Id = newGroup.Id,
@@ -434,9 +382,6 @@ public class RedisProductRepository: IProductRepository
                         CategoryId = newCategory.Id, 
                         CategoryName = newCategory.CategoryName 
                     }));
-                    
-                    cacheTasks.Add(pipeline!.Db.SetAddAsync($"idx:group:{newGroup.Id}:products", id));
-                    cacheTasks.Add(pipeline!.Db.SetAddAsync($"idx:category:{newCategory.Id}:products", id));
                 }
             }
         }
