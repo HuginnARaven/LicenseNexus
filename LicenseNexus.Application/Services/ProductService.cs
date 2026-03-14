@@ -32,7 +32,7 @@ public class ProductService(
         return await productRepository.GetAllAsync();
     }
 
-    public async Task<PaginatedResult<ProductModel>> GetPaginatedAsync(ProductFilterDto filter)
+    public async Task<PaginatedResult<ProductListItemModel>> GetPaginatedAsync(ProductFilterDto filter)
     {
         return await productRepository.GetPaginatedAsync(
             filter.Page, 

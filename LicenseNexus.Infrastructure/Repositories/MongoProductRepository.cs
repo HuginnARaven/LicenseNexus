@@ -43,7 +43,7 @@ public class MongoProductRepository : IProductRepository
         return await _collection.Find(filter).AnyAsync(cancellationToken);
     }
 
-    public async Task<PaginatedResult<ProductModel>> GetPaginatedAsync(
+    public async Task<PaginatedResult<ProductListItemModel>> GetPaginatedAsync(
         int page, int pageSize, 
         int? categoryId, int? groupId, 
         int? vendorId, string? search,
@@ -69,8 +69,6 @@ public class MongoProductRepository : IProductRepository
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            // filter &= builder.Regex(x => x.Title, new MongoDB.Bson.BsonRegularExpression(search, "i")) |
-            //           builder.Regex(x => x.Sku, new MongoDB.Bson.BsonRegularExpression(search, "i"));
             filter &= builder.Text(search);
         }
 
@@ -95,9 +93,9 @@ public class MongoProductRepository : IProductRepository
             .Limit(pageSize)
             .ToListAsync();
 
-        return new PaginatedResult<ProductModel>
+        return new PaginatedResult<ProductListItemModel>
         {
-            Items = documents.Select(MapToModel).ToList(),
+            Items = documents.Select(MapToListItemModel).ToList(),
             TotalCount = (int)totalCount,
             Page = page,
             PageSize = pageSize
@@ -465,6 +463,24 @@ public class MongoProductRepository : IProductRepository
                 CountryCode = p.CountryCode,
                 StartDate = p.StartDate
             }).ToList()
+        };
+    }
+
+    private ProductListItemModel MapToListItemModel(ProductDocument doc)
+    {
+        return new ProductListItemModel
+        {
+            Id = doc.ProductId,
+            Sku = doc.Sku,
+            Title = doc.Title,
+            VendorName = doc.Classification.Vendor.Name,
+            CategoryName = doc.Classification.Group.CategoryName,
+            IsPromo = doc.Attributes.IsPromo,
+            IsTop = doc.Attributes.IsTop,
+            IsNew = doc.Attributes.IsNew,
+            Logo = doc.Attributes.Logo,
+            CurrencyLiteralCode = doc.Currency.LiteralCode,
+            BasePrice = doc.Prices.FirstOrDefault()?.Price ?? 0
         };
     }
 }

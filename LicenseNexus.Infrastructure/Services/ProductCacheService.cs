@@ -50,6 +50,7 @@ public class ProductCacheService : IProductCacheService
 
     public async Task CacheAllProductsAsync()
     {
+        await _redisDb.ExecuteAsync("flushall");
         var allProducts = await GetBaseQuery().ToListAsync();
         var allVendors = await _sqlContext.Vendors.ToListAsync();
         var allProductTypes = await _sqlContext.ProductTypes.ToListAsync();

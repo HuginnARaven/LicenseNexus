@@ -8,7 +8,7 @@ public interface IProductService
 {
     Task<ProductModel?> GetByIdAsync(int id);
     Task<IEnumerable<ProductModel>> GetAllAsync();
-    Task<PaginatedResult<ProductModel>> GetPaginatedAsync(ProductFilterDto filter);
+    Task<PaginatedResult<ProductListItemModel>> GetPaginatedAsync(ProductFilterDto filter);
     Task<ProductModel?> AddAsync(ProductRequestDto product);
     Task UpdateAsync(int id, ProductRequestDto product);
     Task PatchAsync(int id, ProductPatchFieldsDto updates);

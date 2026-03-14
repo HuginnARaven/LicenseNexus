@@ -96,7 +96,7 @@ public class RedisProductRepository: IProductRepository
         return await _sqlContext.ProductPrices.AnyAsync(p => p.Id == priceId && p.ProductId == productId, cancellationToken);
     }
 
-    public async Task<PaginatedResult<ProductModel>> GetPaginatedAsync(
+    public async Task<PaginatedResult<ProductListItemModel>> GetPaginatedAsync(
     int page, int pageSize, 
     int? categoryId, int? groupId, 
     int? vendorId, string? search,
@@ -144,18 +144,18 @@ public class RedisProductRepository: IProductRepository
             .Dialect(2);
 
         var searchResult = await _redisDb.FT().SearchAsync("idx:products", query);
-        var products = new List<ProductModel>();
+        var products = new List<ProductListItemModel>();
         foreach (var doc in searchResult.Documents)
         {
             var json = doc["json"];
             if (!string.IsNullOrEmpty(json))
             {
-                var product = JsonSerializer.Deserialize<ProductModel>((string)json!);
+                var product = JsonSerializer.Deserialize<ProductListItemModel>((string)json!);
                 if (product != null) products.Add(product);
             }
         }
 
-        var result = new PaginatedResult<ProductModel>
+        var result = new PaginatedResult<ProductListItemModel>
         {
             Items = products,
             TotalCount = searchResult.TotalResults,
