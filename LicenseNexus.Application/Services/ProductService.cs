@@ -19,7 +19,7 @@ public class ProductService(
     ITagRepository tagRepository,
     IValidator<ProductRequestDto> productRequestValidator,
     IValidator<ProductPriceRequestDto> productPriceRequestValidator,
-    IValidator<ProductPatchFields> productPatchFieldsValidator
+    IValidator<ProductPatchFieldsDto> productPatchFieldsDtoValidator
     ): IProductService
 {
     public async Task<ProductModel?> GetByIdAsync(int id)
@@ -67,12 +67,78 @@ public class ProductService(
         await productRepository.UpdateAsync(model);
     }
 
-    public async Task PatchAsync(int id, ProductPatchFields updates)
+    public async Task PatchAsync(int id, ProductPatchFieldsDto updates)
     {
-        await productPatchFieldsValidator.ValidateAndThrowAsync(updates);
+        await productPatchFieldsDtoValidator.ValidateAndThrowAsync(updates);
         if (!await productRepository.ExistsAsync(id))
             throw new NotFoundException($"Product with ID {id} not found");
-        await productRepository.PatchAsync(id, updates);
+
+        var patchFieldsModel = new ProductPatchFieldsModel
+        {
+            Sku = updates.Sku,
+            Title = updates.Title,
+            ShortDescription = updates.ShortDescription,
+            QuantityMin = updates.QuantityMin,
+            QuantityMax = updates.QuantityMax,
+            StartDate = updates.StartDate,
+            EndDate = updates.EndDate,
+            IsPromo = updates.IsPromo,
+            IsTop = updates.IsTop,
+            IsNew = updates.IsNew,
+            Logo = updates.Logo,
+            Author = updates.Author,
+        };
+
+        if (updates.UnitMeasureId.HasValue)
+        {
+            var unitMeasure = await unitMeasureRepository.GetByIdAsync((int)updates.UnitMeasureId);
+            patchFieldsModel.UnitMeasureId = unitMeasure!.Id;
+            patchFieldsModel.UnitMeasureName = unitMeasure.Name;
+        }
+        
+        if (updates.ProductTypeId.HasValue)
+        {
+            var productType = await productTypeRepository.GetByIdAsync((int)updates.ProductTypeId);
+            patchFieldsModel.ProductTypeId = productType!.Id;
+            patchFieldsModel.ProductTypeName = productType.TypeName;
+        }
+
+        if (updates.VendorId.HasValue)
+        {
+            var vendor = await vendorRepository.GetByIdAsync((int)updates.VendorId);
+            patchFieldsModel.Vendor = new VendorModel
+            {
+                Id = vendor!.Id,
+                Name = vendor.Name,
+                CountryCode = vendor.CountryCode
+            };
+        }
+
+        if (updates.ProductGroupId.HasValue)
+        {
+            var group = await productGroupRepository.GetByIdAsync((int)updates.ProductGroupId);
+            var category = await categoryRepository.GetByIdAsync(group!.CategoryId);
+            patchFieldsModel.Group = new GroupModel
+            {
+                Id = group.Id,
+                Name = group.Name,
+                CategoryId = group.CategoryId,
+                CategoryName = category?.CategoryName ?? ""
+            };
+        }
+
+        if (updates.CurrencyId.HasValue)
+        {
+            var currency = await currencyRepository.GetByIdAsync((int)updates.CurrencyId);
+            patchFieldsModel.Currency = new CurrencyModel
+            {
+                Id = currency!.Id,
+                Name = currency.Name,
+                LiteralCode = currency.LiteralCode
+            };
+        }
+        
+        await productRepository.PatchAsync(id, patchFieldsModel);
     }
 
     public async Task DeleteAsync(int id)

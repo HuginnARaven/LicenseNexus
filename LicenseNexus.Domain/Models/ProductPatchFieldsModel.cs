@@ -1,6 +1,6 @@
 ﻿namespace LicenseNexus.Domain.Models;
 
-public class ProductPatchFields
+public class ProductPatchFieldsModel
 {
     public string? Sku { get; set; }
     public string? Title { get; set; }
@@ -15,9 +15,13 @@ public class ProductPatchFields
     public string? Logo { get; set; }
     public string? Author { get; set; }
     
-    public int? VendorId { get; set; }
-    public int? ProductTypeId { get; set; }
     public int? UnitMeasureId { get; set; }
-    public int? CurrencyId { get; set; }
-    public int? ProductGroupId { get; set; }
+    public string? UnitMeasureName { get; set; }
+    
+    public int? ProductTypeId { get; set; }
+    public string? ProductTypeName { get; set; }
+    
+    public VendorModel? Vendor { get; set; }
+    public GroupModel? Group { get; set; }
+    public CurrencyModel? Currency { get; set; }
 }

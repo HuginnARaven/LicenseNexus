@@ -11,7 +11,7 @@ public interface IProductService
     Task<PaginatedResult<ProductModel>> GetPaginatedAsync(ProductFilterDto filter);
     Task<ProductModel?> AddAsync(ProductRequestDto product);
     Task UpdateAsync(int id, ProductRequestDto product);
-    Task PatchAsync(int id, ProductPatchFields updates);
+    Task PatchAsync(int id, ProductPatchFieldsDto updates);
     Task DeleteAsync(int id);
     Task<ProductPrice?> AddProductPrice(int productId, ProductPriceRequestDto price);
     Task UpdateProductPrice(int productId, int priceId, ProductPriceRequestDto price);

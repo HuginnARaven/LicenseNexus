@@ -59,7 +59,7 @@ namespace LicenseNexus.API.Controllers
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> Patch(int id, [FromBody] ProductPatchFields updates)
+        public async Task<IActionResult> Patch(int id, [FromBody] ProductPatchFieldsDto updates)
         {
             if (updates == null)
             {

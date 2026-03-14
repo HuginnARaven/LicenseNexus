@@ -1,12 +1,33 @@
 ﻿using FluentValidation;
 using LicenseNexus.Domain.Interfaces;
-using LicenseNexus.Domain.Models;
 
 namespace LicenseNexus.Application.DTOs;
 
-public class ProductPatchFieldsValidator : AbstractValidator<ProductPatchFields>
+public class ProductPatchFieldsDto
 {
-    public ProductPatchFieldsValidator(
+    public string? Sku { get; set; }
+    public string? Title { get; set; }
+    public string? ShortDescription { get; set; }
+    public int? QuantityMin { get; set; }
+    public int? QuantityMax { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public bool? IsPromo { get; set; }
+    public bool? IsTop { get; set; }
+    public bool? IsNew { get; set; }
+    public string? Logo { get; set; }
+    public string? Author { get; set; }
+    
+    public int? VendorId { get; set; }
+    public int? ProductTypeId { get; set; }
+    public int? UnitMeasureId { get; set; }
+    public int? CurrencyId { get; set; }
+    public int? ProductGroupId { get; set; }
+}
+
+public class ProductPatchFieldsDtoValidator : AbstractValidator<ProductPatchFieldsDto>
+{
+    public ProductPatchFieldsDtoValidator(
         IVendorRepository vendorRepository, 
         IProductGroupRepository productGroupRepository,
         IProductTypeRepository productTypeRepository,

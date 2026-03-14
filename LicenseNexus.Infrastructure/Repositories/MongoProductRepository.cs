@@ -121,7 +121,7 @@ public class MongoProductRepository : IProductRepository
         await _collection.ReplaceOneAsync(x => x.ProductId == product.Id, newDoc);
     }
 
-    public async Task PatchAsync(int id, ProductPatchFields updates)
+    public async Task PatchAsync(int id, ProductPatchFieldsModel updates)
     {
         var updateDefinitions = new List<UpdateDefinition<ProductDocument>>();
         var builder = Builders<ProductDocument>.Update;
@@ -139,7 +139,7 @@ public class MongoProductRepository : IProductRepository
             updateDefinitions.Add(builder.Set(x => x.Attributes.QuantityMin, updates.QuantityMin.Value));
         
         if (updates.QuantityMax.HasValue)
-            updateDefinitions.Add(builder.Set(x => x.Attributes.QuantityMin, updates.QuantityMax.Value));
+            updateDefinitions.Add(builder.Set(x => x.Attributes.QuantityMax, updates.QuantityMax.Value));
         
         if (updates.StartDate.HasValue)
             updateDefinitions.Add(builder.Set(x => x.Attributes.StartDate, updates.StartDate));
@@ -162,72 +162,50 @@ public class MongoProductRepository : IProductRepository
         if (!string.IsNullOrWhiteSpace(updates.Author))
             updateDefinitions.Add(builder.Set(x => x.Attributes.Author, updates.Author));
         
-        if (updates.VendorId.HasValue)
+        if (updates.Vendor != null)
         {
-            var vendor = await _context.Vendors.Find(v => v.Id == updates.VendorId).FirstOrDefaultAsync();
-            if (vendor != null)
-            {
-                var vendorSubset = new VendorDoc
-                { 
-                    Id = vendor.Id, 
-                    Name = vendor.Name, 
-                    CountryCode = vendor.CountryCode 
-                };
-                updateDefinitions.Add(builder.Set(x => x.Classification.Vendor, vendorSubset));
-            }
+            var vendorSubset = new VendorDoc
+            { 
+                Id = updates.Vendor.Id, 
+                Name = updates.Vendor.Name, 
+                CountryCode = updates.Vendor.CountryCode 
+            };
+            updateDefinitions.Add(builder.Set(x => x.Classification.Vendor, vendorSubset));
         }
         
-        if (updates.ProductTypeId.HasValue)
+        if (updates.ProductTypeId.HasValue && !string.IsNullOrWhiteSpace(updates.ProductTypeName))
         {
-            var productType = await _context.ProductTypes.Find(v => v.Id == updates.ProductTypeId).FirstOrDefaultAsync();
-            if (productType != null)
-            {
-                updateDefinitions.Add(builder.Set(x => x.Classification.TypeId, productType.Id));
-                updateDefinitions.Add(builder.Set(x => x.Classification.TypeName, productType.TypeName));
-            }
+            updateDefinitions.Add(builder.Set(x => x.Classification.TypeId, updates.ProductTypeId));
+            updateDefinitions.Add(builder.Set(x => x.Classification.TypeName,updates.ProductTypeName));
         }
         
-        if (updates.UnitMeasureId.HasValue)
+        if (updates.UnitMeasureId.HasValue && !string.IsNullOrWhiteSpace(updates.UnitMeasureName))
         {
-            var unitMeasure = await _context.UnitMeasures.Find(v => v.Id == updates.UnitMeasureId).FirstOrDefaultAsync();
-            if (unitMeasure != null)
-            {
-                updateDefinitions.Add(builder.Set(x => x.Classification.UnitMeasureId, unitMeasure.Id));
-                updateDefinitions.Add(builder.Set(x => x.Classification.UnitMeasureName, unitMeasure.Name));
-            }
+            updateDefinitions.Add(builder.Set(x => x.Classification.UnitMeasureId, updates.UnitMeasureId));
+            updateDefinitions.Add(builder.Set(x => x.Classification.UnitMeasureName, updates.UnitMeasureName));
         }
         
-        if (updates.CurrencyId.HasValue)
+        if (updates.Currency != null)
         {
-            var currency = await _context.Currencies.Find(v => v.Id == updates.CurrencyId).FirstOrDefaultAsync();
-            if (currency != null)
-            {
-                var currencySubset = new CurrencyDoc()
-                { 
-                    Id = currency.Id,
-                    LiteralCode = currency.LiteralCode,
-                    Name = currency.Name
-                };
-                updateDefinitions.Add(builder.Set(x => x.Currency, currencySubset));
-            }
+            var currencySubset = new CurrencyDoc()
+            { 
+                Id = updates.Currency.Id,
+                LiteralCode = updates.Currency.LiteralCode,
+                Name = updates.Currency.Name
+            };
+            updateDefinitions.Add(builder.Set(x => x.Currency, currencySubset));
         }
         
-        if (updates.ProductGroupId.HasValue)
+        if (updates.Group != null)
         {
-            var filter = Builders<CategoryDocument>.Filter.ElemMatch(c => c.Groups, g => g.Id == updates.ProductGroupId);
-            var category = await _context.Categories.Find(filter).FirstOrDefaultAsync();
-            var productGroup = category.Groups.FirstOrDefault(g => g.Id == id);
-            if (category != null && productGroup != null)
-            {
-                var GroupSubset = new GroupDoc()
-                { 
-                    Id = productGroup.Id,
-                    Name = productGroup.Name,
-                    CategoryId = category.Id,
-                    CategoryName = category.Name
-                };
-                updateDefinitions.Add(builder.Set(x => x.Classification.Group, GroupSubset));
-            }
+            var groupSubset = new GroupDoc()
+            { 
+                Id = updates.Group.Id,
+                Name = updates.Group.Name,
+                CategoryId = updates.Group.CategoryId,
+                CategoryName = updates.Group.CategoryName
+            };
+            updateDefinitions.Add(builder.Set(x => x.Classification.Group, groupSubset));
         }
 
         if (updateDefinitions.Any())

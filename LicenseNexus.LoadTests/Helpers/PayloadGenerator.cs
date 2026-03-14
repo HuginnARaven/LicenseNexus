@@ -7,7 +7,7 @@ namespace LicenseNexus.LoadTests.Helpers
     public static class PayloadGenerator
     {
         private static Faker<ProductFilterDto> FilterFaker;
-        private static Faker<ProductPatchFields> PatchFaker;
+        private static Faker<ProductPatchFieldsDto> PatchFaker;
         private static Faker<ProductRequestDto> PostFaker;
         private static Faker<OrderRequestDto> OrderFaker;
         private static Faker<OrderProductRequestDto> OrderProductFaker;
@@ -55,7 +55,7 @@ namespace LicenseNexus.LoadTests.Helpers
                 .RuleFor(f => f.Page, f => f.Random.Int(1, 5))
                 .RuleFor(f => f.PageSize, f => f.PickRandom(10, 20, 50));
 
-            PatchFaker = new Faker<ProductPatchFields>()
+            PatchFaker = new Faker<ProductPatchFieldsDto>()
                 .RuleFor(p => p.Sku, f => f.Commerce.Ean13())
                 .RuleFor(p => p.Title, f => f.Commerce.ProductName())
                 .RuleFor(p => p.ShortDescription, f => f.Lorem.Sentence())
@@ -129,7 +129,7 @@ namespace LicenseNexus.LoadTests.Helpers
             return VendorIds[Random.Next(VendorIds.Length)];
         }
 
-        public static ProductPatchFields GetRandomPatch() => PatchFaker.Generate();
+        public static ProductPatchFieldsDto GetRandomPatch() => PatchFaker.Generate();
         public static ProductRequestDto GetRandomNewProduct() => PostFaker.Generate();
         public static ProductFilterDto GetRandomFilter() => FilterFaker.Generate();
         public static double GetRandomDouble() => Random.NextDouble();

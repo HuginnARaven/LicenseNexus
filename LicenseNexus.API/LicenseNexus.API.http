@@ -169,8 +169,8 @@ Content-Type: application/json
 %}
 
 ### getAllProducts
-GET {{API_HostAddress}}/Product/
-Accept: application/json
+### GET {{API_HostAddress}}/Product/
+### Accept: application/json
 
 ### getProductByID
 GET {{API_HostAddress}}/Product/{{new_product_id}}/
@@ -207,8 +207,13 @@ Content-Type: application/json
 {
   "sku": "UUU332123-PATCHED",
   "title": "UnitTest Product PATCHED",
-  "shortDescription": "A unit product updated twice"
+  "shortDescription": "A unit product updated twice",
+  "vendorId": 13071
 }
+
+### getProductByID
+GET {{API_HostAddress}}/Product/{{new_product_id}}/
+Accept: application/json
 
 ### deleteProduct
 DELETE {{API_HostAddress}}/Product/{{new_product_id}}/

@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using LicenseNexus.API.Helpers;
 using LicenseNexus.Domain.Entities;
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Domain.Models;
@@ -196,14 +195,11 @@ public class RedisProductRepository: IProductRepository
         await _cache.CacheProductByIdAsync(product.Id);
     }
 
-    public async Task PatchAsync(int id,  ProductPatchFields updates)
+    public async Task PatchAsync(int id,  ProductPatchFieldsModel updates)
     {
-        var product = await _sqlContext.Products.FindAsync(id);
-        if (product == null)
-        {
-            await _cache.RemoveProductCacheAsync(id);
-            return;
-        }
+        var product = new Product { Id = id };
+        _sqlContext.Products.Attach(product);
+        var entry = _sqlContext.Entry(product);
         
         var productKey = $"product:{id}";
         var isCached = await _redisDb.KeyExistsAsync(productKey);
@@ -213,180 +209,140 @@ public class RedisProductRepository: IProductRepository
         if (!string.IsNullOrWhiteSpace(updates.Sku))
         {
             product.Sku = updates.Sku;
+            entry.Property(p => p.Sku).IsModified = true;
             if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Sku", $"\"{updates.Sku}\""));
         }
 
         if (!string.IsNullOrWhiteSpace(updates.Title))
         {
             product.Title = updates.Title;
+            entry.Property(p => p.Title).IsModified = true;
             if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Title", JsonSerializer.Serialize(updates.Title)));
         }
         
         if (!string.IsNullOrWhiteSpace(updates.ShortDescription))
         {
             product.ShortDescription = updates.ShortDescription;
+            entry.Property(p => p.ShortDescription).IsModified = true;
             if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.ShortDescription", $"\"{updates.ShortDescription}\"" ));
         }
         
         if (updates.QuantityMin.HasValue)
         {
             product.QuantityMin = (int)updates.QuantityMin;
+            entry.Property(p => p.QuantityMin).IsModified = true;
             if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.QuantityMin", (int)updates.QuantityMin));
         }
         
         if (updates.QuantityMax.HasValue)
         {
             product.QuantityMax = (int)updates.QuantityMax;
+            entry.Property(p => p.QuantityMax).IsModified = true;
             if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.QuantityMax", (int)updates.QuantityMax));
         }
         
         if (updates.StartDate.HasValue)
         {
             product.StartDate = updates.StartDate;
+            entry.Property(p => p.StartDate).IsModified = true;
             if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.StartDate", $"\"{updates.StartDate.Value:O}\""));
         }
         
         if (updates.EndDate.HasValue)
         {
             product.EndDate = updates.EndDate;
+            entry.Property(p => p.EndDate).IsModified = true;
             if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.EndDate", $"\"{updates.EndDate.Value:O}\""));
         }
         
         if (updates.IsPromo.HasValue)
         {
             product.IsPromo = updates.IsPromo.Value;
+            entry.Property(p => p.IsPromo).IsModified = true;
             if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.IsPromo", updates.IsPromo.Value ? "true" : "false"));
         }
         
         if (updates.IsTop.HasValue)
         {
             product.IsTop = updates.IsTop.Value;
+            entry.Property(p => p.IsTop).IsModified = true;
             if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.IsTop", updates.IsTop.Value ? "true" : "false"));
         }
         
         if (updates.IsNew.HasValue)
         {
             product.IsNew = updates.IsNew.Value;
+            entry.Property(p => p.IsNew).IsModified = true;
             if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.IsNew", updates.IsNew.Value ? "true" : "false"));
         }
         
         if (!string.IsNullOrWhiteSpace(updates.Logo))
         {
             product.Logo = updates.Logo;
+            entry.Property(p => p.Logo).IsModified = true;
             if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.Logo", $"\"{updates.Logo}\""));
         }
         
         if (!string.IsNullOrWhiteSpace(updates.Author))
         {
             product.Author = updates.Author;
+            entry.Property(p => p.Author).IsModified = true;
             if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Attributes.Author", $"\"{updates.Author}\""));
         }
         
-        if (updates.VendorId.HasValue)
+        if (updates.Vendor != null)
         {
-            var newVendor = await _redisDb.JSON().GetAsync<Vendor>($"vendor:{updates.VendorId}") ?? 
-                            await _sqlContext.Vendors.AsNoTracking().FirstOrDefaultAsync(e => e.Id == updates.VendorId);
-            if (newVendor != null)
+            product.VendorId = updates.Vendor.Id;
+            entry.Property(p => p.VendorId).IsModified = true;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.Vendor",  updates.Vendor));
+        }
+        
+        if (updates.ProductTypeId.HasValue && !string.IsNullOrWhiteSpace(updates.ProductTypeName))
+        {
+            product.ProductTypeId = (int)updates.ProductTypeId;
+            entry.Property(p => p.ProductTypeId).IsModified = true;
+            if (isCached)
             {
-                product.VendorId = newVendor.Id;
-                if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.Vendor",  new VendorModel
-                {
-                    Id = newVendor.Id,
-                    Name = newVendor.Name,
-                    CountryCode = newVendor.CountryCode
-                }));
+                cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.TypeId", (int)updates.ProductTypeId));
+                cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.TypeName", JsonSerializer.Serialize(updates.ProductTypeName)));
             }
         }
         
-        if (updates.ProductTypeId.HasValue)
+        if (updates.UnitMeasureId.HasValue && !string.IsNullOrWhiteSpace(updates.UnitMeasureName))
         {
-            var newType = await _redisDb.JSON().GetAsync<ProductType>($"product_type:{updates.ProductTypeId}") ?? 
-                          await _sqlContext.ProductTypes.AsNoTracking().FirstOrDefaultAsync(e => e.Id == updates.ProductTypeId);
-            if (newType != null)
+            product.UnitMeasureId = (int)updates.UnitMeasureId;
+            entry.Property(p => p.UnitMeasureId).IsModified = true;
+            if (isCached)
             {
-                product.ProductTypeId = newType.Id;
-                if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.TypeId", newType.Id));
-                if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.TypeName", $"\"{newType.TypeName}\""));
+                cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.UnitMeasureId", (int)updates.UnitMeasureId));
+                cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.UnitMeasureName", JsonSerializer.Serialize(updates.UnitMeasureName)));
             }
         }
         
-        if (updates.UnitMeasureId.HasValue)
+        if (updates.Currency != null)
         {
-            var newUnitMeasure = await _redisDb.JSON().GetAsync<UnitMeasure>($"unit_measure:{updates.UnitMeasureId}") ?? 
-                                 await _sqlContext.UnitMeasures.AsNoTracking().FirstOrDefaultAsync(e => e.Id == updates.UnitMeasureId);
-            if (newUnitMeasure != null)
-            {
-                product.UnitMeasureId = newUnitMeasure.Id;
-                if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.UnitMeasureId", newUnitMeasure.Id));
-                if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.UnitMeasureName", $"\"{newUnitMeasure.Name}\""));
-            }
+            product.CurrencyId = updates.Currency.Id;
+            entry.Property(p => p.CurrencyId).IsModified = true;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Currency",  updates.Currency));
         }
         
-        if (updates.CurrencyId.HasValue)
+        if (updates.Group != null)
         {
-            var newCurrency = await _redisDb.JSON().GetAsync<Currency>($"currency:{updates.CurrencyId}") ?? 
-                              await _sqlContext.Currencies.AsNoTracking().FirstOrDefaultAsync(e => e.Id == updates.CurrencyId);
-            if (newCurrency != null)
-            {
-                product.CurrencyId = newCurrency.Id;
-                if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Currency",  new CurrencyModel
-                {
-                    Id = newCurrency.Id,
-                    Name = newCurrency.Name,
-                    LiteralCode = newCurrency.LiteralCode
-                }));
-            }
-        }
-        
-        if (updates.ProductGroupId.HasValue)
-        {
-            ProductGroup? newGroup = null;
-            Category? newCategory = null;
-
-            var categoryIdVal = await _redisDb.HashGetAsync("pg_to_category_map", updates.ProductGroupId.Value);
-            if (categoryIdVal.HasValue)
-            {
-                newCategory = await _redisDb.JSON().GetAsync<Category>($"category:{categoryIdVal}");
-                newGroup = newCategory?.ProductGroups?.FirstOrDefault(g => g.Id == updates.ProductGroupId);
-            }
-            
-            if (newGroup == null || newCategory == null)
-            {
-                newGroup = await _sqlContext.ProductGroups
-                    .AsNoTracking()
-                    .Include(e => e.Category)
-                    .FirstOrDefaultAsync(e => e.Id == updates.ProductGroupId);
-                newCategory = newGroup?.Category;
-            }
-            
-            if (newGroup != null && newCategory != null)
-            {
-                var oldGroupId = product.ProductGroupId;
-                product.ProductGroupId = newGroup.Id;
-                
-                if (isCached)
-                {
-                    var oldCategoryIdVal = await _redisDb.HashGetAsync("pg_to_category_map", oldGroupId);
-                    var oldCategoryId = oldCategoryIdVal.HasValue 
-                        ? (int)oldCategoryIdVal 
-                        : await _sqlContext.ProductGroups
-                            .AsNoTracking()
-                            .Where(e => e.Id == oldGroupId)
-                            .Select(e => e.CategoryId)
-                            .FirstOrDefaultAsync(); ;
-                    
-                    cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.Group",  new GroupModel()
-                    {
-                        Id = newGroup.Id,
-                        Name = newGroup.Name,
-                        CategoryId = newCategory.Id, 
-                        CategoryName = newCategory.CategoryName 
-                    }));
-                }
-            }
+            product.ProductGroupId = updates.Group.Id;
+            entry.Property(p => p.ProductGroupId).IsModified = true;
+            if (isCached) cacheTasks.Add(pipeline!.Json.SetAsync(productKey, "$.Classification.Group", updates.Group));
         }
 
-        await _sqlContext.SaveChangesAsync();
+        try
+        {
+            await _sqlContext.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await _cache.RemoveProductCacheAsync(id);
+            throw;
+        }
+        
         if (isCached)
         {
             pipeline!.Execute();

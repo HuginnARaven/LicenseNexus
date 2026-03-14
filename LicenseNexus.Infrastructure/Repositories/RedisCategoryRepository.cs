@@ -96,6 +96,7 @@ public class RedisCategoryRepository: ICategoryRepository
   
         await _context.SaveChangesAsync();
         await _redisDb.KeyDeleteAsync($"category:{id}");
+        await _redisDb.HashDeleteAsync("pg_to_category_map", id.ToString());
     }
 
     public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
