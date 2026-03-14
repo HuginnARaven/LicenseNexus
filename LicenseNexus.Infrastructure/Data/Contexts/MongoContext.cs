@@ -42,6 +42,8 @@ public class MongoContext
     
     public async Task ConfigureIndexesAsync()
     {
+        await Products.Indexes.DropAllAsync();
+        
         // Products
         var productIndexes = new List<CreateIndexModel<ProductDocument>>
         {
@@ -53,6 +55,26 @@ public class MongoContext
                 Builders<ProductDocument>.IndexKeys.Ascending(p => p.Sku),
                 new CreateIndexOptions { Unique = true }
             ),
+            new CreateIndexModel<ProductDocument>(
+                Builders<ProductDocument>.IndexKeys
+                    .Ascending(p => p.Classification.Group.CategoryId)
+            ),
+            
+            new CreateIndexModel<ProductDocument>(
+                Builders<ProductDocument>.IndexKeys
+                    .Ascending(p => p.Classification.Group.Id)
+            ),
+            
+            new CreateIndexModel<ProductDocument>(
+                Builders<ProductDocument>.IndexKeys
+                    .Ascending(p => p.Classification.Vendor.Id)
+            ),
+            
+            new CreateIndexModel<ProductDocument>(
+                Builders<ProductDocument>.IndexKeys
+                    .Ascending("prices.price")
+            ),
+            
             new CreateIndexModel<ProductDocument>(
                 Builders<ProductDocument>.IndexKeys.Text(x => x.Title)
             )

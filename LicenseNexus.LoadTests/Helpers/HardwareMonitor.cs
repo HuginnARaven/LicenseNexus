@@ -21,7 +21,7 @@ public static class HardwareMonitor
             StartInfo = new ProcessStartInfo
             {
                 FileName = "powershell.exe",
-                Arguments = $"-ExecutionPolicy Bypass -File \"monitor.ps1\" -OutputFile \"{outputFileName}\"",
+                Arguments = $"-ExecutionPolicy Bypass -File \"./Scripts/monitor.ps1\" -OutputFile \"{outputFileName}\"",
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true

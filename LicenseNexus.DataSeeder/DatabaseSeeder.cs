@@ -216,44 +216,47 @@ public class DatabaseSeeder
 
         // Generate related data for products (Prices, Descriptions, Tags)
         var productDocs = new List<ProductDocument>();
-        var redisDb = _redisContext.Database;
-
-        var maxPriceId = 0;
-        var maxDescriptionId = 0;
+        
+        var allPrices = new List<ProductPrice>();
+        var allDescriptions = new List<FullDescription>();
+        var allProductTags = new List<ProductTag>();
         
         foreach (var product in products)
         {
-            // Prices
             var prices = GenerateProductPrices(product.Id);
-            await _extendedSqlContext.ProductPrices.AddRangeAsync(prices);
-            await _extendedSqlContext.SaveChangesAsync();
-            product.Prices = prices;
-            maxPriceId = prices.Max(p => p.Id) > maxPriceId ? prices.Max(p => p.Id) : maxPriceId;
-
-            // Descriptions
             var descriptions = GenerateFullDescriptions(product.Id);
-            await _extendedSqlContext.FullDescriptions.AddRangeAsync(descriptions);
-            await _extendedSqlContext.SaveChangesAsync();
-            product.FullDescriptions = descriptions;
-            maxDescriptionId = descriptions.Max(d => d.Id) > maxDescriptionId ? descriptions.Max(d => d.Id) : maxDescriptionId;
-
-            // Product Tags (Many-to-Many)
             var productTags = GenerateProductTags(product.Id, tags);
-            await _extendedSqlContext.ProductTags.AddRangeAsync(productTags);
-            await _extendedSqlContext.SaveChangesAsync();
+            
+            product.Prices = prices;
+            product.FullDescriptions = descriptions;
             product.ProductTags = productTags;
+            
+            allPrices.AddRange(prices);
+            allDescriptions.AddRange(descriptions);
+            allProductTags.AddRange(productTags);
+        }
+        
+        await _extendedSqlContext.ProductPrices.AddRangeAsync(allPrices);
+        await _extendedSqlContext.FullDescriptions.AddRangeAsync(allDescriptions);
+        await _extendedSqlContext.ProductTags.AddRangeAsync(allProductTags);
+        
+        await _extendedSqlContext.SaveChangesAsync();
+        
+        var maxPriceId = allPrices.Any() ? allPrices.Max(p => p.Id) : 0;
+        var maxDescriptionId = allDescriptions.Any() ? allDescriptions.Max(d => d.Id) : 0;
 
-            // Prepare Mongo Document
-            var pDoc = MapToProductDocument(product, prices, descriptions, productTags, tags, allGroups, vendors, productTypes, unitMeasures, currencies);
+        foreach (var product in products)
+        {
+            var pDoc = MapToProductDocument(
+                product, 
+                product.Prices.ToList(), 
+                product.FullDescriptions.ToList(), 
+                product.ProductTags.ToList(), 
+                tags, allGroups, vendors, productTypes, unitMeasures, currencies
+            );
             productDocs.Add(pDoc);
-
-            // Save to Redis
-            //string redisKey = $"product:{product.Id}";
-            //string redisValue = JsonSerializer.Serialize(pDoc);
-            //await redisDb.StringSetAsync(redisKey, redisValue);
         }
 
-        await _extendedSqlContext.SaveChangesAsync();
         Console.WriteLine("Saved product related data (prices, descriptions, tags) to SQL.");
 
         if (productDocs.Any())

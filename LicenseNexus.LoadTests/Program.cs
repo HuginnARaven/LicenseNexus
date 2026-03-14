@@ -8,13 +8,14 @@ using NBomber.Contracts.Stats;
 using System.Collections.Concurrent;
 using LicenseNexus.Domain.Models;
 using System.Diagnostics;
+using NBomber.Contracts;
 
 using var httpClient = new HttpClient();
 
 // Configuration
 var baseUrl = "http://localhost:5000"; 
 var warmUpDuration = TimeSpan.FromSeconds(30);
-var loadDuration = TimeSpan.FromMinutes(2);
+var loadDuration = TimeSpan.FromMinutes(3);
 var concurrentUsers = 100;
 
 var products = await FetchProductsAsync(httpClient, $"{baseUrl}/api/product");
@@ -92,7 +93,7 @@ var readScenario = ReadHeavyScenarioBuilder.Build(httpClient, baseUrl, concurren
 // Write-Heavy Scenario (80% PATCH, 20% POST)
 var writeScenario = WriteHeavyScenarioBuilder.Build(httpClient, baseUrl, concurrentUsers, warmUpDuration, loadDuration);
 
-// Mixed Scenario (80% Read, 20% Write)
+// Mixed Scenario (80% Read, 20% PATCH)
 var mixedScenario = MixedScenarioBuilder.Build(httpClient, baseUrl, concurrentUsers, warmUpDuration, loadDuration);
 
 var consistencyScenario = ConsistencyTestScenarioBuilder.Build(httpClient, baseUrl);
@@ -101,13 +102,34 @@ var checkoutScenario = CheckoutScenarioBuilder.Build(httpClient, baseUrl, concur
 
 var textSearchScenario = TextSearchScenarioBuilder.Build(httpClient, baseUrl, concurrentUsers, warmUpDuration, loadDuration);
 
-HardwareMonitor.Start("./reports/load_test_metrics.csv");
+var scenarioDict = new Dictionary<string, ScenarioProps[]>
+{
+    { "read", [readScenario] },
+    { "write", writeScenario },
+    { "mixed", [mixedScenario] },
+    { "consistency", consistencyScenario },
+    { "checkout", [checkoutScenario] },
+    { "textsearch", [textSearchScenario] }
+};
 
+var targetScenario = args.Length > 0 ? args[0].ToLower() : "read";
+
+if (!scenarioDict.ContainsKey(targetScenario))
+{
+    Console.WriteLine($"Scenario '{targetScenario}' not found. Valid scenarios: {string.Join(", ", scenarioDict.Keys)}");
+    return;
+}
+
+var selectedScenario = scenarioDict[targetScenario];
+var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+var reportFolder = $"./reports/{targetScenario}_{timestamp}";
+Directory.CreateDirectory(reportFolder);
+
+HardwareMonitor.Start($"{reportFolder}/load_test_metrics.csv");
 NBomberRunner
-    .RegisterScenarios(readScenario)
+    .RegisterScenarios(selectedScenario)
     .WithReportFileName("load_test_report")
-    .WithReportFolder("./reports")
+    .WithReportFolder(reportFolder)
     .WithReportFormats(ReportFormat.Html, ReportFormat.Md)
     .Run();
-
 HardwareMonitor.Stop();

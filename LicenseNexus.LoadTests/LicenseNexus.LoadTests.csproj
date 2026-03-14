@@ -18,4 +18,8 @@
       <ProjectReference Include="..\LicenseNexus.Domain\LicenseNexus.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="reports\" />
+    </ItemGroup>
+
 </Project>

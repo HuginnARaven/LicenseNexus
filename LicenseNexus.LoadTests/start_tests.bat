@@ -1,0 +1,1 @@
+﻿powershell.exe -ExecutionPolicy Bypass -File .\Scripts\test_sequence.ps1
