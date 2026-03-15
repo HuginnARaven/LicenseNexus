@@ -42,7 +42,9 @@ public class ProductService(
             filter.VendorId, 
             filter.Search, 
             filter.PriceFrom, 
-            filter.PriceTo);
+            filter.PriceTo, 
+            filter.IsPromo, 
+            filter.Tags);
     }
 
     public async Task<ProductModel?> AddAsync(ProductRequestDto product)

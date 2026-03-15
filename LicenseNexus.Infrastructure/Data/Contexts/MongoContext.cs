@@ -76,7 +76,28 @@ public class MongoContext
             ),
             
             new CreateIndexModel<ProductDocument>(
-                Builders<ProductDocument>.IndexKeys.Text(x => x.Title)
+                Builders<ProductDocument>.IndexKeys
+                    .Text(p => p.Sku)
+                    .Text(p => p.Title)
+                    .Text(p => p.Attributes.ShortDescription),
+                new CreateIndexOptions
+                {
+                    Name = "ProductTextIndex",
+                    Weights = new MongoDB.Bson.BsonDocument
+                    {
+                        { "Sku", 10 },
+                        { "Title", 5 },
+                        { "Attributes.ShortDescription", 1 }
+                    }
+                }
+            ),
+            
+            new CreateIndexModel<ProductDocument>(
+                Builders<ProductDocument>.IndexKeys.Ascending(p => p.Attributes.IsPromo)
+            ),
+            
+            new CreateIndexModel<ProductDocument>(
+                Builders<ProductDocument>.IndexKeys.Ascending("Tags.Name")
             )
         };
         await Products.Indexes.CreateManyAsync(productIndexes);

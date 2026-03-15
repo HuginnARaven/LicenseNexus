@@ -47,29 +47,36 @@ public class MongoProductRepository : IProductRepository
         int page, int pageSize, 
         int? categoryId, int? groupId, 
         int? vendorId, string? search,
-        double? priceFrom, double? priceTo)
+        double? priceFrom, double? priceTo,
+        bool? isPromo, string[]? tags)
     {
         var builder = Builders<ProductDocument>.Filter;
         var filter = builder.Empty;
-
+        
+        if (isPromo.HasValue)
+            filter &= builder.Eq(x => x.Attributes.IsPromo, isPromo.Value);
+        
         if (categoryId.HasValue)
-        {
             filter &= builder.Eq(x => x.Classification.Group.CategoryId, categoryId.Value);
-        }
 
         if (groupId.HasValue)
-        {
             filter &= builder.Eq(x => x.Classification.Group.Id, groupId.Value);
-        }
 
         if (vendorId.HasValue)
-        {
             filter &= builder.Eq(x => x.Classification.Vendor.Id, vendorId.Value);
-        }
-
+        
+        if (isPromo.HasValue)
+            filter &= builder.Eq(x => x.Attributes.IsPromo, isPromo.Value);
+        
         if (!string.IsNullOrWhiteSpace(search))
-        {
             filter &= builder.Text(search);
+        
+        if (tags != null && tags.Length > 0)
+        {
+            foreach (var tagName in tags)
+            {
+                filter &= builder.ElemMatch(x => x.Tags, t => t.Name == tagName);
+            }
         }
 
         if (priceFrom.HasValue || priceTo.HasValue)
@@ -473,12 +480,13 @@ public class MongoProductRepository : IProductRepository
             Id = doc.ProductId,
             Sku = doc.Sku,
             Title = doc.Title,
-            VendorName = doc.Classification.Vendor.Name,
-            CategoryName = doc.Classification.Group.CategoryName,
             IsPromo = doc.Attributes.IsPromo,
             IsTop = doc.Attributes.IsTop,
             IsNew = doc.Attributes.IsNew,
             Logo = doc.Attributes.Logo,
+            VendorName = doc.Classification.Vendor.Name,
+            CategoryName = doc.Classification.Group.CategoryName,
+            GroupName = doc.Classification.Group.Name,
             CurrencyLiteralCode = doc.Currency.LiteralCode,
             BasePrice = doc.Prices.FirstOrDefault()?.Price ?? 0
         };

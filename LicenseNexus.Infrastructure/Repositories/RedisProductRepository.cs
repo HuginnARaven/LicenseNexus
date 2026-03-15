@@ -100,7 +100,8 @@ public class RedisProductRepository: IProductRepository
     int page, int pageSize, 
     int? categoryId, int? groupId, 
     int? vendorId, string? search,
-    double? priceFrom, double? priceTo)
+    double? priceFrom, double? priceTo,
+    bool? isPromo, string[]? tags)
     {
         // var rawKeyName = $"{page}|{pageSize}|{categoryId}|{groupId}|{vendorId}|{search}|{priceFrom}|{priceTo}";
         //
@@ -123,6 +124,7 @@ public class RedisProductRepository: IProductRepository
         if (categoryId.HasValue) queryParts.Add($"@CategoryId:[{categoryId.Value} {categoryId.Value}]");
         if (groupId.HasValue) queryParts.Add($"@GroupId:[{groupId.Value} {groupId.Value}]");
         if (vendorId.HasValue) queryParts.Add($"@VendorId:[{vendorId.Value} {vendorId.Value}]");
+        if (isPromo.HasValue) queryParts.Add($"@IsPromo:{{{(isPromo.Value ? "true" : "false")}}}");
 
         if (priceFrom.HasValue || priceTo.HasValue)
         {
@@ -130,11 +132,19 @@ public class RedisProductRepository: IProductRepository
             string maxPrice = priceTo.HasValue ? priceTo.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "+inf";
             queryParts.Add($"@Price:[{minPrice} {maxPrice}]");
         }
+        
+        if (tags != null && tags.Length > 0)
+        {
+            foreach(var tagName in tags)
+            {
+                queryParts.Add($"@Tags:{{{tagName}}}");
+            }
+        }
 
         if (!string.IsNullOrWhiteSpace(search))
         {
             var cleanSearch = search.Trim().Replace("-", "\\-"); 
-            queryParts.Add($"@Title:({cleanSearch})");
+            queryParts.Add($"(@Title:({cleanSearch}) | @Sku:({cleanSearch}) | @ShortDescription:({cleanSearch}))");
         }
 
         string queryString = queryParts.Count > 0 ? string.Join(" ", queryParts) : "*";

@@ -34,7 +34,7 @@ GET {{API_HostAddress}}/Product/
 Accept: application/json
 
 ### getPaginatedProducts
-GET {{API_HostAddress}}/Product/catalog
+GET {{API_HostAddress}}/Product/catalog?tags=Practical&tags=Incredible&tags=Handmade
 Accept: application/json
 
 ### getProductByID

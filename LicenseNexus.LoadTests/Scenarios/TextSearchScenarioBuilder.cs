@@ -27,12 +27,7 @@ public class TextSearchScenarioBuilder
 
                 if (response.StatusCode == "OK")
                 {
-                    var jsonString = await response.Payload.Value.Content.ReadAsStringAsync();
-                    if (jsonString.Contains("\"id\":"))
-                    {
-                        return Response.Ok();
-                    }
-                    return Response.Ok(statusCode: "OK_Empty"); // If the word exists but 0 products
+                    return Response.Ok();
                 } 
                 return Response.Fail(statusCode: response.StatusCode, message: "Search Failed"); 
             })

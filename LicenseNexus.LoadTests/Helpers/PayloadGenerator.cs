@@ -23,6 +23,9 @@ namespace LicenseNexus.LoadTests.Helpers
         private static int[] OrderStatusIds = Array.Empty<int>();
         private static string[] SearchTerms = Array.Empty<string>();
         
+        private static ProductFilterDto[] PreGeneratedFilters = Array.Empty<ProductFilterDto>();
+        private static string[] PreGeneratedSearchUrls = Array.Empty<string>();
+        
         private static readonly Random Random = new();
         
         public static void Initialize(
@@ -42,6 +45,9 @@ namespace LicenseNexus.LoadTests.Helpers
             SearchTerms = terms;
 
             InitializeFakers();
+            
+            PreGeneratedFilters = FilterFaker.Generate(10000).ToArray();
+            PreGeneratedSearchUrls = PreGeneratedFilters.Select(BuildQueryString).ToArray();
         }
 
         private static void InitializeFakers()
@@ -131,7 +137,7 @@ namespace LicenseNexus.LoadTests.Helpers
 
         public static ProductPatchFieldsDto GetRandomPatch() => PatchFaker.Generate();
         public static ProductRequestDto GetRandomNewProduct() => PostFaker.Generate();
-        public static ProductFilterDto GetRandomFilter() => FilterFaker.Generate();
+        //public static ProductFilterDto GetRandomFilter() => FilterFaker.Generate();
         public static double GetRandomDouble() => Random.NextDouble();
         
         public static OrderRequestDto GetRandomOrder() => OrderFaker.Generate();
@@ -145,6 +151,31 @@ namespace LicenseNexus.LoadTests.Helpers
         {
             if (SearchTerms.Length == 0) return "Laptop"; // Fallback
             return SearchTerms[Random.Next(SearchTerms.Length)];
+        }
+        
+        public static ProductFilterDto GetRandomFilter() 
+        {
+            return PreGeneratedFilters[Random.Next(PreGeneratedFilters.Length)];
+        }
+    
+        public static string GetRandomPreGeneratedUrl()
+        {
+            return PreGeneratedSearchUrls[Random.Next(PreGeneratedSearchUrls.Length)];
+        }
+    
+        private static string BuildQueryString(ProductFilterDto filter)
+        {
+            // Логіка з ReadHeavyScenarioBuilder переїжджає сюди (виконується 1 раз при старті)
+            var queryParams = new List<string>(); 
+            if (filter.CategoryId.HasValue) queryParams.Add($"CategoryId={filter.CategoryId}"); 
+            if (filter.GroupId.HasValue) queryParams.Add($"GroupId={filter.GroupId}"); 
+            if (filter.VendorId.HasValue) queryParams.Add($"VendorId={filter.VendorId}"); 
+            if (!string.IsNullOrEmpty(filter.Search)) queryParams.Add($"Search={Uri.EscapeDataString(filter.Search)}"); 
+            if (filter.PriceFrom.HasValue) queryParams.Add($"PriceFrom={filter.PriceFrom}"); 
+            if (filter.PriceTo.HasValue) queryParams.Add($"PriceTo={filter.PriceTo}"); 
+            queryParams.Add($"Page={filter.Page}"); 
+            queryParams.Add($"PageSize={filter.PageSize}"); 
+            return string.Join("&", queryParams);
         }
     }
 }

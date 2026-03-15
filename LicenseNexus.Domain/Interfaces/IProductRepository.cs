@@ -12,7 +12,8 @@ public interface IProductRepository
         int page, int pageSize, 
         int? categoryId, int? groupId, 
         int? vendorId, string? search,
-        double? priceFrom, double? priceTo);
+        double? priceFrom, double? priceTo,
+        bool? isPromo, string[]? tags);
     Task<ProductModel?> AddAsync(ProductModel product);
     Task UpdateAsync(ProductModel product);
     Task PatchAsync(int id, ProductPatchFieldsModel updates);

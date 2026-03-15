@@ -146,7 +146,12 @@ public class ProductCacheService : IProductCacheService
 
                 .AddNumericField(new FieldName("$.Prices[*].Price", "Price"))
 
-                .AddTextField(new FieldName("$.Title", "Title"));
+                .AddTextField(new FieldName("$.Sku", "Sku"), weight: 10.0)
+                .AddTextField(new FieldName("$.Title", "Title"), weight: 5.0)
+                .AddTextField(new FieldName("$.Attributes.ShortDescription", "ShortDescription"), weight: 1.0)
+                
+                .AddTagField(new FieldName("$.Attributes.IsPromo", "IsPromo"))
+                .AddTagField(new FieldName("$.Tags[*].Name", "Tags"));
 
             var ftParams = new FTCreateParams()
                 .On(IndexDataType.JSON)
