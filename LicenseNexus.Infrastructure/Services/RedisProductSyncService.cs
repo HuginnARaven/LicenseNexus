@@ -24,38 +24,46 @@ public class RedisProductSyncService : IProductSyncService
     
     public async Task UpdateVendorAsync(Vendor vendor, CancellationToken ct)
     {
-        int batchSize = 10000;
+        int batchSize = 2500;
         int skip = 0;
         long totalResults = 0;
 
-        var newVendor = new VendorModel
+        var newVendor = JsonSerializer.Serialize(new VendorModel
         {
             Id = vendor.Id,
             Name = vendor.Name,
             CountryCode = vendor.CountryCode,
-        };
-
+        });
+        
         do
         {
-            var query = new Query($"@VendorId:[{vendor.Id} {vendor.Id}]").Limit(skip, batchSize).ReturnFields("Id");
+            ct.ThrowIfCancellationRequested();
+            
+            var query = new Query($"@VendorId:[{vendor.Id} {vendor.Id}]")
+                .Limit(skip, batchSize)
+                .ReturnFields("Id");
+            
             var searchResult = await _redisDb.FT().SearchAsync("idx:products", query);
             totalResults = searchResult.TotalResults;
             if (searchResult.Documents.Count == 0) break;
             
-            var pipeline = new Pipeline(_redisDb);
+            //var pipeline = new Pipeline(_redisDb);
             var updateTasks = new List<Task>();
-
+        
+            
             foreach (var doc in searchResult.Documents)
             {
                 var productKey = doc.Id; 
-                updateTasks.Add(pipeline.Json.SetAsync(productKey, "$.Classification.Vendor", newVendor));
+                //updateTasks.Add(pipeline.Json.SetAsync(productKey, "$.Classification.Vendor", newVendor));
+                var task = _redisDb.JSON().SetAsync(productKey, "$.Classification.Vendor", newVendor);
+                updateTasks.Add(task);
             }
-
-            pipeline.Execute();
+            
+            //pipeline.Execute();
             await Task.WhenAll(updateTasks);
-
+        
             skip += batchSize;
-
+        
         } while (skip < totalResults);
     }
     
