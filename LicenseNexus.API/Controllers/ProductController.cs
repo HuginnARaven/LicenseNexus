@@ -73,12 +73,6 @@ namespace LicenseNexus.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var existingProduct = await productService.GetByIdAsync(id);
-            if (existingProduct == null)
-            {
-                return NotFound();
-            }
-
             await productService.DeleteAsync(id);
             return NoContent();
         }

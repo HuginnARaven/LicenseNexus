@@ -6,7 +6,7 @@ namespace LicenseNexus.Application.Interfaces;
 
 public interface IProductService
 {
-    Task<ProductModel?> GetByIdAsync(int id);
+    Task<ProductResponseDto?> GetByIdAsync(int id);
     Task<IEnumerable<ProductModel>> GetAllAsync();
     Task<PaginatedResult<ProductListItemModel>> GetPaginatedAsync(ProductFilterDto filter);
     Task<ProductModel?> AddAsync(ProductRequestDto product);

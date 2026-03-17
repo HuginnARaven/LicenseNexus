@@ -97,10 +97,15 @@ public class RedisVendorRepository: IVendorRepository
     {
         // if (await _context.Vendors.Where(v => v.Id == id).ExecuteDeleteAsync() <=0)
         //     throw new InvalidOperationException("Object Not Found");
-        var vendor = await _context.Vendors.FindAsync(id);
-        if (vendor == null)
-            throw new InvalidOperationException("Object Not Found");
-        _context.Remove(vendor);
+        
+        // var vendor = await _context.Vendors.FindAsync(id);
+        // if (vendor == null)
+        //     throw new InvalidOperationException("Object Not Found");
+        
+        var vendor = new Vendor() { Id = id };
+        _context.Vendors.Attach(vendor);
+        _context.Vendors.Remove(vendor);
+        // _context.Remove(vendor);
         await  _context.SaveChangesAsync();
         await _redisDb.KeyDeleteAsync($"vendor:{id}");
     }

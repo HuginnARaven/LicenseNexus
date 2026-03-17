@@ -136,13 +136,14 @@ public class ProductCacheService : IProductCacheService
         {
             await ft.InfoAsync("idx:products");
         }
-        catch
+        catch (RedisServerException ex) when (ex.Message.Contains("Unknown index name")) 
         {
+            Console.WriteLine("Creating product index...");
             var schema = new Schema()
-                .AddNumericField(new FieldName("$.Classification.Group.CategoryId", "CategoryId"))
-                .AddNumericField(new FieldName("$.Classification.Group.Id", "GroupId"))
-                .AddNumericField(new FieldName("$.Classification.Vendor.Id", "VendorId"))
-                .AddNumericField(new FieldName("$.Classification.TypeId", "TypeId"))
+                .AddTagField(new FieldName("$.Classification.Group.CategoryId", "CategoryId"))
+                .AddTagField(new FieldName("$.Classification.Group.Id", "GroupId"))
+                .AddTagField(new FieldName("$.Classification.Vendor.Id", "VendorId"))
+                .AddTagField(new FieldName("$.Classification.TypeId", "TypeId"))
 
                 .AddNumericField(new FieldName("$.Prices[*].Price", "Price"))
 

@@ -1,58 +1,40 @@
-﻿using System.Text.Json.Serialization;
+﻿namespace LicenseNexus.Application.DTOs;
 
-namespace LicenseNexus.Domain.Models;
-
-public class ProductModel
+public class ProductResponseDto
 {
     public int Id { get; set; }
     public string Sku { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public bool IsActive { get; set; }
-    public List<TagModel> Tags { get; set; } = new();
-    public ClassificationModel Classification { get; set; } = new();
-    public AttributesModel Attributes { get; set; } = new();
-    public List<DescriptionModel> Descriptions { get; set; } = new();
-    public CurrencyModel Currency { get; set; } = new();
-    public List<ProductPriceModel> Prices { get; set; } = new();
-}
-
-public class TagModel
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-}
-
-public class ClassificationModel
-{
-    [JsonConverter(typeof(IntToStringConverter))]
+    public List<string> Tags { get; set; } = new();
     public int TypeId { get; set; }
     public string TypeName { get; set; } = string.Empty;
     public int UnitMeasureId { get; set; }
     public string UnitMeasureName { get; set; } = string.Empty;
-        
-    public VendorModel Vendor { get; set; } = new();
-    public GroupModel Group { get; set; } = new();
+    public ProductVendorDto Vendor { get; set; } = new();
+    public ProductGroupDto Group { get; set; } = new();
+    public ProductAttributesDto Attributes { get; set; } = new();
+    public List<ProductDescriptionDto> Descriptions { get; set; } = new();
+    public ProductPriceDto Currency { get; set; } = new();
+    public List<ProductCurrencyDto> Prices { get; set; } = new();
 }
 
-public class VendorModel
+public class ProductVendorDto
 {
-    [JsonConverter(typeof(IntToStringConverter))]
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? CountryCode { get; set; } = string.Empty;
 }
 
-public class GroupModel
+public class ProductGroupDto
 {
-    [JsonConverter(typeof(IntToStringConverter))]
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    [JsonConverter(typeof(IntToStringConverter))]
     public int CategoryId { get; set; }
     public string CategoryName { get; set; } = string.Empty;
 }
 
-public class AttributesModel
+public class ProductAttributesDto
 {
     public string ShortDescription { get; set; } = string.Empty;
     public int QuantityMin { get; set; }
@@ -63,18 +45,16 @@ public class AttributesModel
     public string? Logo { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
-    public DateTime CreatedDate { get; set; }
-    public string Author { get; set; } = string.Empty;
 }
 
-public class DescriptionModel
+public class ProductDescriptionDto
 {
     public int Id { get; set; }
     public string FullText { get; set; } = string.Empty;
     public string LanguageCode { get; set; } = string.Empty;
 }
 
-public class ProductPriceModel
+public class ProductPriceDto
 {
     public int Id { get; set; }
     public decimal Price { get; set; }
@@ -85,7 +65,7 @@ public class ProductPriceModel
     public DateTime StartDate { get; set; } = DateTime.UtcNow;
 }
 
-public class CurrencyModel
+public class ProductCurrencyDto
 {
     public int Id { get; set; }
     public string LiteralCode { get; set; } = string.Empty;

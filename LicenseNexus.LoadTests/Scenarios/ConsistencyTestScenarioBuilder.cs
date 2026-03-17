@@ -63,8 +63,8 @@ public static class ConsistencyTestScenarioBuilder
                 var jsonString = await httpMessage.Content.ReadAsStringAsync();
                 
                 using var document = JsonDocument.Parse(jsonString);
-                var productVendorId = document.RootElement.GetProperty("classification").GetProperty("vendor").GetProperty("id").GetInt32();
-                var actualVendorName = document.RootElement.GetProperty("classification").GetProperty("vendor").GetProperty("name").GetString();
+                var productVendorId = document.RootElement.GetProperty("vendor").GetProperty("id").GetInt32();
+                var actualVendorName = document.RootElement.GetProperty("vendor").GetProperty("name").GetString();
                 
                 if (ExpectedVendorNames.TryGetValue(productVendorId, out var expectedName))
                 {

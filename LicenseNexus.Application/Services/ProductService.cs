@@ -22,9 +22,11 @@ public class ProductService(
     IValidator<ProductPatchFieldsDto> productPatchFieldsDtoValidator
     ): IProductService
 {
-    public async Task<ProductModel?> GetByIdAsync(int id)
+    public async Task<ProductResponseDto?> GetByIdAsync(int id)
     {
-        return await productRepository.GetByIdAsync(id);
+        var res = await productRepository.GetByIdAsync(id);
+        if (res == null) return null;
+        return MapModelToDto(res);
     }
 
     public async Task<IEnumerable<ProductModel>> GetAllAsync()
@@ -145,6 +147,8 @@ public class ProductService(
 
     public async Task DeleteAsync(int id)
     {
+        if (!await productRepository.ExistsAsync(id))
+            throw new NotFoundException($"Product with ID {id} not found");
         await productRepository.DeleteAsync(id);
     }
 
@@ -213,6 +217,69 @@ public class ProductService(
         if (!await tagRepository.ExistsAsync(tagId))
             throw new NotFoundException($"Tag with ID {tagId} not found");
         await productRepository.DeleteTag(productId, tagId);
+    }
+
+    private ProductResponseDto MapModelToDto(ProductModel model)
+    {
+        return new ProductResponseDto
+        {
+            Id = model.Id,
+            Sku = model.Sku,
+            Title = model.Title,
+            IsActive = model.IsActive,
+            Tags = model.Tags.Select(t => t.Name).ToList(),
+            TypeId = model.Classification.TypeId,
+            TypeName = model.Classification.TypeName,
+            UnitMeasureId = model.Classification.UnitMeasureId,
+            UnitMeasureName = model.Classification.UnitMeasureName,
+            Vendor = new ProductVendorDto
+            {
+                Id = model.Classification.Vendor.Id,
+                Name = model.Classification.Vendor.Name,
+                CountryCode = model.Classification.Vendor.CountryCode
+            },
+            Group = new ProductGroupDto
+            {
+                Id = model.Classification.Group.Id,
+                Name = model.Classification.Group.Name,
+                CategoryId = model.Classification.Group.CategoryId,
+                CategoryName = model.Classification.Group.CategoryName
+            },
+            Attributes = new ProductAttributesDto
+            {
+                ShortDescription = model.Attributes.ShortDescription,
+                QuantityMin = model.Attributes.QuantityMin,
+                QuantityMax = model.Attributes.QuantityMax,
+                IsPromo = model.Attributes.IsPromo,
+                IsTop = model.Attributes.IsTop,
+                IsNew = model.Attributes.IsNew,
+                Logo = model.Attributes.Logo,
+                StartDate = model.Attributes.StartDate,
+                EndDate = model.Attributes.EndDate
+            },
+            Descriptions = model.Descriptions.Select(d => new ProductDescriptionDto
+            {
+                Id = d.Id,
+                FullText = d.FullText,
+                LanguageCode = d.LanguageCode
+            }).ToList(),
+            Currency = new ProductPriceDto
+            {
+                Id = model.Currency.Id,
+                Price = model.Prices.FirstOrDefault()?.Price ?? 0,
+                TermDuration = model.Prices.FirstOrDefault()?.TermDuration,
+                BillingPlan = model.Prices.FirstOrDefault()?.BillingPlan,
+                Segment = model.Prices.FirstOrDefault()?.Segment,
+                CountryCode = model.Prices.FirstOrDefault()?.CountryCode,
+                StartDate = model.Prices.FirstOrDefault()?.StartDate ?? DateTime.UtcNow
+            },
+            Prices = model.Prices.Select(p => new ProductCurrencyDto
+            {
+                Id = p.Id,
+                LiteralCode = model.Currency.LiteralCode,
+                Name = model.Currency.Name
+            }).ToList()
+        };
     }
 
     private async Task<ProductModel> MapDtoToModel(ProductRequestDto dto)

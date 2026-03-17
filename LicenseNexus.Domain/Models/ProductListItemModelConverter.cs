@@ -92,7 +92,7 @@ public class ProductListItemModelConverter : JsonConverter<ProductListItemModel>
             }
         }
 
-        throw new JsonException("Несподіваний кінець JSON.");
+        throw new JsonException("Unexpected end of JSON.");
     }
 
     private void ReadClassification(ref Utf8JsonReader reader, ProductListItemModel model)

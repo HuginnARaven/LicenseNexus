@@ -39,7 +39,7 @@ public class RedisProductSyncService : IProductSyncService
         {
             ct.ThrowIfCancellationRequested();
             
-            var query = new Query($"@VendorId:[{vendor.Id} {vendor.Id}]")
+            var query = new Query($"@VendorId:{{{vendor.Id}}}")
                 .Limit(skip, batchSize)
                 .ReturnFields("Id");
             
@@ -77,7 +77,9 @@ public class RedisProductSyncService : IProductSyncService
 
         do
         {
-            var query = new Query($"@CategoryId:[{category.Id} {category.Id}]").Limit(skip, batchSize).ReturnFields("Id");
+            var query = new Query($"@CategoryId:{{{category.Id}}}")
+                .Limit(skip, batchSize)
+                .ReturnFields("Id");
             var searchResult = await _redisDb.FT().SearchAsync("idx:products", query);
             totalResults = searchResult.TotalResults;
             if (searchResult.Documents.Count == 0) break;
@@ -109,7 +111,9 @@ public class RedisProductSyncService : IProductSyncService
 
         do
         {
-            var query = new Query($"@GroupId:[{group.Id} {group.Id}]").Limit(skip, batchSize).ReturnFields("Id");
+            var query = new Query($"@GroupId:{{{group.Id}}}")
+                .Limit(skip, batchSize)
+                .ReturnFields("Id");
             var searchResult = await _redisDb.FT().SearchAsync("idx:products", query);
             totalResults = searchResult.TotalResults;
             if (searchResult.Documents.Count == 0) break;
@@ -120,7 +124,7 @@ public class RedisProductSyncService : IProductSyncService
             foreach (var doc in searchResult.Documents)
             {
                 var productKey = doc.Id; 
-                updateTasks.Add(pipeline.Json.SetAsync(productKey, "$.Classification.Group.Name", $"\"{group.Name}\""));
+                updateTasks.Add(pipeline.Json.SetAsync(productKey, "$.Classification.Group.Name", groupName));
             }
 
             pipeline.Execute();
@@ -141,7 +145,9 @@ public class RedisProductSyncService : IProductSyncService
 
         do
         {
-            var query = new Query($"@TypeId:[{productType.Id} {productType.Id}]").Limit(skip, batchSize).ReturnFields("Id");
+            var query = new Query($"@TypeId:{{{productType.Id}}}")
+                .Limit(skip, batchSize)
+                .ReturnFields("Id");
             var searchResult = await _redisDb.FT().SearchAsync("idx:products", query);
             totalResults = searchResult.TotalResults;
             if (searchResult.Documents.Count == 0) break;
@@ -174,11 +180,12 @@ public class RedisProductSyncService : IProductSyncService
 
         var pipeline = new Pipeline(_redisDb);
         var updateTasks = new List<Task>();
-
+        var unitMeasureName = JsonSerializer.Serialize(unitMeasure.Name);
+        
         foreach (var productId in productIds)
         {
             var productKey = $"product:{productId}";
-            updateTasks.Add(pipeline.Json.SetAsync(productKey, "$.Classification.UnitMeasureName", $"\"{unitMeasure.Name}\""));
+            updateTasks.Add(pipeline.Json.SetAsync(productKey, "$.Classification.UnitMeasureName", unitMeasureName));
         }
         
         pipeline.Execute();
@@ -195,12 +202,12 @@ public class RedisProductSyncService : IProductSyncService
         
         var pipeline = new Pipeline(_redisDb);
         var updateTasks = new List<Task>();
-        var newCurrency = new CurrencyModel
+        var newCurrency = JsonSerializer.Serialize(new CurrencyModel
         {
             Id = currency.Id,
             LiteralCode = currency.LiteralCode,
             Name = currency.Name
-        };
+        });
 
         foreach (var productId in productIds)
         {
@@ -221,11 +228,12 @@ public class RedisProductSyncService : IProductSyncService
             .ToListAsync(cancellationToken: ct);
         var pipeline = new Pipeline(_redisDb);
         var updateTasks = new List<Task>();
+        var tagName = JsonSerializer.Serialize(tag.Name);
 
         foreach (var productId in productIds)
         {
             var productKey = $"product:{productId}";
-            updateTasks.Add(pipeline.Json.SetAsync(productKey, $"$.Tags[?(@.Id=={tag.Id})].Name", $"\"{tag.Name}\""));
+            updateTasks.Add(pipeline.Json.SetAsync(productKey, $"$.Tags[?(@.Id=={tag.Id})].Name", tagName));
         }
         
         pipeline.Execute();

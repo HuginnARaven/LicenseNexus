@@ -34,11 +34,11 @@ GET {{API_HostAddress}}/Product/
 Accept: application/json
 
 ### getPaginatedProducts
-GET {{API_HostAddress}}/Product/catalog?tags=Practical&tags=Incredible&tags=Handmade
+GET {{API_HostAddress}}/Product/catalog
 Accept: application/json
 
 ### getProductByID
-GET {{API_HostAddress}}/Product/162045/
+GET {{API_HostAddress}}/Product/{{new_product_id}}/
 Accept: application/json
 
 ### updateProduct

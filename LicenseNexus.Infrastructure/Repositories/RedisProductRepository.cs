@@ -121,9 +121,9 @@ public class RedisProductRepository: IProductRepository
         var take = pageSize;
         
         var queryParts = new List<string>();
-        if (categoryId.HasValue) queryParts.Add($"@CategoryId:[{categoryId.Value} {categoryId.Value}]");
-        if (groupId.HasValue) queryParts.Add($"@GroupId:[{groupId.Value} {groupId.Value}]");
-        if (vendorId.HasValue) queryParts.Add($"@VendorId:[{vendorId.Value} {vendorId.Value}]");
+        if (categoryId.HasValue) queryParts.Add($"@CategoryId:{{{categoryId.Value}}}");
+        if (groupId.HasValue) queryParts.Add($"@GroupId:{{{groupId.Value}}}");
+        if (vendorId.HasValue) queryParts.Add($"@VendorId:{{{vendorId.Value}}}");
         if (isPromo.HasValue) queryParts.Add($"@IsPromo:{{{(isPromo.Value ? "true" : "false")}}}");
 
         if (priceFrom.HasValue || priceTo.HasValue)
