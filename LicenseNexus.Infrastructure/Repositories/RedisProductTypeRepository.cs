@@ -83,10 +83,12 @@ public class RedisProductTypeRepository: IProductTypeRepository
     
     public async Task DeleteAsync(int id)
     {
-        var productType = await _context.ProductTypes.FindAsync(id);
-        if (productType == null)
-            throw new InvalidOperationException("Object Not Found");
-        _context.Remove(productType);
+        // var productType = await _context.ProductTypes.FindAsync(id);
+        // if (productType == null)
+        //     throw new InvalidOperationException("Object Not Found");
+        var productType = new ProductType { Id = id };
+        _context.ProductTypes.Attach(productType);
+        _context.ProductTypes.Remove(productType);
         await  _context.SaveChangesAsync();
         await _redisDb.KeyDeleteAsync($"product_type:{id}");
     }

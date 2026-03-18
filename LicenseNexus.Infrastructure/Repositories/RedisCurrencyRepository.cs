@@ -81,10 +81,12 @@ public class RedisCurrencyRepository: ICurrencyRepository
 
     public async Task DeleteAsync(int id)
     {
-        var currency = await _context.Currencies.FindAsync(id);
-        if (currency == null)
-            throw new InvalidOperationException("Object Not Found");
-        _context.Remove(currency);
+        // var currency = await _context.Currencies.FindAsync(id);
+        // if (currency == null)
+        //     throw new InvalidOperationException("Object Not Found");
+        var currency = new Currency() { Id = id };
+        _context.Currencies.Attach(currency);
+        _context.Currencies.Remove(currency);
         await  _context.SaveChangesAsync();
         await _redisDb.KeyDeleteAsync($"currency:{id}");
     }

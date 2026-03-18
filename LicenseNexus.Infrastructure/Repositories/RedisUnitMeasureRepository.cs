@@ -83,10 +83,12 @@ public class RedisUnitMeasureRepository: IUnitMeasureRepository
     
     public async Task DeleteAsync(int id)
     {
-        var unitMeasure = await _context.UnitMeasures.FindAsync(id);
-        if (unitMeasure == null)
-            throw new InvalidOperationException("Object Not Found");
-        _context.Remove(unitMeasure);
+        // var unitMeasure = await _context.UnitMeasures.FindAsync(id);
+        // if (unitMeasure == null)
+        //     throw new InvalidOperationException("Object Not Found");
+        var unitMeasure = new UnitMeasure { Id = id };
+        _context.UnitMeasures.Attach(unitMeasure);
+        _context.UnitMeasures.Remove(unitMeasure);
         await  _context.SaveChangesAsync();
         await _redisDb.KeyDeleteAsync($"unit_measure:{id}");
     }
