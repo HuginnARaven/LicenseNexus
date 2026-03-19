@@ -32,11 +32,18 @@ public class DatabaseSeeder
     {
         Console.WriteLine("Generating Data...");
 
+        const int vendorsCount = 300;
+        const int categoriesCount = 20;
+        const int groupsPerCategoryCount = 8;
+        const int tagsCount = 200;
+        const int productsCount = 100000;
+        const int partnersCount = 15;
+        
         // 1. Clear existing data (optional, be careful in production!)
         await ClearDataAsync();
 
         // 2. Generate and Save Vendors
-        var vendors = GenerateVendors(30);
+        var vendors = GenerateVendors(vendorsCount);
         await _extendedSqlContext.Vendors.AddRangeAsync(vendors);
         await _extendedSqlContext.SaveChangesAsync();
         Console.WriteLine($"Saved {vendors.Count} vendors to SQL.");
@@ -61,7 +68,7 @@ public class DatabaseSeeder
         }
 
         // 3. Generate and Save Categories & ProductGroups
-        var categories = GenerateCategories(15);
+        var categories = GenerateCategories(categoriesCount);
         await _extendedSqlContext.Categories.AddRangeAsync(categories);
         await _extendedSqlContext.SaveChangesAsync();
         Console.WriteLine($"Saved {categories.Count} categories to SQL.");
@@ -70,7 +77,7 @@ public class DatabaseSeeder
         var maxProdutGroupId = 0;
         foreach (var cat in categories)
         {
-            var groups = GenerateProductGroups(5, cat.Id);
+            var groups = GenerateProductGroups(groupsPerCategoryCount, cat.Id);
             await _extendedSqlContext.ProductGroups.AddRangeAsync(groups);
             await _extendedSqlContext.SaveChangesAsync(); // Save groups to get IDs
             
@@ -184,7 +191,7 @@ public class DatabaseSeeder
         }
 
         // 7. Generate and Save Tags
-        var tags = GenerateTags(50);
+        var tags = GenerateTags(tagsCount);
         await _extendedSqlContext.Tags.AddRangeAsync(tags);
         await _extendedSqlContext.SaveChangesAsync();
         Console.WriteLine($"Saved {tags.Count} tags to SQL.");
@@ -208,7 +215,7 @@ public class DatabaseSeeder
         // 8. Generate and Save Products
         var allGroups = await _extendedSqlContext.ProductGroups.Include(g => g.Category).ToListAsync();
         
-        var products = GenerateProducts(5000, vendors, productTypes, unitMeasures, currencies, allGroups);
+        var products = GenerateProducts(productsCount, vendors, productTypes, unitMeasures, currencies, allGroups);
         
         await _extendedSqlContext.Products.AddRangeAsync(products);
         await _extendedSqlContext.SaveChangesAsync();
@@ -284,7 +291,7 @@ public class DatabaseSeeder
         }
         
         // 9. Generate and Save Partners, Addresses, and Customers TODO: Sync Ids with MinimalDb
-        var partners = GeneratePartners(5);
+        var partners = GeneratePartners(partnersCount);
         await _extendedSqlContext.Partners.AddRangeAsync(partners);
         await _extendedSqlContext.SaveChangesAsync();
 
@@ -506,7 +513,7 @@ public class DatabaseSeeder
     private List<LicenseNexus.Domain.Entities.Tag> GenerateTags(int count)
     {
         var faker = new Faker<LicenseNexus.Domain.Entities.Tag>("en")
-            .RuleFor(t => t.Name, f => f.Commerce.ProductAdjective());
+            .RuleFor(t => t.Name, f => $"{f.Commerce.ProductAdjective()}_{f.Random.AlphaNumeric(6)}");
 
         return faker.Generate(count).DistinctBy(t => t.Name).ToList();
     }
@@ -546,7 +553,7 @@ public class DatabaseSeeder
     {
         var faker = new Faker<ProductPrice>("en")
             .RuleFor(pp => pp.ProductId, productId)
-            .RuleFor(pp => pp.Price, f => f.Finance.Amount(10, 1000))
+            .RuleFor(pp => pp.Price, f => f.Finance.Amount(10, 2000))
             .RuleFor(pp => pp.TermDuration, f => f.PickRandom("1 Month", "1 Year", "Lifetime"))
             .RuleFor(pp => pp.BillingPlan, f => f.PickRandom("Monthly", "Yearly", "One-time"))
             .RuleFor(pp => pp.CountryCode, f => f.Address.CountryCode(Bogus.DataSets.Iso3166Format.Alpha3))

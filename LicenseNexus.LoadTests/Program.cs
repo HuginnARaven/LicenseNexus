@@ -33,8 +33,9 @@ var terms = products
     .Where(x => x.Length > 3) // taking 3+ letter word TODO: mb change later
     .Distinct()
     .ToArray();
+var tagsNames = await FetchPropertyStringValuesAsync(httpClient, $"{baseUrl}/api/tag", "name");
 
-PayloadGenerator.Initialize(products, vendorIds, groupIds, typeIds, unitMeasureIds, currencyIds, customerIds, orderStatusIds, terms);
+PayloadGenerator.Initialize(products, vendorIds, groupIds, typeIds, unitMeasureIds, currencyIds, customerIds, orderStatusIds, terms, tagsNames);
 
 async Task<int[]> FetchIdsAsync(HttpClient client, string url)
 {
@@ -59,6 +60,32 @@ async Task<int[]> FetchIdsAsync(HttpClient client, string url)
     {
         Console.WriteLine($"Parsing error {url}: {ex.Message}");
         return Array.Empty<int>();
+    }
+}
+
+async Task<string[]> FetchPropertyStringValuesAsync(HttpClient client, string url, string propertyName)
+{
+    try
+    {
+        var response = await client.GetAsync(url);
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"Error loading from {url}: {response.StatusCode}");
+            return Array.Empty<string>();
+        }
+
+        var jsonString = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(jsonString);
+        
+        return document.RootElement
+            .EnumerateArray()
+            .Select(x => x.GetProperty(propertyName).ToString())
+            .ToArray();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Parsing error {url}: {ex.Message}");
+        return Array.Empty<string>();
     }
 }
 

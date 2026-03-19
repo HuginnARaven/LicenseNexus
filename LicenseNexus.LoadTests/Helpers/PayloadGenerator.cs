@@ -22,6 +22,7 @@ namespace LicenseNexus.LoadTests.Helpers
         private static int[] CustomerIds = Array.Empty<int>();
         private static int[] OrderStatusIds = Array.Empty<int>();
         private static string[] SearchTerms = Array.Empty<string>();
+        private static string[] TagNames = Array.Empty<string>();
         
         private static ProductFilterDto[] PreGeneratedFilters = Array.Empty<ProductFilterDto>();
         private static string[] PreGeneratedSearchUrls = Array.Empty<string>();
@@ -31,7 +32,8 @@ namespace LicenseNexus.LoadTests.Helpers
         public static void Initialize(
             List<ProductModel> products, int[] vendorIds, int[] groupIds, 
             int[] typeIds, int[] unitMeasureIds, int[] currencyIds,
-            int[] customerIds, int[] orderStatusIds, string[] terms)
+            int[] customerIds, int[] orderStatusIds, string[] terms, 
+            string[] tagNames)
         {
             ProductsMap = products.ToDictionary(p => p.Id);
             ProductIds = products.Select(p => p.Id).ToArray();
@@ -43,11 +45,13 @@ namespace LicenseNexus.LoadTests.Helpers
             CustomerIds = customerIds;
             OrderStatusIds = orderStatusIds;
             SearchTerms = terms;
-
+            TagNames = tagNames;
+            
             InitializeFakers();
             
             PreGeneratedFilters = FilterFaker.Generate(10000).ToArray();
             PreGeneratedSearchUrls = PreGeneratedFilters.Select(BuildQueryString).ToArray();
+            Console.WriteLine(PreGeneratedSearchUrls[0]);
         }
 
         private static void InitializeFakers()
@@ -58,6 +62,8 @@ namespace LicenseNexus.LoadTests.Helpers
                 .RuleFor(f => f.Search, f => f.Random.Bool() && SearchTerms.Length > 0 ? f.PickRandom(SearchTerms) : null)
                 .RuleFor(f => f.PriceFrom, f => f.Random.Bool() ? f.Random.Double(10, 100) : null)
                 .RuleFor(f => f.PriceTo, (f, o) => o.PriceFrom.HasValue ? f.Random.Double(o.PriceFrom.Value, 1000) : null)
+                .RuleFor(p => p.IsPromo, f => f.Random.Bool())
+                .RuleFor(f => f.Tags, f => f.Random.Bool() && TagNames.Length > 0 ? f.PickRandom(TagNames, f.Random.Int(1, 2)).ToArray() : null)
                 .RuleFor(f => f.Page, f => f.Random.Int(1, 5))
                 .RuleFor(f => f.PageSize, f => f.PickRandom(10, 20, 50));
 
@@ -165,14 +171,21 @@ namespace LicenseNexus.LoadTests.Helpers
     
         private static string BuildQueryString(ProductFilterDto filter)
         {
-            // Логіка з ReadHeavyScenarioBuilder переїжджає сюди (виконується 1 раз при старті)
             var queryParams = new List<string>(); 
             if (filter.CategoryId.HasValue) queryParams.Add($"CategoryId={filter.CategoryId}"); 
             if (filter.GroupId.HasValue) queryParams.Add($"GroupId={filter.GroupId}"); 
             if (filter.VendorId.HasValue) queryParams.Add($"VendorId={filter.VendorId}"); 
-            if (!string.IsNullOrEmpty(filter.Search)) queryParams.Add($"Search={Uri.EscapeDataString(filter.Search)}"); 
+            //if (!string.IsNullOrEmpty(filter.Search)) queryParams.Add($"Search={Uri.EscapeDataString(filter.Search)}"); 
             if (filter.PriceFrom.HasValue) queryParams.Add($"PriceFrom={filter.PriceFrom}"); 
             if (filter.PriceTo.HasValue) queryParams.Add($"PriceTo={filter.PriceTo}"); 
+            if (filter.IsPromo.HasValue) queryParams.Add($"IsPromo={filter.IsPromo.Value.ToString().ToLower()}");
+            if (filter.Tags != null && filter.Tags.Any())
+            {
+                foreach (var tag in filter.Tags)
+                {
+                    queryParams.Add($"Tags={Uri.EscapeDataString(tag)}");
+                }
+            }
             queryParams.Add($"Page={filter.Page}"); 
             queryParams.Add($"PageSize={filter.PageSize}"); 
             return string.Join("&", queryParams);
