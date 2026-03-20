@@ -15,7 +15,7 @@ using var httpClient = new HttpClient();
 // Configuration
 var baseUrl = "http://localhost:5000"; 
 var warmUpDuration = TimeSpan.FromSeconds(30);
-var loadDuration = TimeSpan.FromMinutes(3);
+var loadDuration = TimeSpan.FromMinutes(5);
 var concurrentUsers = 100;
 
 var products = await FetchProductsAsync(httpClient, $"{baseUrl}/api/product");
@@ -139,6 +139,8 @@ var scenarioDict = new Dictionary<string, ScenarioProps[]>
     { "textsearch", [textSearchScenario] }
 };
 
+var currArch = "redis";
+
 var targetScenario = args.Length > 0 ? args[0].ToLower() : "read";
 
 if (!scenarioDict.ContainsKey(targetScenario))
@@ -149,13 +151,13 @@ if (!scenarioDict.ContainsKey(targetScenario))
 
 var selectedScenario = scenarioDict[targetScenario];
 var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-var reportFolder = $"./reports/{targetScenario}_{timestamp}";
+var reportFolder = $"./reports/{timestamp}_{currArch}_{targetScenario}";
 Directory.CreateDirectory(reportFolder);
 
-HardwareMonitor.Start($"{reportFolder}/load_test_metrics.csv");
+HardwareMonitor.Start($"{reportFolder}/{currArch}_{targetScenario}_load_test_metrics.csv");
 NBomberRunner
     .RegisterScenarios(selectedScenario)
-    .WithReportFileName("load_test_report")
+    .WithReportFileName($"{currArch}_{targetScenario}_load_test_report")
     .WithReportFolder(reportFolder)
     .WithReportFormats(ReportFormat.Html, ReportFormat.Md)
     .Run();

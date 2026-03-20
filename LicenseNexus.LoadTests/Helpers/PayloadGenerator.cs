@@ -51,7 +51,6 @@ namespace LicenseNexus.LoadTests.Helpers
             
             PreGeneratedFilters = FilterFaker.Generate(10000).ToArray();
             PreGeneratedSearchUrls = PreGeneratedFilters.Select(BuildQueryString).ToArray();
-            Console.WriteLine(PreGeneratedSearchUrls[0]);
         }
 
         private static void InitializeFakers()
