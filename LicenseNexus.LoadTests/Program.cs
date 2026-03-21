@@ -133,13 +133,13 @@ var scenarioDict = new Dictionary<string, ScenarioProps[]>
 {
     { "read", [readScenario] },
     { "write", writeScenario },
-    { "mixed", [mixedScenario] },
+    { "mixed", mixedScenario },
     { "consistency", consistencyScenario },
     { "checkout", [checkoutScenario] },
     { "textsearch", [textSearchScenario] }
 };
 
-var currArch = "redis";
+var currArch = "mongo";
 
 var targetScenario = args.Length > 0 ? args[0].ToLower() : "read";
 
