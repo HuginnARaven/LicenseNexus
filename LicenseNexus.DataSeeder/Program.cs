@@ -2,8 +2,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using LicenseNexus.Infrastructure.Data.Contexts;
-using Bogus;
 using LicenseNexus.DataSeeder;
+using LicenseNexus.DataSeeder.Seeders;
 
 Console.WriteLine("Starting Data Seeder...");
 
@@ -27,6 +27,8 @@ services.AddDbContext<ExtendedSqlContext>(options =>
 services.Configure<MongoDbSettings>(configuration.GetSection("MongoDbSettings"));
 services.AddScoped<MongoContext>();
 services.AddSingleton<RedisContext>();
+
+services.AddTransient<ProductSeeder>();
 
 services.AddTransient<DatabaseSeeder>();
 

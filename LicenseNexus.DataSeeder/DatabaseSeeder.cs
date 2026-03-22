@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
 using System.Text.Json;
 using Bogus.Extensions.UnitedStates;
+using LicenseNexus.DataSeeder.Seeders;
 
 namespace LicenseNexus.DataSeeder;
 
@@ -15,17 +16,21 @@ public class DatabaseSeeder
     private readonly BaseSqlContext _baseSqlContext;
     private readonly MongoContext _mongoContext;
     private readonly RedisContext _redisContext;
+    
+    private readonly ProductSeeder _productSeeder;
 
     public DatabaseSeeder(
         ExtendedSqlContext extendedSqlContext,
         BaseSqlContext baseSqlContext,
         MongoContext mongoContext,
-        RedisContext redisContext)
+        RedisContext redisContext,
+        ProductSeeder productSeeder)
     {
         _extendedSqlContext = extendedSqlContext;
         _baseSqlContext = baseSqlContext;
         _mongoContext = mongoContext;
         _redisContext = redisContext;
+        _productSeeder = productSeeder;
     }
 
     public async Task RunAsync()
@@ -39,7 +44,7 @@ public class DatabaseSeeder
         const int productsCount = 100000;
         const int partnersCount = 15;
         
-        // 1. Clear existing data (optional, be careful in production!)
+        // 1. Clear existing data
         await ClearDataAsync();
 
         // 2. Generate and Save Vendors
@@ -214,81 +219,91 @@ public class DatabaseSeeder
 
         // 8. Generate and Save Products
         var allGroups = await _extendedSqlContext.ProductGroups.Include(g => g.Category).ToListAsync();
-        
-        var products = GenerateProducts(productsCount, vendors, productTypes, unitMeasures, currencies, allGroups);
-        
-        await _extendedSqlContext.Products.AddRangeAsync(products);
-        await _extendedSqlContext.SaveChangesAsync();
-        Console.WriteLine($"Saved {products.Count} products to SQL.");
-
-        // Generate related data for products (Prices, Descriptions, Tags)
-        var productDocs = new List<ProductDocument>();
-        
-        var allPrices = new List<ProductPrice>();
-        var allDescriptions = new List<FullDescription>();
-        var allProductTags = new List<ProductTag>();
-        
-        foreach (var product in products)
-        {
-            var prices = GenerateProductPrices(product.Id);
-            var descriptions = GenerateFullDescriptions(product.Id);
-            var productTags = GenerateProductTags(product.Id, tags);
-            
-            product.Prices = prices;
-            product.FullDescriptions = descriptions;
-            product.ProductTags = productTags;
-            
-            allPrices.AddRange(prices);
-            allDescriptions.AddRange(descriptions);
-            allProductTags.AddRange(productTags);
-        }
-        
-        await _extendedSqlContext.ProductPrices.AddRangeAsync(allPrices);
-        await _extendedSqlContext.FullDescriptions.AddRangeAsync(allDescriptions);
-        await _extendedSqlContext.ProductTags.AddRangeAsync(allProductTags);
-        
-        await _extendedSqlContext.SaveChangesAsync();
-        
-        var maxPriceId = allPrices.Any() ? allPrices.Max(p => p.Id) : 0;
-        var maxDescriptionId = allDescriptions.Any() ? allDescriptions.Max(d => d.Id) : 0;
-
-        foreach (var product in products)
-        {
-            var pDoc = MapToProductDocument(
-                product, 
-                product.Prices.ToList(), 
-                product.FullDescriptions.ToList(), 
-                product.ProductTags.ToList(), 
-                tags, allGroups, vendors, productTypes, unitMeasures, currencies
-            );
-            productDocs.Add(pDoc);
-        }
-
-        Console.WriteLine("Saved product related data (prices, descriptions, tags) to SQL.");
-
-        if (productDocs.Any())
-        {
-            await _mongoContext.Products.InsertManyAsync(productDocs);
-            await _mongoContext.Counters.UpdateOneAsync(
-                ds => ds.Id == "product_id", 
-                Builders<DatabaseSequence>.Update.Set(ds => ds.Seq, products.Max(с => с.Id)),
-                new UpdateOptions { IsUpsert = true }
-            );
-            if (maxPriceId > 0)
-                await _mongoContext.Counters.UpdateOneAsync(
-                    ds => ds.Id == "product_price_id", 
-                    Builders<DatabaseSequence>.Update.Set(ds => ds.Seq, maxPriceId),
-                    new UpdateOptions { IsUpsert = true }
-                );
-            if (maxDescriptionId > 0)
-                await _mongoContext.Counters.UpdateOneAsync(
-                    ds => ds.Id == "product_description_id", 
-                    Builders<DatabaseSequence>.Update.Set(ds => ds.Seq, maxDescriptionId),
-                    new UpdateOptions { IsUpsert = true }
-                );
-
-            Console.WriteLine($"Saved {productDocs.Count} products to Mongo.");
-        }
+        await _productSeeder.SeedAsync(
+            productsCount, 
+            500, 
+            vendors, 
+            productTypes, 
+            unitMeasures, 
+            currencies, 
+            allGroups, 
+            tags);
+        // var allGroups = await _extendedSqlContext.ProductGroups.Include(g => g.Category).ToListAsync();
+        //
+        // var products = GenerateProducts(productsCount, vendors, productTypes, unitMeasures, currencies, allGroups);
+        //
+        // await _extendedSqlContext.Products.AddRangeAsync(products);
+        // await _extendedSqlContext.SaveChangesAsync();
+        // Console.WriteLine($"Saved {products.Count} products to SQL.");
+        //
+        // // Generate related data for products (Prices, Descriptions, Tags)
+        // var productDocs = new List<ProductDocument>();
+        //
+        // var allPrices = new List<ProductPrice>();
+        // var allDescriptions = new List<FullDescription>();
+        // var allProductTags = new List<ProductTag>();
+        //
+        // foreach (var product in products)
+        // {
+        //     var prices = GenerateProductPrices(product.Id);
+        //     var descriptions = GenerateFullDescriptions(product.Id);
+        //     var productTags = GenerateProductTags(product.Id, tags);
+        //     
+        //     product.Prices = prices;
+        //     product.FullDescriptions = descriptions;
+        //     product.ProductTags = productTags;
+        //     
+        //     allPrices.AddRange(prices);
+        //     allDescriptions.AddRange(descriptions);
+        //     allProductTags.AddRange(productTags);
+        // }
+        //
+        // await _extendedSqlContext.ProductPrices.AddRangeAsync(allPrices);
+        // await _extendedSqlContext.FullDescriptions.AddRangeAsync(allDescriptions);
+        // await _extendedSqlContext.ProductTags.AddRangeAsync(allProductTags);
+        //
+        // await _extendedSqlContext.SaveChangesAsync();
+        //
+        // var maxPriceId = allPrices.Any() ? allPrices.Max(p => p.Id) : 0;
+        // var maxDescriptionId = allDescriptions.Any() ? allDescriptions.Max(d => d.Id) : 0;
+        //
+        // foreach (var product in products)
+        // {
+        //     var pDoc = MapToProductDocument(
+        //         product, 
+        //         product.Prices.ToList(), 
+        //         product.FullDescriptions.ToList(), 
+        //         product.ProductTags.ToList(), 
+        //         tags, allGroups, vendors, productTypes, unitMeasures, currencies
+        //     );
+        //     productDocs.Add(pDoc);
+        // }
+        //
+        // Console.WriteLine("Saved product related data (prices, descriptions, tags) to SQL.");
+        //
+        // if (productDocs.Any())
+        // {
+        //     await _mongoContext.Products.InsertManyAsync(productDocs);
+        //     await _mongoContext.Counters.UpdateOneAsync(
+        //         ds => ds.Id == "product_id", 
+        //         Builders<DatabaseSequence>.Update.Set(ds => ds.Seq, products.Max(с => с.Id)),
+        //         new UpdateOptions { IsUpsert = true }
+        //     );
+        //     if (maxPriceId > 0)
+        //         await _mongoContext.Counters.UpdateOneAsync(
+        //             ds => ds.Id == "product_price_id", 
+        //             Builders<DatabaseSequence>.Update.Set(ds => ds.Seq, maxPriceId),
+        //             new UpdateOptions { IsUpsert = true }
+        //         );
+        //     if (maxDescriptionId > 0)
+        //         await _mongoContext.Counters.UpdateOneAsync(
+        //             ds => ds.Id == "product_description_id", 
+        //             Builders<DatabaseSequence>.Update.Set(ds => ds.Seq, maxDescriptionId),
+        //             new UpdateOptions { IsUpsert = true }
+        //         );
+        //
+        //     Console.WriteLine($"Saved {productDocs.Count} products to Mongo.");
+        // }
         
         // 9. Generate and Save Partners, Addresses, and Customers TODO: Sync Ids with MinimalDb
         var partners = GeneratePartners(partnersCount);
