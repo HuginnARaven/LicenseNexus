@@ -29,6 +29,13 @@ services.AddScoped<MongoContext>();
 services.AddSingleton<RedisContext>();
 
 services.AddTransient<ProductSeeder>();
+services.AddTransient<VendorSeeder>();
+services.AddTransient<CategorySeeder>();
+services.AddTransient<ProductTypeSeeder>();
+services.AddTransient<UnitMeasureSeeder>();
+services.AddTransient<CurrencySeeder>();
+services.AddTransient<TagSeeder>();
+services.AddTransient<PartnerSeeder>();
 
 services.AddTransient<DatabaseSeeder>();
 
