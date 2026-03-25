@@ -7,12 +7,12 @@ Content-Type: application/json
   "isActive": true,
   "note": "ProductGroup1 description",
   "author": "Test",
-  "categoryId": 13013
+  "categoryId": 21197
 }
 
 > {%
     client.global.set("new_product_group_id", response.body.id);
-    client.log("Created Category ID: " + client.global.get("new_product_group_id"));
+    client.log("Created Product Group ID: " + client.global.get("new_product_group_id"));
 %}
 
 ### getAllProductGroups
@@ -33,3 +33,7 @@ Content-Type: application/json
   "note": "ProductGroup description",
   "author": "Test"
 }
+
+### deleteProductGroup
+DELETE {{API_HostAddress}}/ProductGroup/{{new_product_group_id}}/
+Accept: application/json

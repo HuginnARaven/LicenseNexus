@@ -1,11 +1,17 @@
-﻿using LicenseNexus.Application.DTOs;
+﻿using FluentValidation;
+using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
 using LicenseNexus.Domain.Entities;
+using LicenseNexus.Domain.Exceptions;
 using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
 
-public class ProductGroupService(IProductGroupRepository productGroupRepository, IEventPublisher eventPublisher) : IProductGroupService
+public class ProductGroupService(
+    IProductGroupRepository productGroupRepository, 
+    IEventPublisher eventPublisher, IValidator<ProductGroupRequestDto> createValidator, 
+    IValidator<ProductGroupEditRequestDto> editValidator
+    ) : IProductGroupService
 {
     public async Task<IEnumerable<ProductGroupResponseDto>> GetAllProductGroups()
     {
@@ -44,6 +50,7 @@ public class ProductGroupService(IProductGroupRepository productGroupRepository,
 
     public async Task<ProductGroupResponseDto?> AddProductGroup(ProductGroupRequestDto groupDto)
     {
+        await createValidator.ValidateAndThrowAsync(groupDto);
         var group = new ProductGroup
         {
             Name = groupDto.Name,
@@ -68,6 +75,9 @@ public class ProductGroupService(IProductGroupRepository productGroupRepository,
 
     public async Task UpdateProductGroup(int id, ProductGroupEditRequestDto productGroup)
     {
+        if (!await productGroupRepository.ExistsAsync(id))
+            throw new NotFoundException($"Product group with ID {id} not found");
+        await editValidator.ValidateAndThrowAsync(productGroup);
         var group = new ProductGroup
         {
             Id = id,
@@ -79,5 +89,13 @@ public class ProductGroupService(IProductGroupRepository productGroupRepository,
 
         await productGroupRepository.UpdateAsync(group);
         await eventPublisher.PublishAsync(new GroupUpdatedEvent(group));
+    }
+    
+    public async Task DeleteProductGroup(int id)
+    {
+        if (!await productGroupRepository.ExistsAsync(id))
+            throw new NotFoundException($"Product group with ID {id} not found");
+
+        await productGroupRepository.DeleteAsync(id);
     }
 }

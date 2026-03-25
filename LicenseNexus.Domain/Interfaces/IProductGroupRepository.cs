@@ -9,4 +9,5 @@ public interface IProductGroupRepository
     Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default);
     Task<ProductGroup?> AddAsync(ProductGroup group);
     Task UpdateAsync(ProductGroup group);
+    Task DeleteAsync(int id);
 }

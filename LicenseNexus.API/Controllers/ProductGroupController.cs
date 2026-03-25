@@ -48,5 +48,12 @@ namespace LicenseNexus.API.Controllers
             await productGroupService.UpdateProductGroup(id, group);
             return Ok();
         }
+        
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await productGroupService.DeleteProductGroup(id);
+            return NoContent();
+        }
     }
 }

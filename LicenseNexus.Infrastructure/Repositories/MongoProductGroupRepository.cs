@@ -117,20 +117,44 @@ public class MongoProductGroupRepository: IProductGroupRepository
         var update = Builders<CategoryDocument>.Update.Push(c => c.Groups, groupDoc);
         var res = await _context.Categories.UpdateOneAsync(filter, update);
         
-        if (res.ModifiedCount <= 0)
-            throw new ConflictException($"Product group with name '{group.Name}' already exists in this category.");
+        if (res.MatchedCount == 0)
+            throw new ConflictException($"Cannot add group. Either category with ID '{group.CategoryId}' does not exist, or a group with name '{group.Name}' already exists in this category.");
+        
         return  group;
     }
 
     public async Task UpdateAsync(ProductGroup group)
     {
-        var filter = Builders<CategoryDocument>.Filter.ElemMatch(c => c.Groups, g => g.Id == group.Id);
+        var filter = Builders<CategoryDocument>.Filter.And(
+            Builders<CategoryDocument>.Filter.ElemMatch(c => c.Groups, g => g.Id == group.Id),
+            Builders<CategoryDocument>.Filter.Not(
+                Builders<CategoryDocument>.Filter.ElemMatch(c => c.Groups, 
+                    g => g.Name == group.Name && g.Id != group.Id)
+            )
+        );
+        
         var update = Builders<CategoryDocument>.Update
             .Set("Groups.$.Name", group.Name)
             .Set("Groups.$.IsActive", group.IsActive)
             .Set("Groups.$.Note", group.Note)
             .Set("Groups.$.Author", group.Author);
+        
+        var res = await _context.Categories.UpdateOneAsync(filter, update);
 
-        await _context.Categories.UpdateOneAsync(filter, update);
+        if (res.MatchedCount == 0)
+            throw new ConflictException($"Cannot update. Either the group with Id '{group.Id}' doesn't exist, or a group with name '{group.Name}' already exists in this category.");
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var filter = Builders<ProductDocument>.Filter.Eq(p => p.Classification.Group.Id, id);
+        bool hasLinkedProducts = await _context.Products.Find(filter).AnyAsync();
+        
+        if (hasLinkedProducts)
+            throw new ConflictException("A database constraint violation occurred. Cannot delete this object because it is assigned to one or more products.");
+        
+        var deleteFilter = Builders<CategoryDocument>.Filter.ElemMatch(c => c.Groups, g => g.Id == id);
+        var update = Builders<CategoryDocument>.Update.PullFilter(c => c.Groups, g => g.Id == id);
+        await _context.Categories.UpdateOneAsync(deleteFilter, update);
     }
 }

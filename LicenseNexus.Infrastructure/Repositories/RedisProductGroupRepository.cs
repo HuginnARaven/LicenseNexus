@@ -149,6 +149,26 @@ public class RedisProductGroupRepository: IProductGroupRepository
             await _redisDb.JSON().MergeAsync($"category:{categoryIdVal}", $"$.ProductGroups[?(@.Id=={group.Id})]", updatePayload);
     }
 
+    public async Task DeleteAsync(int id)
+    {
+        var categoryIdVal = await _redisDb.HashGetAsync("pg_to_category_map", id);
+
+        var productGroup = new ProductGroup() { Id = id };
+        _context.ProductGroups.Attach(productGroup);
+        _context.ProductGroups.Remove(productGroup);
+        var res = await _context.SaveChangesAsync();
+        
+        if (res > 0)
+        {
+            if (!categoryIdVal.IsNull)
+            {
+                await _redisDb.JSON().DelAsync($"category:{categoryIdVal}", $"$.ProductGroups[?(@.Id=={id})]");
+                await _redisDb.HashDeleteAsync("pg_to_category_map", id);
+            }
+            await _redisDb.KeyDeleteAsync($"product_group:{id}:notfound");
+        }
+    }
+
     private ProductGroup MapToRedisReadyProductGroup(ProductGroup productGroup)
     {
         return new ProductGroup()
