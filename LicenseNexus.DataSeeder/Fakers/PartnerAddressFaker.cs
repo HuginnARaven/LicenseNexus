@@ -1,10 +1,9 @@
 ﻿using Bogus;
-using Bogus.Extensions.UnitedStates;
 using LicenseNexus.Domain.Entities;
 
 namespace LicenseNexus.DataSeeder.Fakers;
 
-public class PartnerAddressFaker : Faker<PartnerAddress>
+public sealed class PartnerAddressFaker : Faker<PartnerAddress>
 {
     public PartnerAddressFaker() : base("en")
     {

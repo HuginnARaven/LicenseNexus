@@ -3,7 +3,7 @@ using LicenseNexus.Domain.Entities;
 
 namespace LicenseNexus.DataSeeder.Fakers;
 
-public class TagFaker : Faker<Tag>
+public sealed class TagFaker : Faker<Tag>
 {
     public TagFaker() : base("en")
     {

@@ -2,7 +2,7 @@
 
 namespace LicenseNexus.DataSeeder.Fakers;
 
-public class ProductTagFaker(List<Tag> tags)
+public sealed class ProductTagFaker(List<Tag> tags)
 {
     public List<ProductTag> GenerateForProduct(int productId, int count = 0)
     {

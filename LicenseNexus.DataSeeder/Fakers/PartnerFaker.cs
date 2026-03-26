@@ -4,7 +4,7 @@ using LicenseNexus.Domain.Entities;
 
 namespace LicenseNexus.DataSeeder.Fakers;
 
-public class PartnerFaker : Faker<Partner>
+public sealed class PartnerFaker : Faker<Partner>
 {
     public PartnerFaker() : base("en")
     {

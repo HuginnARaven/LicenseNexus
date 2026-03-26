@@ -3,7 +3,7 @@ using LicenseNexus.Domain.Entities;
 
 namespace LicenseNexus.DataSeeder.Fakers;
 
-public class ProductFaker : Faker<Product>
+public sealed class ProductFaker : Faker<Product>
 {
     public ProductFaker(
         List<Vendor> vendors, 

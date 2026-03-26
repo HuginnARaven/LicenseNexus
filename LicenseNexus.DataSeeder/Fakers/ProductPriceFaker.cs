@@ -3,7 +3,7 @@ using LicenseNexus.Domain.Entities;
 
 namespace LicenseNexus.DataSeeder.Fakers;
 
-public class ProductPriceFaker: Faker<ProductPrice>
+public sealed class ProductPriceFaker: Faker<ProductPrice>
 {
     public ProductPriceFaker() : base("en")
     {

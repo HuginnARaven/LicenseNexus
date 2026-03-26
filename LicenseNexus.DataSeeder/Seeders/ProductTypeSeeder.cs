@@ -1,10 +1,7 @@
-﻿using LicenseNexus.DataSeeder.Fakers;
-using LicenseNexus.DataSeeder.Mappers;
-using LicenseNexus.Domain.Entities;
+﻿using LicenseNexus.Domain.Entities;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using LicenseNexus.Infrastructure.Data.MongoDocuments;
 using MongoDB.Driver;
-using Tag = LicenseNexus.Domain.Entities.Tag;
 
 namespace LicenseNexus.DataSeeder.Seeders;
 

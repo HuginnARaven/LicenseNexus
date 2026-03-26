@@ -3,7 +3,7 @@ using LicenseNexus.Domain.Entities;
 
 namespace LicenseNexus.DataSeeder.Fakers;
 
-public class FullDescriptionFaker : Faker<FullDescription>
+public sealed class FullDescriptionFaker : Faker<FullDescription>
 {
     public FullDescriptionFaker(): base("en")
     {

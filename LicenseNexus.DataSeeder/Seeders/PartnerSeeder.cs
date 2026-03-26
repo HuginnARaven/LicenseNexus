@@ -1,8 +1,6 @@
 ﻿using LicenseNexus.DataSeeder.Fakers;
 using LicenseNexus.Domain.Entities;
 using LicenseNexus.Infrastructure.Data.Contexts;
-using LicenseNexus.Infrastructure.Data.MongoDocuments;
-using MongoDB.Driver;
 
 namespace LicenseNexus.DataSeeder.Seeders;
 

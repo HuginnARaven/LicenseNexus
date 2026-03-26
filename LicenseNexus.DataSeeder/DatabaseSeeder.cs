@@ -1,11 +1,7 @@
-﻿using Bogus;
-using LicenseNexus.Domain.Entities;
-using LicenseNexus.Infrastructure.Data.Contexts;
+﻿using LicenseNexus.Infrastructure.Data.Contexts;
 using LicenseNexus.Infrastructure.Data.MongoDocuments;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
-using System.Text.Json;
-using Bogus.Extensions.UnitedStates;
 using LicenseNexus.DataSeeder.Seeders;
 
 namespace LicenseNexus.DataSeeder;
