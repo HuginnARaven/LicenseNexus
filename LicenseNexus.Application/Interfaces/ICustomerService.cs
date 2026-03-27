@@ -1,5 +1,4 @@
 ﻿using LicenseNexus.Application.DTOs;
-using LicenseNexus.Domain.Entities;
 
 namespace LicenseNexus.Application.Interfaces;
 

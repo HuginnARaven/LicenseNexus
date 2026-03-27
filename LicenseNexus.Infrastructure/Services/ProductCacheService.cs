@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using NRedisStack;
 using NRedisStack.RedisStackCommands;
 using StackExchange.Redis;
-using NRedisStack.RedisStackCommands;
 using NRedisStack.Search;
 using NRedisStack.Search.Literals.Enums;
 

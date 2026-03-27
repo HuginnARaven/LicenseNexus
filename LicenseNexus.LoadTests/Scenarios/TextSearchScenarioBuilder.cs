@@ -2,8 +2,6 @@
 using NBomber.CSharp;
 using NBomber.Http.CSharp;
 using LicenseNexus.LoadTests.Helpers;
-using System.Text.Json;
-using System.Text;
 
 namespace LicenseNexus.LoadTests.Scenarios;
 

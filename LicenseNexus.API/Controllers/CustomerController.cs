@@ -1,7 +1,6 @@
 using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
 using LicenseNexus.Domain.Entities;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LicenseNexus.API.Controllers

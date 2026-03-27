@@ -1,13 +1,9 @@
 ﻿using NBomber.CSharp;
-using NBomber.Http.CSharp;
 using LicenseNexus.LoadTests.Helpers;
 using LicenseNexus.LoadTests.Scenarios;
 using System.Text.Json;
-using System.Text;
 using NBomber.Contracts.Stats;
-using System.Collections.Concurrent;
 using LicenseNexus.Domain.Models;
-using System.Diagnostics;
 using NBomber.Contracts;
 
 using var httpClient = new HttpClient();

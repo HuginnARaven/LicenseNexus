@@ -45,63 +45,6 @@ public class MongoContext
         await Products.Indexes.DropAllAsync();
         
         // Products
-        // var productIndexes = new List<CreateIndexModel<ProductDocument>>
-        // {
-        //     new CreateIndexModel<ProductDocument>(
-        //         Builders<ProductDocument>.IndexKeys.Ascending(p => p.ProductId),
-        //         new CreateIndexOptions { Unique = true }
-        //     ),
-        //     new CreateIndexModel<ProductDocument>(
-        //         Builders<ProductDocument>.IndexKeys.Ascending(p => p.Sku),
-        //         new CreateIndexOptions { Unique = true }
-        //     ),
-        //     new CreateIndexModel<ProductDocument>(
-        //         Builders<ProductDocument>.IndexKeys
-        //             .Ascending(p => p.Classification.Group.CategoryId)
-        //     ),
-        //     
-        //     new CreateIndexModel<ProductDocument>(
-        //         Builders<ProductDocument>.IndexKeys
-        //             .Ascending(p => p.Classification.Group.Id)
-        //     ),
-        //     
-        //     new CreateIndexModel<ProductDocument>(
-        //         Builders<ProductDocument>.IndexKeys
-        //             .Ascending(p => p.Classification.Vendor.Id)
-        //     ),
-        //     
-        //     new CreateIndexModel<ProductDocument>(
-        //         Builders<ProductDocument>.IndexKeys
-        //             .Ascending("prices.price")
-        //     ),
-        //     
-        //     new CreateIndexModel<ProductDocument>(
-        //         Builders<ProductDocument>.IndexKeys
-        //             .Text(p => p.Sku)
-        //             .Text(p => p.Title)
-        //             .Text(p => p.Attributes.ShortDescription),
-        //         new CreateIndexOptions
-        //         {
-        //             Name = "ProductTextIndex",
-        //             Weights = new MongoDB.Bson.BsonDocument
-        //             {
-        //                 { "Sku", 10 },
-        //                 { "Title", 5 },
-        //                 { "Attributes.ShortDescription", 1 }
-        //             }
-        //         }
-        //     ),
-        //     
-        //     new CreateIndexModel<ProductDocument>(
-        //         Builders<ProductDocument>.IndexKeys.Ascending(p => p.Attributes.IsPromo)
-        //     ),
-        //     
-        //     new CreateIndexModel<ProductDocument>(
-        //         Builders<ProductDocument>.IndexKeys.Ascending("Tags.Name")
-        //     )
-        // };
-        // await Products.Indexes.CreateManyAsync(productIndexes);
-        
         var productIndexes = new List<CreateIndexModel<ProductDocument>>();
         var builder = Builders<ProductDocument>.IndexKeys;
         productIndexes.Add(new CreateIndexModel<ProductDocument>(builder.Ascending(p => p.ProductId), new CreateIndexOptions { Unique = true }));

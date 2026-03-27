@@ -2,7 +2,6 @@
 using LicenseNexus.Domain.Interfaces;
 using LicenseNexus.Infrastructure.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
-using NRedisStack;
 using NRedisStack.RedisStackCommands;
 using StackExchange.Redis;
 
