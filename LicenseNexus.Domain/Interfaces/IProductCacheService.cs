@@ -1,6 +1,6 @@
 ﻿using LicenseNexus.Domain.Models;
 
-namespace LicenseNexus.Infrastructure.Services;
+namespace LicenseNexus.Domain.Interfaces;
 
 public interface IProductCacheService
 {
