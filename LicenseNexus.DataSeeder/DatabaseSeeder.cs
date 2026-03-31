@@ -54,7 +54,9 @@ public class DatabaseSeeder
     public async Task RunAsync()
     {
         Console.WriteLine("Generating Data...");
-
+        
+        Bogus.Randomizer.Seed = new Random(1337);
+        
         // const int vendorsCount = 300;
         // const int categoriesCount = 20;
         // const int groupsPerCategoryCount = 8;
@@ -62,12 +64,19 @@ public class DatabaseSeeder
         // const int productsCount = 100000;
         // const int partnersCount = 15;
         
-        const int vendorsCount = 5;
-        const int categoriesCount = 5;
-        const int groupsPerCategoryCount = 3;
-        const int tagsCount = 10;
-        const int productsCount = 1000;
-        const int partnersCount = 3;
+        const int vendorsCount = 30;
+        const int categoriesCount = 10;
+        const int groupsPerCategoryCount = 4;
+        const int tagsCount = 20;
+        const int productsCount = 10000;
+        const int partnersCount = 9;
+        
+        // const int vendorsCount = 3;
+        // const int categoriesCount = 5;
+        // const int groupsPerCategoryCount = 2;
+        // const int tagsCount = 5;
+        // const int productsCount = 1000;
+        // const int partnersCount = 3;
         
         // 1. Clear existing data
         await ClearDataAsync();

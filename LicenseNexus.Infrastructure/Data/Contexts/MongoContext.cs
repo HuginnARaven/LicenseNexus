@@ -43,7 +43,13 @@ public class MongoContext
     public async Task ConfigureIndexesAsync()
     {
         await Products.Indexes.DropAllAsync();
-        
+        await Categories.Indexes.DropAllAsync();
+        await Vendors.Indexes.DropAllAsync();
+        await ProductTypes.Indexes.DropAllAsync();
+        await UnitMeasures.Indexes.DropAllAsync();
+        await Currencies.Indexes.DropAllAsync();
+        await Tags.Indexes.DropAllAsync();
+
         // Products
         var productIndexes = new List<CreateIndexModel<ProductDocument>>();
         var builder = Builders<ProductDocument>.IndexKeys;

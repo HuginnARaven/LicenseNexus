@@ -135,7 +135,7 @@ var scenarioDict = new Dictionary<string, ScenarioProps[]>
     { "textsearch", [textSearchScenario] }
 };
 
-var currArch = "mongo";
+var prefix = "mongo_10000";
 
 var targetScenario = args.Length > 0 ? args[0].ToLower() : "read";
 
@@ -147,13 +147,13 @@ if (!scenarioDict.ContainsKey(targetScenario))
 
 var selectedScenario = scenarioDict[targetScenario];
 var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-var reportFolder = $"./reports/{timestamp}_{currArch}_{targetScenario}";
+var reportFolder = $"./reports/{timestamp}_{prefix}_{targetScenario}";
 Directory.CreateDirectory(reportFolder);
 
-HardwareMonitor.Start($"{reportFolder}/{currArch}_{targetScenario}_load_test_metrics.csv");
+HardwareMonitor.Start($"{reportFolder}/{prefix}_{targetScenario}_load_test_metrics.csv");
 NBomberRunner
     .RegisterScenarios(selectedScenario)
-    .WithReportFileName($"{currArch}_{targetScenario}_load_test_report")
+    .WithReportFileName($"{prefix}_{targetScenario}_load_test_report")
     .WithReportFolder(reportFolder)
     .WithReportFormats(ReportFormat.Html, ReportFormat.Md)
     .Run();
