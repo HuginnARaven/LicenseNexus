@@ -12,6 +12,6 @@ public class TagDocument
     [BsonElement("id")]
     public int Id { get; set; }
     
-    [BsonElement("type_name")]
+    [BsonElement("type_name")] //TODO: type_name -> name
     public string Name { get; set; } = string.Empty;
 }

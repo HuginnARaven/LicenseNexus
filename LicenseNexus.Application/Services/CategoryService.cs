@@ -1,4 +1,5 @@
-﻿using LicenseNexus.Application.DTOs;
+﻿using FluentValidation;
+using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
 using LicenseNexus.Domain.Entities;
 using LicenseNexus.Domain.Exceptions;
@@ -6,7 +7,11 @@ using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
 
-public class CategoryService(ICategoryRepository categoryRepository, IEventPublisher eventPublisher) : ICategoryService
+public class CategoryService(
+    ICategoryRepository categoryRepository, 
+    IEventPublisher eventPublisher,
+    IValidator<CategoryRequestDto> validator
+    ) : ICategoryService
 {
     public async Task<IEnumerable<CategoryResponseDto>> GetAllCategories()
     {
@@ -63,6 +68,7 @@ public class CategoryService(ICategoryRepository categoryRepository, IEventPubli
 
     public async Task<CategoryResponseDto?> AddCategory(CategoryRequestDto categoryDto)
     {
+        await validator.ValidateAndThrowAsync(categoryDto);
         var category = new Category
         {
             CategoryName = categoryDto.CategoryName,
@@ -86,6 +92,7 @@ public class CategoryService(ICategoryRepository categoryRepository, IEventPubli
 
     public async Task UpdateCategory(int id, CategoryRequestDto category)
     {
+        await validator.ValidateAndThrowAsync(category);
         if(!await categoryRepository.ExistsAsync(id))
             throw new NotFoundException($"Category with ID {id} not found");
         

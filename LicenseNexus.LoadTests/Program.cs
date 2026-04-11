@@ -135,7 +135,7 @@ var scenarioDict = new Dictionary<string, ScenarioProps[]>
     { "textsearch", [textSearchScenario] }
 };
 
-var prefix = "mongo_10000";
+var prefix = "mongo_100000";
 
 var targetScenario = args.Length > 0 ? args[0].ToLower() : "read";
 

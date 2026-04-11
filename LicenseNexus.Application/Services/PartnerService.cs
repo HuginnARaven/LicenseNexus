@@ -1,11 +1,13 @@
-﻿using LicenseNexus.Application.DTOs;
+﻿using FluentValidation;
+using LicenseNexus.Application.DTOs;
 using LicenseNexus.Application.Interfaces;
 using LicenseNexus.Domain.Entities;
+using LicenseNexus.Domain.Exceptions;
 using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
 
-public class PartnerService(IPartnerRepository repository) : IPartnerService
+public class PartnerService(IPartnerRepository repository, IValidator<PartnerRequestDto> validator) : IPartnerService
 {
     public async Task<IEnumerable<PartnerResponseDto>> GetAllPartnersAsync()
     {
@@ -23,6 +25,7 @@ public class PartnerService(IPartnerRepository repository) : IPartnerService
 
     public async Task<PartnerResponseDto?> CreatePartnerAsync(PartnerRequestDto partnerDto)
     {
+        await validator.ValidateAndThrowAsync(partnerDto);
         var partner = new Partner
         {
             Status = "Created",
@@ -44,6 +47,10 @@ public class PartnerService(IPartnerRepository repository) : IPartnerService
 
     public async Task UpdatePartnerAsync(int id, PartnerRequestDto partnerDto)
     {
+        await validator.ValidateAndThrowAsync(partnerDto);
+        if (!await repository.ExistsAsync(id))
+            throw new NotFoundException($"Partner with ID {id} not found");
+        
         var partner = new Partner
         {
             Id = id,

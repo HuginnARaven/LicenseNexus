@@ -34,6 +34,10 @@ public class ProductRequestDtoValidator : AbstractValidator<ProductRequestDto>
         IUnitMeasureRepository unitMeasureRepository,
         ICurrencyRepository currencyRepository)
     {
+        RuleFor(x => x.Sku)
+            .NotEmpty().WithMessage("Sku cannot be empty.")
+            .MaximumLength(100).WithMessage("Sku cannot exceed 100 characters.");
+        
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Title cannot be empty.")
             .MaximumLength(250).WithMessage("Title cannot exceed 250 characters.");
@@ -72,7 +76,10 @@ public class ProductRequestDtoValidator : AbstractValidator<ProductRequestDto>
 
         RuleFor(x => x.Author)
             .NotEmpty().WithMessage("Author cannot be empty.")
-            .MaximumLength(100).WithMessage("Author cannot exceed 100 characters.");
+            .MaximumLength(200).WithMessage("Author cannot exceed 200 characters.");
+        
+        RuleFor(x => x.Logo)
+            .MaximumLength(128).WithMessage("Author cannot exceed 128 characters.");
         
         RuleFor(x => x.VendorId)
             .MustAsync(async (id, cancellation) => await vendorRepository.ExistsAsync(id, cancellation))

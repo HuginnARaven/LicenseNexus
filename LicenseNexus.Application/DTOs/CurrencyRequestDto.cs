@@ -18,7 +18,7 @@ public class CurrencyRequestDtoValidator : AbstractValidator<CurrencyRequestDto>
 
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Name cannot be empty.")
-            .MaximumLength(100).WithMessage("Name cannot exceed 100 characters.");
+            .MaximumLength(20).WithMessage("Name cannot exceed 20 characters.");
 
         RuleFor(x => x.CountryCode)
             .NotEmpty().WithMessage("CountryCode cannot be empty.")

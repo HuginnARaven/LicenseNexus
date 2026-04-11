@@ -27,6 +27,6 @@ public class VendorRequestDTOValidator : AbstractValidator<VendorRequestDTO>
             .MaximumLength(255).WithMessage("OriginalName cannot exceed 255 characters.");
 
         RuleFor(x => x.Description)
-            .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters.");
+            .MaximumLength(1024).WithMessage("Description cannot exceed 1024 characters.");
     }
 }

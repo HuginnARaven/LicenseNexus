@@ -23,10 +23,11 @@ public class CustomerRequestDtoValidator : AbstractValidator<CustomerRequestDto>
 
         RuleFor(x => x.AccountName)
             .NotEmpty().WithMessage("AccountName is required.")
-            .MaximumLength(255).WithMessage("AccountName cannot exceed 255 characters.");
+            .MaximumLength(150).WithMessage("AccountName cannot exceed 150 characters.");
 
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email is required.")
+            .MaximumLength(255).WithMessage("Email cannot exceed 255 characters.")
             .EmailAddress().WithMessage("A valid email address is required.");
 
         RuleFor(x => x.LegalName)
@@ -38,12 +39,12 @@ public class CustomerRequestDtoValidator : AbstractValidator<CustomerRequestDto>
             .Length(2, 3).WithMessage("CountryCode must be between 2 and 3 characters.");
 
         RuleFor(x => x.City)
-            .MaximumLength(100).WithMessage("City cannot exceed 100 characters.");
+            .MaximumLength(80).WithMessage("City cannot exceed 80 characters.");
 
         RuleFor(x => x.Region)
-            .MaximumLength(100).WithMessage("Region cannot exceed 100 characters.");
+            .MaximumLength(80).WithMessage("Region cannot exceed 80 characters.");
 
         RuleFor(x => x.ZipCode)
-            .MaximumLength(20).WithMessage("ZipCode cannot exceed 20 characters.");
+            .MaximumLength(80).WithMessage("ZipCode cannot exceed 80 characters.");
     }
 }

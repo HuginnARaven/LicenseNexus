@@ -30,5 +30,8 @@ public class ProductPriceRequestDtoValidator : AbstractValidator<ProductPriceReq
 
         RuleFor(x => x.Segment)
             .MaximumLength(20).WithMessage("Segment cannot exceed 20 characters.");
+        
+        RuleFor(x => x.TermDuration)
+            .MaximumLength(10).WithMessage("TermDuration cannot exceed 10 characters.");
     }
 }

@@ -32,6 +32,6 @@ public class OrderProductRequestDtoValidator : AbstractValidator<OrderProductReq
             .GreaterThanOrEqualTo(0).WithMessage("CustomerPrice must be 0 or greater.");
 
         RuleFor(x => x.Status)
-            .MaximumLength(50).WithMessage("Status cannot exceed 50 characters.");
+            .MaximumLength(20).WithMessage("Status cannot exceed 20 characters.");
     }
 }

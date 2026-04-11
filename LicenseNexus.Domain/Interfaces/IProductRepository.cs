@@ -27,4 +27,6 @@ public interface IProductRepository
     
     Task AddTag(int productId, int tagId);
     Task DeleteTag(int productId, int tagId);
+    
+    // TODO: Add full_description CRUD
 }

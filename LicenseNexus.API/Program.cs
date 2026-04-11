@@ -92,6 +92,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<OrderProductRequestDtoValid
 builder.Services.AddValidatorsFromAssemblyContaining<ProductPatchFieldsDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<ProductGroupRequestDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<ProductGroupEditRequestDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CategoryRequestDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<PartnerRequestDtoValidator>();
 
 builder.Services.AddControllers().AddJsonOptions(options => 
 {

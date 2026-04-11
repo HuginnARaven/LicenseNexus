@@ -57,19 +57,19 @@ public class DatabaseSeeder
         
         Bogus.Randomizer.Seed = new Random(1337);
         
-        // const int vendorsCount = 300;
-        // const int categoriesCount = 20;
-        // const int groupsPerCategoryCount = 8;
-        // const int tagsCount = 200;
-        // const int productsCount = 100000;
-        // const int partnersCount = 15;
+        const int vendorsCount = 300;
+        const int categoriesCount = 20;
+        const int groupsPerCategoryCount = 8;
+        const int tagsCount = 200;
+        const int productsCount = 100000;
+        const int partnersCount = 15;
         
-        const int vendorsCount = 30;
-        const int categoriesCount = 10;
-        const int groupsPerCategoryCount = 4;
-        const int tagsCount = 20;
-        const int productsCount = 10000;
-        const int partnersCount = 9;
+        // const int vendorsCount = 30;
+        // const int categoriesCount = 10;
+        // const int groupsPerCategoryCount = 4;
+        // const int tagsCount = 20;
+        // const int productsCount = 10000;
+        // const int partnersCount = 9;
         
         // const int vendorsCount = 3;
         // const int categoriesCount = 5;

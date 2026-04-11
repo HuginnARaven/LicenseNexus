@@ -90,7 +90,7 @@ public class ProductSeeder
             
             _sqlContext.ChangeTracker.Clear();
 
-            Console.WriteLine($"Processed batch {(i / batchSize) + 1} / {totalBatches}. Products saved: {i + currentBatchSize}");
+            //Console.WriteLine($"Processed batch {(i / batchSize) + 1} / {totalBatches}. Products saved: {i + currentBatchSize}");
         }
         
         await UpdateMongoCountersAsync(maxProductId, maxPriceId, maxDescriptionId);
