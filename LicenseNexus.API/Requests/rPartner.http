@@ -41,6 +41,44 @@ Content-Type: application/json
   "Author": "Tester"
 }
 
+### createPartnerAddress
+POST {{API_HostAddress}}/Partner/address
+Content-Type: application/json
+
+{
+  "partnerId": {{new_partner_id}},
+  "city": "TestCity",
+  "addressFull": "TestAddressFull",
+  "region": "TestRegion",
+  "zipCode": "TestZipCode"
+}
+
+> {%
+    client.global.set("new_partner_address_id", response.body.id);
+    client.log("Created Partner ID: " + client.global.get("new_partner_address_id"));
+%}
+
+
+### editPartnerAddress
+PUT {{API_HostAddress}}/Partner/address/{{new_partner_address_id}}/
+Content-Type: application/json
+
+{
+  "partnerId": {{new_partner_id}},
+  "city": "QuestCity",
+  "addressFull": "QuestAddressFull",
+  "region": "QuestRegion",
+  "zipCode": "QuestZipCode"
+}
+
+### getPartnerByID
+GET {{API_HostAddress}}/Partner/{{new_partner_id}}/
+Accept: application/json
+
+### deletePartnerAddress
+DELETE {{API_HostAddress}}/Partner/address/{{new_partner_address_id}}/
+Accept: application/json
+
 ### deletePartner
 DELETE {{API_HostAddress}}/Partner/{{new_partner_id}}/
 Accept: application/json

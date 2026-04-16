@@ -18,7 +18,9 @@ public class BaseSqlRepository<T>: IBaseRepository<T> where T : class, IEntity
     
     public virtual async Task<T?> GetByIdAsync(int id, bool trackChanges = false, params Expression<Func<T, object>>[] includes)
     {
-        if (includes == null || includes.Length > 0 || !trackChanges)
+        bool hasIncludes = includes != null && includes.Length > 0;
+        
+        if (!hasIncludes && trackChanges)
         {
             return await _dbSet.FindAsync(id);
         }

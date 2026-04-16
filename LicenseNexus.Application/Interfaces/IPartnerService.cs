@@ -9,4 +9,7 @@ public interface IPartnerService
     Task<PartnerResponseDto?> CreatePartnerAsync(PartnerRequestDto partner);
     Task UpdatePartnerAsync(int id, PartnerRequestDto partner);
     Task DeletePartnerAsync(int id);
+    Task<PartnerAddressResponseDto?> AddAddressAsync(PartnerAddressRequestDto addressDto);
+    Task UpdateAddressAsync(int id, PartnerAddressRequestDto addressDto);
+    Task DeleteAddressAsync(int id);
 }

@@ -21,6 +21,7 @@ public class PartnerAddressResponseDto
 {
     public int Id { get; set; }
     public int PartnerId { get; set; }
+    public required string AddressType { get; set; }
     public required string City { get; set; }
     public required string AddressFull { get; set; }
     public string? Region { get; set; }

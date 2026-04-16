@@ -20,4 +20,29 @@ public class SqlPartnerRepository(BaseSqlContext context): BaseSqlRepository<Par
             .SetProperty(p => p.Author, partner.Author)
         );
     }
+
+    public Task<bool> AddressExistsAsync(int id)
+    {
+        return _context.PartnerAddresses.AnyAsync(pa => pa.Id == id);
+    }
+
+    public async Task<PartnerAddress?> AddAddressAsync(PartnerAddress address)
+    {
+        await _context.AddAsync(address);
+        var res = await _context.SaveChangesAsync();
+        if (res > 0)
+            return address;
+        return null;
+    }
+
+    public async Task EditAddressAsync(PartnerAddress address)
+    {
+        _context.Update(address);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAddressAsync(int addressId)
+    {
+        await _context.PartnerAddresses.Where(pa => pa.Id == addressId).ExecuteDeleteAsync();
+    }
 }

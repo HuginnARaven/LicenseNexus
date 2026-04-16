@@ -45,5 +45,26 @@ namespace LicenseNexus.API.Controllers
             await service.DeletePartnerAsync(id);
             return Ok();
         }
+        
+        [HttpPost("address")]
+        public async Task<ActionResult<PartnerAddressResponseDto?>> AddAddress([FromBody] PartnerAddressRequestDto addressDto)
+        {
+            var result = await service.AddAddressAsync(addressDto);
+            return Ok(result);
+        }
+
+        [HttpPut("address/{id}")]
+        public async Task<ActionResult> UpdateAddress(int id, [FromBody] PartnerAddressRequestDto addressDto)
+        {
+            await service.UpdateAddressAsync(id, addressDto);
+            return Ok();
+        }
+
+        [HttpDelete("address/{id}")]
+        public async Task<ActionResult> DeleteAddress(int id)
+        {
+            await service.DeleteAddressAsync(id);
+            return Ok();
+        }
     }
 }

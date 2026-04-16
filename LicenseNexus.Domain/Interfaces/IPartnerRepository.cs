@@ -4,5 +4,8 @@ namespace LicenseNexus.Domain.Interfaces;
 
 public interface IPartnerRepository: IBaseRepository<Partner>
 {
-    // TODO add partner_address CRUD
+    Task<bool> AddressExistsAsync(int id);
+    Task<PartnerAddress?> AddAddressAsync(PartnerAddress address);
+    Task EditAddressAsync(PartnerAddress address);
+    Task DeleteAddressAsync(int addressId);
 }

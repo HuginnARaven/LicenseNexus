@@ -7,7 +7,7 @@ using LicenseNexus.Domain.Interfaces;
 
 namespace LicenseNexus.Application.Services;
 
-public class PartnerService(IPartnerRepository repository, IValidator<PartnerRequestDto> validator) : IPartnerService
+public class PartnerService(IPartnerRepository repository, IValidator<PartnerRequestDto> validator, IValidator<PartnerAddressRequestDto> addressValidator) : IPartnerService
 {
     public async Task<IEnumerable<PartnerResponseDto>> GetAllPartnersAsync()
     {
@@ -70,7 +70,59 @@ public class PartnerService(IPartnerRepository repository, IValidator<PartnerReq
     {
         await repository.DeleteAsync(id);
     }
-    
+
+    public async Task<PartnerAddressResponseDto?> AddAddressAsync(PartnerAddressRequestDto addressDto)
+    {
+        var address = new PartnerAddress()
+        {
+            PartnerId = addressDto.PartnerId,
+            City = addressDto.City,
+            AddressFull = addressDto.AddressFull,
+            Region = addressDto.Region,
+            ZipCode = addressDto.ZipCode,
+            AddressType = "Main"
+        };
+        var createdAddress = await repository.AddAddressAsync(address);
+        if (createdAddress == null)
+            return null;
+
+        return new PartnerAddressResponseDto()
+        {
+            Id = createdAddress.Id,
+            PartnerId = createdAddress.PartnerId,
+            AddressType = createdAddress.AddressType,
+            City = createdAddress.City,
+            AddressFull = createdAddress.AddressFull,
+            Region = createdAddress.Region,
+            ZipCode = createdAddress.ZipCode
+        };
+    }
+
+    public async Task UpdateAddressAsync(int id, PartnerAddressRequestDto addressDto)
+    {
+        if (! await repository.AddressExistsAsync(id)) 
+            throw new NotFoundException($"Address with ID {id} not found");
+        await addressValidator.ValidateAndThrowAsync(addressDto);
+        var address = new PartnerAddress()
+        {
+            Id = id,
+            PartnerId = addressDto.PartnerId,
+            City = addressDto.City,
+            AddressFull = addressDto.AddressFull,
+            Region = addressDto.Region,
+            ZipCode = addressDto.ZipCode,
+            AddressType = "Main"
+        };
+        await repository.EditAddressAsync(address);
+    }
+
+    public async Task DeleteAddressAsync(int id)
+    {
+        if (! await repository.AddressExistsAsync(id)) 
+            throw new NotFoundException($"Address with ID {id} not found");
+        await repository.DeleteAddressAsync(id);
+    }
+
     private PartnerResponseDto MapPartnerToDto(Partner partner)
     {
         return new PartnerResponseDto
@@ -90,6 +142,7 @@ public class PartnerService(IPartnerRepository repository, IValidator<PartnerReq
             {
                 Id = a.Id,
                 PartnerId = a.PartnerId,
+                AddressType = a.AddressType,
                 City = a.City,
                 AddressFull = a.AddressFull,
                 Region = a.Region,
