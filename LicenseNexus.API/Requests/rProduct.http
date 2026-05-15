@@ -34,7 +34,7 @@ GET {{API_HostAddress}}/Product/
 Accept: application/json
 
 ### getPaginatedProducts
-GET {{API_HostAddress}}/Product/catalog
+GET {{API_HostAddress}}/Product/catalog?PageSize=3&IsPromo=true
 Accept: application/json
 
 ### getProductByID

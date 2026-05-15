@@ -5,13 +5,23 @@ using System.Text.Json;
 using NBomber.Contracts.Stats;
 using LicenseNexus.Domain.Models;
 using NBomber.Contracts;
+using NBomber.Sinks.OpenTelemetry;
+using OpenTelemetry;
+using OpenTelemetry.Exporter;
 
+Environment.SetEnvironmentVariable("OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG", "true");
 using var httpClient = new HttpClient();
+
+var otelSink = new OpenTelemetrySink(new OtlpExporterOptions {
+    Endpoint = new Uri("http://127.0.0.1:9090/api/v1/otlp/v1/metrics"),
+    Protocol = OtlpExportProtocol.HttpProtobuf,
+    //TimeoutMilliseconds = 10000
+});
 
 // Configuration
 var baseUrl = "http://localhost:5000"; 
 var warmUpDuration = TimeSpan.FromSeconds(30);
-var loadDuration = TimeSpan.FromMinutes(5);
+var loadDuration = TimeSpan.FromMinutes(1);
 var concurrentUsers = 100;
 
 var products = await FetchProductsAsync(httpClient, $"{baseUrl}/api/product");
@@ -156,5 +166,5 @@ NBomberRunner
     .WithReportFileName($"{prefix}_{targetScenario}_load_test_report")
     .WithReportFolder(reportFolder)
     .WithReportFormats(ReportFormat.Html, ReportFormat.Md)
-    .Run();
+    .WithReportingSinks(otelSink).Run();
 HardwareMonitor.Stop();
